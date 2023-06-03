@@ -1,0 +1,25 @@
+name: PR Builder
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    name: Swift ${{ matrix.swift }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        swift: [ "5.8" ]
+        os: [ ubuntu-latest ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Set up Swift ${{ matrix.swift }}
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: ${{ matrix.swift }}
+      - name: Swift build
+        run: swift build
+      - name: Swift test
+        run: swift test
