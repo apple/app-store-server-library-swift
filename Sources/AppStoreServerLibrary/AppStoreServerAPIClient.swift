@@ -58,6 +58,7 @@ public class AppStoreServerAPIClient {
             
             if let b = body {
                 let jsonEncoder = JSONEncoder()
+                jsonEncoder.dateEncodingStrategy = .millisecondsSince1970
                 let encodedBody = try jsonEncoder.encode(b)
                 urlRequest.httpBody = encodedBody
                 urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -94,13 +95,15 @@ public class AppStoreServerAPIClient {
     private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: String, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
-            case .success(let data):
-                guard let decodedBody = try? JSONDecoder().decode(R.self, from: data) else {
-                    return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
-                }
-                return APIResult.success(response: decodedBody)
-            case .failure(let statusCode, let apiError, let error):
-                return APIResult.failure(statusCode: statusCode, apiError: apiError, causedBy: error)
+        case .success(let data):
+            let decoder = JSONDecoder();
+            decoder.dateDecodingStrategy = .millisecondsSince1970
+            guard let decodedBody = try? decoder.decode(R.self, from: data) else {
+                return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
+            }
+            return APIResult.success(response: decodedBody)
+        case .failure(let statusCode, let apiError, let error):
+            return APIResult.failure(statusCode: statusCode, apiError: apiError, causedBy: error)
         }
     }
     
@@ -269,6 +272,20 @@ public class AppStoreServerAPIClient {
         return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test", method: "POST", queryParameters: [:], body: body)
     }
     
+    ///Get a list of notifications that the App Store server attempted to send to your server.
+    ///
+    ///- Parameter paginationToken: An optional token you use to get the next set of up to 20 notification history records. All responses that have more records available include a paginationToken. Omit this parameter the first time you call this endpoint.
+    ///- Parameter notificationHistoryRequest: The request body that includes the start and end dates, and optional query constraints.
+    ///- Returns: A response that contains the App Store Server Notifications history for your app.
+    ///[Get Notification History](https://developer.apple.com/documentation/appstoreserverapi/get_notification_history)
+    public func getNotificationHistory(paginationToken: String?, notificationHistoryRequest: NotificationHistoryRequest) async -> APIResult<NotificationHistoryResponse> {
+        var queryParams: [String: [String]] = [:]
+        if let innerPaginationToken = paginationToken {
+            queryParams["paginationToken"] = [innerPaginationToken]
+        }
+        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/history", method: "POST", queryParameters: queryParams, body: notificationHistoryRequest)
+    }
+
     ///Send consumption information about a consumable in-app purchase to the App Store after your server receives a consumption request notification.
     ///
     ///- Parameter transactionId: The transaction identifier for which you’re providing consumption information. You receive this identifier in the CONSUMPTION_REQUEST notification the App Store sends to your server.
