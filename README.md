@@ -23,7 +23,7 @@ Add the following dependency
 
 ## Documentation
 
-[Documentation](TODO)
+[Documentation](https://apple.github.io/app-store-server-library-swift/documentation/appstoreserverlibrary/)
 
 [WWDC Video](https://developer.apple.com/videos/play/wwdc2023/10143/)
 ## Usage
