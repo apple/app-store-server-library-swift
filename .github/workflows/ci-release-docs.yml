@@ -1,0 +1,37 @@
+name: Doc Builder
+on:
+  release:
+    types: [published]
+permissions:
+  pages: write
+  id-token: write
+jobs:
+  build:
+    name: Doc Builder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Set up Swift 5.8
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: 5.8
+      - name: Swift build
+        run: swift build
+      - name: Build docs
+        run: swift package --allow-writing-to-directory docs generate-documentation --target AppStoreServerLibrary --product AppStoreServerLibrary --disable-indexing --hosting-base-path app-store-server-library-swift --output-path docs
+      - name: Upload docs
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy docs
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v2
