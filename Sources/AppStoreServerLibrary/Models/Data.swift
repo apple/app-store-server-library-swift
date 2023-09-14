@@ -34,4 +34,9 @@ public struct Data: Decodable, Encodable, Hashable {
     ///
     ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
     public var signedRenewalInfo: String?
+
+    ///The status of an auto-renewable subscription as of the signedDate in the responseBodyV2DecodedPayload.
+    ///
+    ///[status](https://developer.apple.com/documentation/appstoreservernotifications/status)
+    public var status: Status?
 }
