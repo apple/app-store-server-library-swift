@@ -119,4 +119,19 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[transactionReason](https://developer.apple.com/documentation/appstoreserverapi/transactionreason)
     public var transactionReason: TransactionReason?
+
+    ///The three-letter ISO 4217 currency code for the price of the product.
+    ///
+    ///[currency](https://developer.apple.com/documentation/appstoreserverapi/currency)
+    public var currency: String?
+
+    ///The price of the in-app purchase or subscription offer that you configured in App Store Connect, as an integer.
+    ///
+    ///[price](https://developer.apple.com/documentation/appstoreserverapi/price)
+    public var price: Int32?
+
+    ///The payment mode you configure for an introductory offer, promotional offer, or offer code on an auto-renewable subscription.
+    ///
+    ///[offerDiscountType](https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype)
+    public var offerDiscountType: OfferDiscountType?
 }

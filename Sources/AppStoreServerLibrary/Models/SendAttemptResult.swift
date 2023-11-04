@@ -4,7 +4,7 @@
 ///
 ///[sendAttemptResult](https://developer.apple.com/documentation/appstoreserverapi/sendattemptresult)
 public enum SendAttemptResult: String, Decodable, Encodable, Hashable {
-    case succes = "SUCCESS"
+    case success = "SUCCESS"
     case timedOut = "TIMED_OUT"
     case tlsIssue = "TLS_ISSUE"
     case circularRedirect = "CIRCULAR_REDIRECT"
