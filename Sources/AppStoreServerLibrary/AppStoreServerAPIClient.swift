@@ -131,7 +131,7 @@ public class AppStoreServerAPIClient {
             aud: .init(value: AppStoreServerAPIClient.appStoreConnectAudience),
             iat: .init(value: Date())
         )
-        let key: ECDSAKey<P256> = try ECDSAKey.private(pem: self.signingKey.pemRepresentation)
+        let key = try ES256Key.private(pem: self.signingKey.pemRepresentation)
         await keys.addES256(key: key)
         return try await keys.sign(payload, typ: "JWT", kid: JWKIdentifier(stringLiteral: self.keyId))
     }
