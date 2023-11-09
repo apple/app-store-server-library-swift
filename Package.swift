@@ -18,9 +18,9 @@ let package = Package(
             targets: ["AppStoreServerLibrary"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-certificates.git", .upToNextMinor(from: "0.5.0")),
-        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMinor(from: "0.8.0")),
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "3.0.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
     ],
