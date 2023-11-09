@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+
 ///A verifier and decoder class designed to decode signed data from the App Store.
 public struct SignedDataVerifier {
     

@@ -3,9 +3,7 @@
 import Foundation
 import Crypto
 import JWTKit
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
+import AsyncHTTPClient
 
 public class AppStoreServerAPIClient {
     
@@ -19,6 +17,7 @@ public class AppStoreServerAPIClient {
     private let issuerId: String
     private let bundleId: String
     private let url: String
+    private let client: HTTPClient
     ///Create an App Store Server API client
     ///
     ///- Parameter signingKey: Your private key downloaded from App Store Connect
@@ -31,6 +30,11 @@ public class AppStoreServerAPIClient {
         self.issuerId = issuerId
         self.bundleId = bundleId
         self.url = environment == Environment.production ? AppStoreServerAPIClient.productionUrl : AppStoreServerAPIClient.sandboxUrl
+        self.client = .init()
+    }
+    
+    deinit {
+        try? self.client.syncShutdown()
     }
     
     private func makeRequest<T: Encodable>(path: String, method: String, queryParameters: [String: [String]], body: T?) async -> APIResult<Foundation.Data> {
