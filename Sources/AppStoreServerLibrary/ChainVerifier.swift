@@ -70,13 +70,12 @@ struct ChainVerifier {
                     return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
                 }
                 // Verify using Vapor
-                let signers = JWTSigners()
-                try signers.use(.es256(key: .public(pem: publicKey.pemRepresentation)))
-                let verifiedBody: VerificationResult<VaporBody> = try VerificationResult<VaporBody>.valid(signers.verify(signedData))
-                switch verifiedBody {
-                    case .invalid(_):
-                        return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
-                    case .valid(_): break
+                let keys = JWTKeyCollection()
+                try await keys.addES256(key: .public(pem: publicKey.pemRepresentation))
+                do {
+                    _ = try await VerificationResult<VaporBody>.valid(keys.verify(signedData))
+                } catch {
+                    return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
                 }
                 return VerificationResult.valid(decodedBody)
             case .couldNotValidate(_):
@@ -100,8 +99,8 @@ struct ChainVerifier {
     }
 }
 
-class VaporBody : JWTPayload {
-    func verify(using signer: JWTKit.JWTSigner) throws {
+struct VaporBody : JWTPayload {
+    func verify(using signer: JWTAlgorithm) async throws {
         // No-op
     }
 }
