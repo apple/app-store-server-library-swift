@@ -4,6 +4,7 @@ import Foundation
 import Crypto
 import JWTKit
 import AsyncHTTPClient
+import NIOHTTP1
 
 public class AppStoreServerAPIClient {
     
@@ -37,7 +38,7 @@ public class AppStoreServerAPIClient {
         try? self.client.syncShutdown()
     }
     
-    private func makeRequest<T: Encodable>(path: String, method: String, queryParameters: [String: [String]], body: T?) async -> APIResult<Foundation.Data> {
+    private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Foundation.Data> {
         do {
             var queryItems: [URLQueryItem] = []
             for (parameter, values) in queryParameters {
@@ -53,50 +54,39 @@ public class AppStoreServerAPIClient {
                 return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
             }
             
-            var urlRequest = URLRequest(url: url)
+            var urlRequest = HTTPClientRequest(url: url.absoluteString)
             let token = try generateToken()
-            urlRequest.setValue(AppStoreServerAPIClient.userAgent, forHTTPHeaderField: "User-Agent")
-            urlRequest.setValue("Bearer " + token, forHTTPHeaderField: "Authorization")
-            urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
-            urlRequest.httpMethod = method
+            urlRequest.headers.add(name: "User-Agent", value: AppStoreServerAPIClient.userAgent)
+            urlRequest.headers.add(name: "Authorization", value: "Bearer \(token)")
+            urlRequest.headers.add(name: "Accept", value: "application/json")
+            urlRequest.method = method
             
             if let b = body {
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.dateEncodingStrategy = .millisecondsSince1970
                 let encodedBody = try jsonEncoder.encode(b)
-                urlRequest.httpBody = encodedBody
-                urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                urlRequest.body = .bytes(.init(data: encodedBody))
+                urlRequest.headers.add(name: "Content-Type", value: "application/json")
             }
-            let (data, response) = try await withCheckedThrowingContinuation() { (c: CheckedContinuation<(Foundation.Data, URLResponse), Error>) in
-                let urlSessionDataTask = URLSession.shared.dataTask(with: urlRequest) {data, response, error in
-                    if let e = error {
-                        c.resume(throwing: e)
-                        return
-                    }
-                    guard let r = response else {
-                        c.resume(throwing: APIFetchError())
-                        return
-                    }
-                    c.resume(returning: (data ?? Foundation.Data(), r))
-                }
-                urlSessionDataTask.resume()
+            
+            let response = try await self.client.execute(urlRequest, timeout: .seconds(30))
+            var body = try await response.body.collect(upTo: 1024 * 1024)
+            guard let data = body.readData(length: body.readableBytes) else {
+                throw APIFetchError()
             }
-            guard let httpResponse = response as? HTTPURLResponse else {
-                return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
-            }
-            if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
+            if response.status.code >= 200 && response.status.code < 300 {
                 return APIResult.success(response: data)
             } else if let decodedBody = try? JSONDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode, let apiError = APIError.init(rawValue: errorCode) {
-                return APIResult.failure(statusCode: httpResponse.statusCode, apiError: apiError, causedBy: nil)
+                return APIResult.failure(statusCode: Int(response.status.code), apiError: apiError, causedBy: nil)
             } else {
-                return APIResult.failure(statusCode: httpResponse.statusCode, apiError: nil, causedBy: nil)
+                return APIResult.failure(statusCode: Int(response.status.code), apiError: nil, causedBy: nil)
             }
         } catch (let error) {
             return APIResult.failure(statusCode: nil, apiError: nil, causedBy: error)
         }
     }
     
-    private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: String, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
+    private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
         case .success(let data):
@@ -111,7 +101,7 @@ public class AppStoreServerAPIClient {
         }
     }
     
-    private func makeRequestWithoutResponseBody<T: Encodable>(path: String, method: String, queryParameters: [String: [String]], body: T?) async -> APIResult<Void> {
+    private func makeRequestWithoutResponseBody<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Void> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
             case .success:
@@ -141,7 +131,7 @@ public class AppStoreServerAPIClient {
     ///- Returns: A response that indicates the server successfully received the subscription-renewal-date extension request, or information about the failure
     ///[Extend Subscription Renewal Dates for All Active Subscribers](https://developer.apple.com/documentation/appstoreserverapi/extend_subscription_renewal_dates_for_all_active_subscribers)
     public func extendRenewalDateForAllActiveSubscribers(massExtendRenewalDateRequest: MassExtendRenewalDateRequest) async -> APIResult<MassExtendRenewalDateResponse> {
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass/", method: "POST", queryParameters: [:], body: massExtendRenewalDateRequest)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass/", method: .POST, queryParameters: [:], body: massExtendRenewalDateRequest)
     }
     
     ///Extends the renewal date of a customer’s active subscription using the original transaction identifier.
@@ -151,7 +141,7 @@ public class AppStoreServerAPIClient {
     ///- Returns: A response that indicates whether an individual renewal-date extension succeeded, and related details, or information about the failure
     ///[Extend a Subscription Renewal Date](https://developer.apple.com/documentation/appstoreserverapi/extend_a_subscription_renewal_date)
     public func extendSubscriptionRenewalDate(originalTransactionId: String, extendRenewalDateRequest: ExtendRenewalDateRequest) async -> APIResult<ExtendRenewalDateResponse> {
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/" + originalTransactionId, method: "PUT", queryParameters: [:], body: extendRenewalDateRequest)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/" + originalTransactionId, method: .PUT, queryParameters: [:], body: extendRenewalDateRequest)
     }
     
     ///Get the statuses for all of a customer’s auto-renewable subscriptions in your app.
@@ -168,7 +158,7 @@ public class AppStoreServerAPIClient {
             }
         }
 
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/" + transactionId, method: "GET", queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     
     ///Get a paginated list of all of a customer’s refunded in-app purchases for your app.
@@ -184,7 +174,7 @@ public class AppStoreServerAPIClient {
             queryParams["revision"] = [innerRevision]
         }
         
-        return await makeRequestWithResponseBody(path: "/inApps/v2/refund/lookup/" + transactionId, method: "GET", queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v2/refund/lookup/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     
     ///Checks whether a renewal date extension request completed, and provides the final count of successful or failed extensions.
@@ -195,7 +185,7 @@ public class AppStoreServerAPIClient {
     ///[Get Status of Subscription Renewal Date Extensions](https://developer.apple.com/documentation/appstoreserverapi/get_status_of_subscription_renewal_date_extensions)
     public func getStatusOfSubscriptionRenewalDateExtensions(requestIdentifier: String, productId: String) async -> APIResult<MassExtendRenewalDateStatusResponse> {
         let request: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass/" + productId + "/" + requestIdentifier, method: "GET", queryParameters: [:], body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass/" + productId + "/" + requestIdentifier, method: .GET, queryParameters: [:], body: request)
     }
     
     ///Check the status of the test App Store server notification sent to your server.
@@ -205,7 +195,7 @@ public class AppStoreServerAPIClient {
     ///[Get Test Notification Status](https://developer.apple.com/documentation/appstoreserverapi/get_test_notification_status)
     public func getTestNotificationStatus(testNotificationToken: String) async -> APIResult<CheckTestNotificationResponse> {
         let request: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: "GET", queryParameters: [:], body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: .GET, queryParameters: [:], body: request)
     }
     
     ///Get a customer’s in-app purchase transaction history for your app.
@@ -246,7 +236,7 @@ public class AppStoreServerAPIClient {
         if let innerRevoked = transactionHistoryRequest.revoked {
             queryParams["revoked"] = [String(innerRevoked)]
         }
-        return await makeRequestWithResponseBody(path: "/inApps/v1/history/" + transactionId, method: "GET", queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     ///Get information about a single transaction for your app.
     ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
@@ -254,7 +244,7 @@ public class AppStoreServerAPIClient {
     ///[Get Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get_transaction_info)
     public func getTransactionInfo(transactionId: String) async -> APIResult<TransactionInfoResponse> {
         let request: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/transactions/" + transactionId, method: "GET", queryParameters: [:], body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/transactions/" + transactionId, method: .GET, queryParameters: [:], body: request)
     }
     
     ///Get a customer’s in-app purchases from a receipt using the order ID.
@@ -263,7 +253,7 @@ public class AppStoreServerAPIClient {
     ///[Look Up Order ID](https://developer.apple.com/documentation/appstoreserverapi/look_up_order_id)
     public func lookUpOrderId(orderId: String) async -> APIResult<OrderLookupResponse> {
         let request: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/lookup/" + orderId, method: "GET", queryParameters: [:], body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/lookup/" + orderId, method: .GET, queryParameters: [:], body: request)
     }
     
     ///Ask App Store Server Notifications to send a test notification to your server.
@@ -273,7 +263,7 @@ public class AppStoreServerAPIClient {
     ///[Request a Test Notification](https://developer.apple.com/documentation/appstoreserverapi/request_a_test_notification)
     public func requestTestNotification() async -> APIResult<SendTestNotificationResponse> {
         let body: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test", method: "POST", queryParameters: [:], body: body)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test", method: .POST, queryParameters: [:], body: body)
     }
     
     ///Get a list of notifications that the App Store server attempted to send to your server.
@@ -287,7 +277,7 @@ public class AppStoreServerAPIClient {
         if let innerPaginationToken = paginationToken {
             queryParams["paginationToken"] = [innerPaginationToken]
         }
-        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/history", method: "POST", queryParameters: queryParams, body: notificationHistoryRequest)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/history", method: .POST, queryParameters: queryParams, body: notificationHistoryRequest)
     }
 
     ///Send consumption information about a consumable in-app purchase to the App Store after your server receives a consumption request notification.
@@ -297,7 +287,7 @@ public class AppStoreServerAPIClient {
     ///- Returns: Success, or information about the failure
     ///[Send Consumption Information](https://developer.apple.com/documentation/appstoreserverapi/send_consumption_information)
     public func sendConsumptionData(transactionId: String, consumptionRequest: ConsumptionRequest) async -> APIResult<Void> {
-        return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/consumption/" + transactionId, method: "PUT", queryParameters: [:], body: consumptionRequest)
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/consumption/" + transactionId, method: .PUT, queryParameters: [:], body: consumptionRequest)
     }
     
     struct AppStoreServerAPIJWT: JWTPayload, Equatable {
