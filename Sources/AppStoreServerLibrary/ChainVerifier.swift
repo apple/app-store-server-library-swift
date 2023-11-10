@@ -84,14 +84,13 @@ struct ChainVerifier {
     }
     
     func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
-        var policies: [VerifierPolicy] = [
-            RFC5280Policy(validationTime: validationTime),
+        var verifier = Verifier(rootCertificates: self.store) {
+            RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
-        ]
-        if online {
-            policies.append(OCSPVerifierPolicy(failureMode: OCSPFailureMode.hard, requester: Requester(), validationTime: Date()))
+            if online {
+                OCSPVerifierPolicy(failureMode: OCSPFailureMode.hard, requester: Requester(), validationTime: Date())
+            }
         }
-        var verifier = Verifier(rootCertificates: self.store, policy: PolicySet(policies: policies))
         let intermediateStore = CertificateStore([intermediate])
         return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
     }
@@ -150,29 +149,34 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 }
 
 final class Requester: OCSPRequester {
-    func query(request: [UInt8], uri: String) async throws -> [UInt8] {
+    func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
         let url = URL(string: uri)!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/ocsp-request", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = Foundation.Data(request)
         
-        let data: Foundation.Data = try await withCheckedThrowingContinuation() { c in
-            let urlSessionDataTask = URLSession.shared.dataTask(with: urlRequest) {data, response, error in
-                if let e = error {
-                    c.resume(throwing: e)
-                    return
+        do {
+            let data: Foundation.Data = try await withCheckedThrowingContinuation() { c in
+                let urlSessionDataTask = URLSession.shared.dataTask(with: urlRequest) {data, response, error in
+                    if let e = error {
+                        c.resume(throwing: e)
+                        return
+                    }
+                    guard let unwrappedData = data else {
+                        c.resume(throwing: OCSPFetchError())
+                        return
+                    }
+                    c.resume(returning: unwrappedData)
                 }
-                guard let unwrappedData = data else {
-                    c.resume(throwing: OCSPFetchError())
-                    return
-                }
-                c.resume(returning: unwrappedData)
+                urlSessionDataTask.resume()
             }
-            urlSessionDataTask.resume()
+            
+            return .response([UInt8](data))
         }
-        
-        return [UInt8](data)
+        catch {
+            return .terminalError(error)
+        }
     }
     
     private struct OCSPFetchError: Error {}
