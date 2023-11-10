@@ -15,7 +15,7 @@ struct ChainVerifier {
     private static let EXPECTED_JWT_SEGMENTS = 3
     private static let EXPECTED_ALGORITHM = "ES256"
     
-    private var store: CertificateStore
+    private let store: CertificateStore
     
     init(rootCertificates: [Foundation.Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
