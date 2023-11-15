@@ -88,7 +88,7 @@ struct ChainVerifier {
             RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
             if online {
-                OCSPVerifierPolicy(failureMode: OCSPFailureMode.hard, requester: Requester(), validationTime: Date())
+                OCSPVerifierPolicy(failureMode: .hard, requester: Requester(), validationTime: Date())
             }
         }
         let intermediateStore = CertificateStore([intermediate])
