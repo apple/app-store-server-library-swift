@@ -147,21 +147,25 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 }
 
 final class Requester: OCSPRequester {
-    func query(request: [UInt8], uri: String) async throws -> X509.OCSPRequesterQueryResult {
-        let httpClient = HTTPClient()
-        defer {
-            try? httpClient.syncShutdown()
+    func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
+        do {
+            let httpClient = HTTPClient()
+            defer {
+                try? httpClient.syncShutdown()
+            }
+            var urlRequest = HTTPClientRequest(url: uri)
+            urlRequest.method = .POST
+            urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
+            urlRequest.body = .bytes(request)
+            let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
+            var body = try await response.body.collect(upTo: 1024 * 1024)
+            guard let data = body.readData(length: body.readableBytes) else {
+                return .nonTerminalError(OCSPFetchError())
+            }
+            return .response([UInt8](data))
+        } catch {
+            return .terminalError(error)
         }
-        var urlRequest = HTTPClientRequest(url: uri)
-        urlRequest.method = .POST
-        urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
-        urlRequest.body = .bytes(request)
-        let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
-        var body = try await response.body.collect(upTo: 1024 * 1024)
-        guard let data = body.readData(length: body.readableBytes) else {
-            throw OCSPFetchError()
-        }
-        return .response([UInt8](data))
     }
     
     private struct OCSPFetchError: Error {}
