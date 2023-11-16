@@ -6,6 +6,7 @@ import SwiftASN1
 import JWTKit
 import Crypto
 import AsyncHTTPClient
+import NIOFoundationCompat
 
 struct ChainVerifier {
     

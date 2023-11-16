@@ -5,6 +5,7 @@ import Crypto
 import JWTKit
 import AsyncHTTPClient
 import NIOHTTP1
+import NIOFoundationCompat
 
 public class AppStoreServerAPIClient {
     
