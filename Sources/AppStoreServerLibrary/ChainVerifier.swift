@@ -13,7 +13,7 @@ struct ChainVerifier {
     private static let EXPECTED_JWT_SEGMENTS = 3
     private static let EXPECTED_ALGORITHM = "ES256"
     
-    private var store: CertificateStore
+    private let store: CertificateStore
     
     init(rootCertificates: [Foundation.Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
@@ -82,14 +82,13 @@ struct ChainVerifier {
     }
     
     func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
-        var policies: [VerifierPolicy] = [
-            RFC5280Policy(validationTime: validationTime),
+        var verifier = Verifier(rootCertificates: self.store) {
+            RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
-        ]
-        if online {
-            policies.append(OCSPVerifierPolicy(failureMode: OCSPFailureMode.hard, requester: Requester(), validationTime: Date()))
+            if online {
+                OCSPVerifierPolicy(failureMode: .hard, requester: Requester(), validationTime: Date())
+            }
         }
-        var verifier = Verifier(rootCertificates: self.store, policy: PolicySet(policies: policies))
         let intermediateStore = CertificateStore([intermediate])
         return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
     }
@@ -148,7 +147,7 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 }
 
 final class Requester: OCSPRequester {
-    func query(request: [UInt8], uri: String) async throws -> [UInt8] {
+    func query(request: [UInt8], uri: String) async throws -> X509.OCSPRequesterQueryResult {
         let httpClient = HTTPClient()
         defer {
             try? httpClient.syncShutdown()
@@ -162,7 +161,7 @@ final class Requester: OCSPRequester {
         guard let data = body.readData(length: body.readableBytes) else {
             throw OCSPFetchError()
         }
-        return [UInt8](data)
+        return .response([UInt8](data))
     }
     
     private struct OCSPFetchError: Error {}
