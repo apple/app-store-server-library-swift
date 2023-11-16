@@ -22,7 +22,9 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-nio", from: "2.0.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.9.0"),
     ],
     targets: [
         .target(
@@ -31,7 +33,10 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
-                .product(name: "JWTKit", package: "jwt-kit")
+                .product(name: "JWTKit", package: "jwt-kit"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
             ]),
         .testTarget(
             name: "AppStoreServerLibraryTests",

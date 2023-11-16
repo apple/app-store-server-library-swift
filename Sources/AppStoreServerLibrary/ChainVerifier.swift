@@ -5,9 +5,8 @@ import X509
 import SwiftASN1
 import JWTKit
 import Crypto
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
+import AsyncHTTPClient
+import NIOFoundationCompat
 
 struct ChainVerifier {
     
@@ -19,7 +18,7 @@ struct ChainVerifier {
     
     init(rootCertificates: [Foundation.Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
-        store = CertificateStore(parsedCertificates)
+        self.store = CertificateStore(parsedCertificates)
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool) async -> VerificationResult<T> where T: Decodable {
@@ -150,31 +149,22 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 
 final class Requester: OCSPRequester {
     func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
-        let url = URL(string: uri)!
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("application/ocsp-request", forHTTPHeaderField: "Content-Type")
-        urlRequest.httpBody = Foundation.Data(request)
-        
         do {
-            let data: Foundation.Data = try await withCheckedThrowingContinuation() { c in
-                let urlSessionDataTask = URLSession.shared.dataTask(with: urlRequest) {data, response, error in
-                    if let e = error {
-                        c.resume(throwing: e)
-                        return
-                    }
-                    guard let unwrappedData = data else {
-                        c.resume(throwing: OCSPFetchError())
-                        return
-                    }
-                    c.resume(returning: unwrappedData)
-                }
-                urlSessionDataTask.resume()
+            let httpClient = HTTPClient()
+            defer {
+                try? httpClient.syncShutdown()
             }
-            
+            var urlRequest = HTTPClientRequest(url: uri)
+            urlRequest.method = .POST
+            urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
+            urlRequest.body = .bytes(request)
+            let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
+            var body = try await response.body.collect(upTo: 1024 * 1024)
+            guard let data = body.readData(length: body.readableBytes) else {
+                throw OCSPFetchError()
+            }
             return .response([UInt8](data))
-        }
-        catch {
+        } catch {
             return .terminalError(error)
         }
     }
