@@ -161,7 +161,7 @@ final class Requester: OCSPRequester {
             let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
-                return .nonTerminalError(OCSPFetchError())
+                throw OCSPFetchError()
             }
             return .response([UInt8](data))
         } catch {
