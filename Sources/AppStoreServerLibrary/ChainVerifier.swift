@@ -21,7 +21,7 @@ struct ChainVerifier {
         self.store = CertificateStore(parsedCertificates)
     }
     
-    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool) async -> VerificationResult<T> where T: Decodable {
+    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: Environment) async -> VerificationResult<T> where T: Decodable {
         let header: JWTHeader;
         let decodedBody: T;
         do {
@@ -40,6 +40,12 @@ struct ChainVerifier {
             return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
         }
         
+        if (environment == Environment.xcode || environment == Environment.localTesting) {
+            // Data is not signed by the App Store, and verification should be skipped
+            // The environment MUST be checked in the public method calling this
+            return VerificationResult.valid(decodedBody)
+        }
+
         guard let x5c_header = header.x5c else {
             return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
         }
@@ -111,7 +117,7 @@ class VaporBody : JWTPayload {
     }
 }
 
-struct JWTHeader: Decodable {
+struct JWTHeader: Decodable, Encodable {
     public var alg: String?
     public var x5c: [String]?
 }
