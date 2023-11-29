@@ -1,5 +1,6 @@
 .swiftpm
-
+.DS_Store
+docs/
 .build/
 
 Packages/

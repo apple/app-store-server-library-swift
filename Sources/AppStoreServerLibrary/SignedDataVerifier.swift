@@ -29,7 +29,16 @@ public struct SignedDataVerifier {
     ///  - Parameter signedRenewalInfo The signedRenewalInfo field
     ///  - Returns: If success, the decoded renewal info after verification, else the reason for verification failure
     public func verifyAndDecodeRenewalInfo(signedRenewalInfo: String) async -> VerificationResult<JWSRenewalInfoDecodedPayload> {
-        return await decodeSignedData(signedData: signedRenewalInfo, type: JWSRenewalInfoDecodedPayload.self)
+        let renewalInfoResult = await decodeSignedData(signedData: signedRenewalInfo, type: JWSRenewalInfoDecodedPayload.self)
+        switch renewalInfoResult {
+        case .valid(let renewalInfo):
+            if self.environment != renewalInfo.environment {
+                return VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT)
+            }
+        case .invalid(_):
+            break
+        }
+        return renewalInfoResult
     }
     ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
     ///
@@ -94,7 +103,7 @@ public struct SignedDataVerifier {
         return appTransactionResult
     }
     
-    private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable{
-        return await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks)
+    private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
+        return await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks, environment: self.environment)
     }
 }

@@ -73,5 +73,5 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///The UNIX time, in milliseconds, when the most recent auto-renewable subscription purchase expires.
     ///
     ///[renewalDate](https://developer.apple.com/documentation/appstoreserverapi/renewaldate)
-    public var renewaldate: Date?
+    public var renewalDate: Date?
 }

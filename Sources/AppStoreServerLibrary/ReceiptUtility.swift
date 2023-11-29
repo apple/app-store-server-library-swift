@@ -15,18 +15,18 @@ public class ReceiptUtility {
     ///- Returns A transaction id from the array of in-app purchases, null if the receipt contains no in-app purchases
     public static func extractTransactionId(appReceipt: String) -> String? {
         var result: String? = nil
-        if let parsedData = Foundation.Data(base64Encoded: appReceipt), let parsedContainer = try? DER.parse([UInt8](parsedData)) {
-            try? DER.sequence(parsedContainer, identifier: ASN1Identifier.sequence) { nodes in
-                let _ = try ASN1ObjectIdentifier(derEncoded: &nodes)
-                try? DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { arrayNode in
-                    try? DER.sequence(arrayNode, identifier: ASN1Identifier.sequence) { nodes in
+        if let parsedData = Foundation.Data(base64Encoded: appReceipt), let parsedContainer = try? BER.parse([UInt8](parsedData)) {
+            try? BER.sequence(parsedContainer, identifier: ASN1Identifier.sequence) { nodes in
+                let _ = try ASN1ObjectIdentifier(berEncoded: &nodes)
+                try? BER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { arrayNode in
+                    try? BER.sequence(arrayNode, identifier: ASN1Identifier.sequence) { nodes in
                         var _ = nodes.next()
                         _ = nodes.next()
                         if let contentInfo = nodes.next() {
-                            try? DER.sequence(contentInfo, identifier: ASN1Identifier.sequence) { nodes in
+                            try? BER.sequence(contentInfo, identifier: ASN1Identifier.sequence) { nodes in
                                 _ = nodes.next()
-                                try? DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { arrayNode in
-                                    let content = try ASN1OctetString(derEncoded: arrayNode)
+                                try? BER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { arrayNode in
+                                    let content = try ASN1OctetString(berEncoded: arrayNode)
                                     result = extractTransactionIdFromAppReceiptInner(appReceiptContent: content)
                                 }
                             }
@@ -42,13 +42,13 @@ public class ReceiptUtility {
     
     private static func extractTransactionIdFromAppReceiptInner(appReceiptContent: ASN1OctetString) -> String? {
         var result: String? = nil
-        if let parsedAppReceipt = try? DER.parse([UInt8](appReceiptContent.bytes)) {
-            try? DER.sequence(parsedAppReceipt, identifier: ASN1Identifier.set) { nodes in
+        if let parsedAppReceipt = try? BER.parse([UInt8](appReceiptContent.bytes)) {
+            try? BER.sequence(parsedAppReceipt, identifier: ASN1Identifier.set) { nodes in
                 while let node = nodes.next() {
-                    try? DER.sequence(node, identifier: ASN1Identifier.sequence) { sequenceNodes in
+                    try? BER.sequence(node, identifier: ASN1Identifier.sequence) { sequenceNodes in
                         if let typeEncoded = sequenceNodes.next(), sequenceNodes.next() != nil, let valueEncoded = sequenceNodes.next() {
-                            let type = try? Int64(derEncoded: typeEncoded, withIdentifier: ASN1Identifier.integer)
-                            let value = try? ASN1OctetString(derEncoded: valueEncoded)
+                            let type = try? Int64(berEncoded: typeEncoded, withIdentifier: ASN1Identifier.integer)
+                            let value = try? ASN1OctetString(berEncoded: valueEncoded)
                             if type == IN_APP_TYPE_ID, let unwrappedValue = value {
                                 result = extractTransactionIdFromInAppReceipt(inAppReceiptContent: unwrappedValue)
                             }
@@ -62,16 +62,16 @@ public class ReceiptUtility {
     
     private static func extractTransactionIdFromInAppReceipt(inAppReceiptContent: ASN1OctetString) -> String? {
         var result: String? = nil
-        if let parsedInAppReceipt = try? DER.parse([UInt8](inAppReceiptContent.bytes)) {
-            try? DER.sequence(parsedInAppReceipt, identifier: ASN1Identifier.set) { nodes in
+        if let parsedInAppReceipt = try? BER.parse([UInt8](inAppReceiptContent.bytes)) {
+            try? BER.sequence(parsedInAppReceipt, identifier: ASN1Identifier.set) { nodes in
                 while let node = nodes.next() {
-                    try? DER.sequence(node, identifier: ASN1Identifier.sequence) { sequenceNodes in
+                    try? BER.sequence(node, identifier: ASN1Identifier.sequence) { sequenceNodes in
                         if let typeEncoded = sequenceNodes.next(), sequenceNodes.next() != nil, let valueEncoded = sequenceNodes.next() {
-                            let type = try? Int64(derEncoded: typeEncoded, withIdentifier: ASN1Identifier.integer)
-                            let value = try? ASN1OctetString(derEncoded: valueEncoded)
+                            let type = try? Int64(berEncoded: typeEncoded, withIdentifier: ASN1Identifier.integer)
+                            let value = try? ASN1OctetString(berEncoded: valueEncoded)
                             if type == TRANSACTION_IDENTIFIER_TYPE_ID || type == ORIGINAL_TRANSACTION_IDENTIFIER_TYPE_ID, let unwrappedValue = value {
-                                if let parseResult = try? DER.parse(unwrappedValue.bytes) {
-                                    if let utf8String = try? ASN1UTF8String(derEncoded: parseResult, withIdentifier: .utf8String) {
+                                if let parseResult = try? BER.parse(unwrappedValue.bytes) {
+                                    if let utf8String = try? ASN1UTF8String(berEncoded: parseResult, withIdentifier: .utf8String) {
                                         result =  String(utf8String)
                                     }
                                 }

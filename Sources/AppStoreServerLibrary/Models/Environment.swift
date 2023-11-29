@@ -6,4 +6,6 @@
 public enum Environment: String, Decodable, Encodable, Hashable {
     case sandbox = "Sandbox"
     case production = "Production"
+    case xcode = "Xcode"
+    case localTesting = "LocalTesting"
 }
