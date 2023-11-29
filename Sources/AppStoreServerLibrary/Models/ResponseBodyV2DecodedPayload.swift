@@ -5,15 +5,56 @@ import Foundation
 ///
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable {
+    
+    init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+        self.notificationType = notificationType
+        self.subtype = subtype
+        self.notificationUUID = notificationUUID
+        self.data = data
+        self.version = version
+        self.signedDate = signedDate
+        self.summary = summary
+    }
+    
+    init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+        self.rawNotificationType = rawNotificationType
+        self.rawSubtype = rawSubtype
+        self.notificationUUID = notificationUUID
+        self.data = data
+        self.version = version
+        self.signedDate = signedDate
+        self.summary = summary
+    }
+    
     ///The in-app purchase event for which the App Store sends this version 2 notification.
     ///
     ///[notificationType](https://developer.apple.com/documentation/appstoreservernotifications/notificationtype)
-    public var notificationType: NotificationTypeV2?
+    public var notificationType: NotificationTypeV2? {
+        get {
+            return rawNotificationType.flatMap { NotificationTypeV2(rawValue: $0) }
+        }
+        set {
+            self.rawNotificationType = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``notificationType``
+    public var rawNotificationType: String?
 
     ///Additional information that identifies the notification event. The subtype field is present only for specific version 2 notifications.
     ///
     ///[subtype](https://developer.apple.com/documentation/appstoreservernotifications/subtype)
-    public var subtype: Subtype?
+    public var subtype: Subtype? {
+        get {
+            return rawSubtype.flatMap { Subtype(rawValue: $0) }
+        }
+        set {
+            self.rawSubtype = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``subtype``
+    public var rawSubtype: String?
 
     ///A unique identifier for the notification.
     ///

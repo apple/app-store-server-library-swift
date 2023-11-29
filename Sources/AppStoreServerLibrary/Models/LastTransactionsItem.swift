@@ -4,10 +4,35 @@
 ///
 ///[lastTransactionsItem](https://developer.apple.com/documentation/appstoreserverapi/lasttransactionsitem)
 public struct LastTransactionsItem: Decodable, Encodable, Hashable {
+    
+    init(status: Status? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
+        self.status = status
+        self.originalTransactionId = originalTransactionId
+        self.signedTransactionInfo = signedTransactionInfo
+        self.signedRenewalInfo = signedRenewalInfo
+    }
+    
+    init(rawStatus: Int32? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
+        self.rawStatus = rawStatus
+        self.originalTransactionId = originalTransactionId
+        self.signedTransactionInfo = signedTransactionInfo
+        self.signedRenewalInfo = signedRenewalInfo
+    }
+
     ///The status of the auto-renewable subscription.
     ///
     ///[status](https://developer.apple.com/documentation/appstoreserverapi/status)
-    public var status: Status?
+    public var status: Status? {
+        get {
+            return rawStatus.flatMap { Status(rawValue: $0) }
+        }
+        set {
+            self.rawStatus = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``status``
+    public var rawStatus: Int32?
 
     ///The original transaction identifier of a purchase.
     ///

@@ -4,10 +4,35 @@
 ///
 ///[StatusResponse](https://developer.apple.com/documentation/appstoreserverapi/statusresponse)
 public struct StatusResponse: Decodable, Encodable, Hashable {
+    
+    init(environment: Environment? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
+        self.environment = environment
+        self.bundleId = bundleId
+        self.appAppleId = appAppleId
+        self.data = data
+    }
+    
+    init(rawEnvironment: String? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
+        self.rawEnvironment = rawEnvironment
+        self.bundleId = bundleId
+        self.appAppleId = appAppleId
+        self.data = data
+    }
+    
     ///The server environment, sandbox or production, in which the App Store generated the response.
     ///
     ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
-    public var environment: Environment?
+    public var environment: Environment? {
+        get {
+            return rawEnvironment.flatMap { Environment(rawValue: $0) }
+        }
+        set {
+            self.rawEnvironment = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``environment``
+    public var rawEnvironment: String?
     
     ///The bundle identifier of an app.
     ///

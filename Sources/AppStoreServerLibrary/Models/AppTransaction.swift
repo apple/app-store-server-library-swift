@@ -8,10 +8,48 @@ import Foundation
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable {
     
+    init(receiptType: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+        self.receiptType = receiptType
+        self.appAppleId = appAppleId
+        self.bundleId = bundleId
+        self.applicationVersion = applicationVersion
+        self.versionExternalIdentifier = versionExternalIdentifier
+        self.receiptCreationDate = receiptCreationDate
+        self.originalPurchaseDate = originalPurchaseDate
+        self.originalApplicationVersion = originalApplicationVersion
+        self.deviceVerification = deviceVerification
+        self.deviceVerificationNonce = deviceVerificationNonce
+        self.preorderDate = preorderDate
+    }
+    
+    init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+        self.rawReceiptType = rawReceiptType
+        self.appAppleId = appAppleId
+        self.bundleId = bundleId
+        self.applicationVersion = applicationVersion
+        self.versionExternalIdentifier = versionExternalIdentifier
+        self.receiptCreationDate = receiptCreationDate
+        self.originalPurchaseDate = originalPurchaseDate
+        self.originalApplicationVersion = originalApplicationVersion
+        self.deviceVerification = deviceVerification
+        self.deviceVerificationNonce = deviceVerificationNonce
+        self.preorderDate = preorderDate
+    }
+    
     ///The server environment that signs the app transaction.
     ///
     ///[environment](https://developer.apple.com/documentation/storekit/apptransaction/3963901-environment)
-    public var receiptType: Environment?
+    public var receiptType: Environment?  {
+        get {
+            return rawReceiptType.flatMap { Environment(rawValue: $0) }
+        }
+        set {
+            self.rawReceiptType = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``receiptType``
+    public var rawReceiptType: String?
     
     ///The unique identifier the App Store uses to identify the app.
     ///
