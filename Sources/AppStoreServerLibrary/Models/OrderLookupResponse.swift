@@ -4,10 +4,31 @@
 ///
 ///[OrderLookupResponse](https://developer.apple.com/documentation/appstoreserverapi/orderlookupresponse)
 public struct OrderLookupResponse: Decodable, Encodable, Hashable {
+    
+    init(status: OrderLookupStatus? = nil, signedTransactions: [String]? = nil) {
+        self.status = status
+        self.signedTransactions = signedTransactions
+    }
+    
+    init(rawStatus: Int32? = nil, signedTransactions: [String]? = nil) {
+        self.rawStatus = rawStatus
+        self.signedTransactions = signedTransactions
+    }
+    
     ///The status that indicates whether the order ID is valid.
     ///
     ///[OrderLookupStatus](https://developer.apple.com/documentation/appstoreserverapi/orderlookupstatus)
-    public var status: OrderLookupStatus?
+    public var status: OrderLookupStatus? {
+        get {
+            return rawStatus.flatMap { OrderLookupStatus(rawValue: $0) }
+        }
+        set {
+            self.rawStatus = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``status``
+    public var rawStatus: Int32?
     
     ///An array of in-app purchase transactions that are part of order, signed by Apple, in JSON Web Signature format.
     public var signedTransactions: [String]?

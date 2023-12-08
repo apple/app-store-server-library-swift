@@ -49,10 +49,12 @@ public class AppStoreServerAPIClient {
             }
             var urlComponents = URLComponents(string: self.url)
             urlComponents?.path = path
-            urlComponents?.queryItems = queryItems
+            if !queryItems.isEmpty {
+                urlComponents?.queryItems = queryItems
+            }
             
             guard let url = urlComponents?.url else {
-                return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
+                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: nil)
             }
             
             var urlRequest = HTTPClientRequest(url: url.absoluteString)
@@ -62,43 +64,52 @@ public class AppStoreServerAPIClient {
             urlRequest.headers.add(name: "Accept", value: "application/json")
             urlRequest.method = method
             
+            let requestBody: Foundation.Data?
             if let b = body {
-                let jsonEncoder = JSONEncoder()
-                jsonEncoder.dateEncodingStrategy = .millisecondsSince1970
+                let jsonEncoder = getJsonEncoder()
                 let encodedBody = try jsonEncoder.encode(b)
+                requestBody = encodedBody
                 urlRequest.body = .bytes(.init(data: encodedBody))
                 urlRequest.headers.add(name: "Content-Type", value: "application/json")
+            } else {
+                requestBody = nil
             }
             
-            let response = try await self.client.execute(urlRequest, timeout: .seconds(30))
+            let response = try await executeRequest(urlRequest, requestBody)
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
                 throw APIFetchError()
             }
             if response.status.code >= 200 && response.status.code < 300 {
                 return APIResult.success(response: data)
-            } else if let decodedBody = try? JSONDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode, let apiError = APIError.init(rawValue: errorCode) {
-                return APIResult.failure(statusCode: Int(response.status.code), apiError: apiError, causedBy: nil)
+            } else if let decodedBody = try? getJsonDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode {
+                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: errorCode, apiError: APIError.init(rawValue: errorCode), causedBy: nil)
             } else {
-                return APIResult.failure(statusCode: Int(response.status.code), apiError: nil, causedBy: nil)
+                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: nil, apiError: nil, causedBy: nil)
             }
         } catch (let error) {
-            return APIResult.failure(statusCode: nil, apiError: nil, causedBy: error)
+            return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: error)
         }
+    }
+    
+    // requestBody passed for testing purposes
+    internal func executeRequest(_ urlRequest: HTTPClientRequest, _ requestBody: Foundation.Data?) async throws -> HTTPClientResponse {
+        return try await self.client.execute(urlRequest, timeout: .seconds(30))
     }
     
     private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
         case .success(let data):
-            let decoder = JSONDecoder();
-            decoder.dateDecodingStrategy = .millisecondsSince1970
-            guard let decodedBody = try? decoder.decode(R.self, from: data) else {
-                return APIResult.failure(statusCode: nil, apiError: nil, causedBy: nil)
+            let decoder = getJsonDecoder();
+            do {
+                let decodedBody = try decoder.decode(R.self, from: data)
+                return APIResult.success(response: decodedBody)
+            } catch (let error) {
+                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: error)
             }
-            return APIResult.success(response: decodedBody)
-        case .failure(let statusCode, let apiError, let error):
-            return APIResult.failure(statusCode: statusCode, apiError: apiError, causedBy: error)
+        case .failure(let statusCode, let rawApiError, let apiError, let error):
+            return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, causedBy: error)
         }
     }
     
@@ -107,8 +118,8 @@ public class AppStoreServerAPIClient {
         switch response {
             case .success:
                 return APIResult.success(response: ())
-            case .failure(let statusCode, let apiError, let causedBy):
-            return APIResult.failure(statusCode: statusCode, apiError: apiError, causedBy: causedBy)
+            case .failure(let statusCode, let rawApiError, let apiError, let causedBy):
+                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, causedBy: causedBy)
         }
     }
         
@@ -132,7 +143,7 @@ public class AppStoreServerAPIClient {
     ///- Returns: A response that indicates the server successfully received the subscription-renewal-date extension request, or information about the failure
     ///[Extend Subscription Renewal Dates for All Active Subscribers](https://developer.apple.com/documentation/appstoreserverapi/extend_subscription_renewal_dates_for_all_active_subscribers)
     public func extendRenewalDateForAllActiveSubscribers(massExtendRenewalDateRequest: MassExtendRenewalDateRequest) async -> APIResult<MassExtendRenewalDateResponse> {
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass/", method: .POST, queryParameters: [:], body: massExtendRenewalDateRequest)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/extend/mass", method: .POST, queryParameters: [:], body: massExtendRenewalDateRequest)
     }
     
     ///Extends the renewal date of a customer’s active subscription using the original transaction identifier.
@@ -212,10 +223,10 @@ public class AppStoreServerAPIClient {
             queryParams["revision"] = [innerRevision]
         }
         if let innerStartDate = transactionHistoryRequest.startDate {
-            queryParams["startDate"] = [String(Int64(innerStartDate.timeIntervalSince1970 * 1000))]
+            queryParams["startDate"] = [String(Int64((innerStartDate.timeIntervalSince1970 * 1000).rounded()))]
         }
         if let innerEndDate = transactionHistoryRequest.endDate {
-            queryParams["endDate"] = [String(Int64(innerEndDate.timeIntervalSince1970 * 1000))]
+            queryParams["endDate"] = [String(Int64((innerEndDate.timeIntervalSince1970 * 1000).rounded()))]
         }
         if let innerProductIds = transactionHistoryRequest.productIds {
             queryParams["productId"] = innerProductIds
@@ -291,7 +302,7 @@ public class AppStoreServerAPIClient {
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/consumption/" + transactionId, method: .PUT, queryParameters: [:], body: consumptionRequest)
     }
     
-    struct AppStoreServerAPIJWT: JWTPayload, Equatable {
+    internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
         var exp: ExpirationClaim
         var iss: IssuerClaim
         var bid: String
@@ -307,7 +318,7 @@ public class AppStoreServerAPIClient {
 
 public enum APIResult<T> {
     case success(response: T)
-    case failure(statusCode: Int?, apiError: APIError?, causedBy: Error?)
+    case failure(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, causedBy: Error?)
 }
 
 public enum APIError: Int64 {

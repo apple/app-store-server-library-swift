@@ -29,8 +29,7 @@ struct ChainVerifier {
             if (bodySegments.count != ChainVerifier.EXPECTED_JWT_SEGMENTS) {
                 return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
             }
-            let jsonDecoder = JSONDecoder()
-            jsonDecoder.dateDecodingStrategy = .millisecondsSince1970
+            let jsonDecoder = getJsonDecoder()
             guard let headerData = Foundation.Data(base64Encoded: base64URLToBase64(bodySegments[0])), let bodyData = Foundation.Data(base64Encoded: base64URLToBase64(bodySegments[1])) else {
                 return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
             }
@@ -98,16 +97,6 @@ struct ChainVerifier {
         }
         let intermediateStore = CertificateStore([intermediate])
         return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
-    }
-    
-    private func base64URLToBase64(_ encodedString: String) -> String {
-        let replacedString = encodedString
-            .replacingOccurrences(of: "/", with: "+")
-            .replacingOccurrences(of: "_", with: "-")
-        if (replacedString.count % 4 != 0) {
-            return replacedString + String(repeating: "=", count: 4 - replacedString.count % 4)
-        }
-        return replacedString
     }
 }
 

@@ -4,6 +4,25 @@
 ///
 ///[HistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/historyresponse)
 public struct HistoryResponse: Decodable, Encodable, Hashable {
+    
+    init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: Environment? = nil, signedTransactions: [String]? = nil) {
+        self.revision = revision
+        self.hasMore = hasMore
+        self.bundleId = bundleId
+        self.appAppleId = appAppleId
+        self.environment = environment
+        self.signedTransactions = signedTransactions
+    }
+    
+    init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, rawEnvironment: String? = nil, signedTransactions: [String]? = nil) {
+        self.revision = revision
+        self.hasMore = hasMore
+        self.bundleId = bundleId
+        self.appAppleId = appAppleId
+        self.rawEnvironment = rawEnvironment
+        self.signedTransactions = signedTransactions
+    }
+    
     ///A token you use in a query to request the next set of transactions for the customer.
     ///
     ///[revision](https://developer.apple.com/documentation/appstoreserverapi/revision)
@@ -27,7 +46,17 @@ public struct HistoryResponse: Decodable, Encodable, Hashable {
     ///The server environment in which you’re making the request, whether sandbox or production.
     ///
     ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
-    public var environment: Environment?
+    public var environment: Environment? {
+        get {
+            return rawEnvironment.flatMap { Environment(rawValue: $0) }
+        }
+        set {
+            self.rawEnvironment = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``environment``
+    public var rawEnvironment: String?
     
     ///An array of in-app purchase transactions for the customer, signed by Apple, in JSON Web Signature format.
     ///

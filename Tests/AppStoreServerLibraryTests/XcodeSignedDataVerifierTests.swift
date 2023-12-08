@@ -29,6 +29,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual(UUID(uuidString: "48c8b92d-ce0d-4229-bedf-e61b4f9cfc92"), appTransaction.deviceVerificationNonce)
         XCTAssertNil(appTransaction.preorderDate)
         XCTAssertEqual(.xcode, appTransaction.receiptType)
+        XCTAssertEqual("Xcode", appTransaction.rawReceiptType)
     }
 
     public func testXcodeSignedTransaction() async throws {
@@ -53,18 +54,23 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         compareXcodeDates(Date(timeIntervalSince1970: 1700358336.049), transaction.expiresDate)
         XCTAssertEqual(1, transaction.quantity)
         XCTAssertEqual(ProductType.autoRenewableSubscription, transaction.type)
+        XCTAssertEqual("Auto-Renewable Subscription", transaction.rawType)
         XCTAssertNil(transaction.appAccountToken)
         XCTAssertEqual(InAppOwnershipType.purchased, transaction.inAppOwnershipType)
+        XCTAssertEqual("PURCHASED", transaction.rawInAppOwnershipType)
         compareXcodeDates(Date(timeIntervalSince1970: 1697679936.056), transaction.signedDate)
         XCTAssertNil(transaction.revocationReason)
         XCTAssertNil(transaction.revocationDate)
         XCTAssertEqual(false, transaction.isUpgraded)
         XCTAssertEqual(OfferType.introductoryOffer, transaction.offerType)
+        XCTAssertEqual(1, transaction.rawOfferType)
         XCTAssertNil(transaction.offerIdentifier)
         XCTAssertEqual(Environment.xcode, transaction.environment)
+        XCTAssertEqual("Xcode", transaction.rawEnvironment)
         XCTAssertEqual("USA", transaction.storefront)
         XCTAssertEqual("143441", transaction.storefrontId)
         XCTAssertEqual(TransactionReason.purchase, transaction.transactionReason)
+        XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
     }
 
     public func testXcodeSignedRenewalInfo() async throws {
@@ -83,6 +89,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("pass.premium", renewalInfo.autoRenewProductId)
         XCTAssertEqual("pass.premium", renewalInfo.productId)
         XCTAssertEqual(AutoRenewStatus.on, renewalInfo.autoRenewStatus)
+        XCTAssertEqual(1, renewalInfo.rawAutoRenewStatus)
         XCTAssertNil(renewalInfo.isInBillingRetryPeriod)
         XCTAssertNil(renewalInfo.priceIncreaseStatus)
         XCTAssertNil(renewalInfo.gracePeriodExpiresDate)
@@ -90,6 +97,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertNil(renewalInfo.offerIdentifier)
         compareXcodeDates(Date(timeIntervalSince1970: 1697679936.711), renewalInfo.signedDate)
         XCTAssertEqual(Environment.xcode, renewalInfo.environment)
+        XCTAssertEqual("Xcode", renewalInfo.rawEnvironment)
         compareXcodeDates(Date(timeIntervalSince1970: 1697679936.049), renewalInfo.recentSubscriptionStartDate)
         compareXcodeDates(Date(timeIntervalSince1970: 1700358336.049), renewalInfo.renewalDate)
     }
