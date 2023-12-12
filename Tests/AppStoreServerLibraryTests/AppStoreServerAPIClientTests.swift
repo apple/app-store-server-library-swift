@@ -401,13 +401,14 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         let body = TestingUtility.readFile("resources/models/apiException.json")
         let client = try getAppStoreServerAPIClient(body, .internalServerError, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let causedBy) = result else {
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
             return
         }
         XCTAssertEqual(500, statusCode)
         XCTAssertEqual(APIError.generalInternal, apiError)
         XCTAssertEqual(5000000, rawApiError)
+        XCTAssertEqual("An unknown error occurred.", errorMessage)
         XCTAssertNil(causedBy)
     }
     
@@ -415,13 +416,14 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         let body = TestingUtility.readFile("resources/models/apiTooManyRequestsException.json")
         let client = try getAppStoreServerAPIClient(body, .tooManyRequests, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let causedBy) = result else {
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
             return
         }
         XCTAssertEqual(429, statusCode)
         XCTAssertEqual(APIError.rateLimitExceeded, apiError)
         XCTAssertEqual(4290000, rawApiError)
+        XCTAssertEqual("Rate limit exceeded.", errorMessage)
         XCTAssertNil(causedBy)
     }
     
@@ -429,13 +431,14 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         let body = TestingUtility.readFile("resources/models/apiUnknownError.json")
         let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let causedBy) = result else {
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
             return
         }
         XCTAssertEqual(400, statusCode)
         XCTAssertNil(apiError)
         XCTAssertEqual(9990000, rawApiError)
+        XCTAssertEqual("Testing error.", errorMessage)
         XCTAssertNil(causedBy)
     }
     
@@ -481,13 +484,14 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         
         let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
         
-        guard case .failure(let statusCode, let rawApiError, let apiError, let causedBy) = response else {
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = response else {
             XCTAssertTrue(false)
             return
         }
         XCTAssertNil(statusCode)
         XCTAssertNil(rawApiError)
         XCTAssertNil(apiError)
+        XCTAssertNil(errorMessage)
         XCTAssertNotNil(causedBy)
     }
     
