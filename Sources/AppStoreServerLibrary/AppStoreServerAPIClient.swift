@@ -54,7 +54,7 @@ public class AppStoreServerAPIClient {
             }
             
             guard let url = urlComponents?.url else {
-                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: nil)
+                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil)
             }
             
             var urlRequest = HTTPClientRequest(url: url.absoluteString)
@@ -82,13 +82,13 @@ public class AppStoreServerAPIClient {
             }
             if response.status.code >= 200 && response.status.code < 300 {
                 return APIResult.success(response: data)
-            } else if let decodedBody = try? getJsonDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode {
-                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: errorCode, apiError: APIError.init(rawValue: errorCode), causedBy: nil)
+            } else if let decodedBody = try? getJsonDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode, let errorMessage = decodedBody.errorMessage {
+                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: errorCode, apiError: APIError.init(rawValue: errorCode), errorMessage: errorMessage, causedBy: nil)
             } else {
-                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: nil, apiError: nil, causedBy: nil)
+                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil)
             }
         } catch (let error) {
-            return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: error)
+            return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error)
         }
     }
     
@@ -106,10 +106,10 @@ public class AppStoreServerAPIClient {
                 let decodedBody = try decoder.decode(R.self, from: data)
                 return APIResult.success(response: decodedBody)
             } catch (let error) {
-                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, causedBy: error)
+                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error)
             }
-        case .failure(let statusCode, let rawApiError, let apiError, let error):
-            return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, causedBy: error)
+        case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let error):
+            return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: error)
         }
     }
     
@@ -118,8 +118,8 @@ public class AppStoreServerAPIClient {
         switch response {
             case .success:
                 return APIResult.success(response: ())
-            case .failure(let statusCode, let rawApiError, let apiError, let causedBy):
-                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, causedBy: causedBy)
+            case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy):
+                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: causedBy)
         }
     }
         
@@ -318,63 +318,282 @@ public class AppStoreServerAPIClient {
 
 public enum APIResult<T> {
     case success(response: T)
-    case failure(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, causedBy: Error?)
+    case failure(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, errorMessage: String?, causedBy: Error?)
 }
 
 public enum APIError: Int64 {
+    ///An error that indicates an invalid request.
+    ///
+    ///[GeneralBadRequestError](https://developer.apple.com/documentation/appstoreserverapi/generalbadrequesterror)
     case generalBadRequest = 4000000
+
+    ///An error that indicates an invalid app identifier.
+    ///
+    ///[InvalidAppIdentifierError](https://developer.apple.com/documentation/appstoreserverapi/invalidappidentifiererror)
     case invalidAppIdentifier = 4000002
+
+    ///An error that indicates an invalid request revision.
+    ///
+    ///[InvalidRequestRevisionError](https://developer.apple.com/documentation/appstoreserverapi/invalidrequestrevisionerror)
     case invalidRequestRevision = 4000005
+
+    ///An error that indicates an invalid transaction identifier.
+    ///
+    ///[InvalidTransactionIdError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactioniderror)
     case invalidTransactionId = 4000006
+
+    ///An error that indicates an invalid original transaction identifier.
+    ///
+    ///[InvalidOriginalTransactionIdError](https://developer.apple.com/documentation/appstoreserverapi/invalidoriginaltransactioniderror)
     case invalidOriginalTransactionId = 4000008
+
+    ///An error that indicates an invalid extend-by-days value.
+    ///
+    ///[InvalidExtendByDaysError](https://developer.apple.com/documentation/appstoreserverapi/invalidextendbydayserror)
     case invalidExtendByDays = 4000009
+
+    ///An error that indicates an invalid reason code.
+    ///
+    ///[InvalidExtendReasonCodeError](https://developer.apple.com/documentation/appstoreserverapi/invalidextendreasoncodeerror)
     case invalidExtendReasonCode = 4000010
-    case invalidIdentifier = 4000011
+
+    ///An error that indicates an invalid request identifier.
+    ///
+    ///[InvalidRequestIdentifierError](https://developer.apple.com/documentation/appstoreserverapi/invalidrequestidentifiererror)
+    case invalidRequestIdentifier = 4000011
+
+    ///An error that indicates that the start date is earlier than the earliest allowed date.
+    ///
+    ///[StartDateTooFarInPastError](https://developer.apple.com/documentation/appstoreserverapi/startdatetoofarinpasterror)
     case startDateTooFarInPast = 4000012
+
+    ///An error that indicates that the end date precedes the start date, or the two dates are equal.
+    ///
+    ///[StartDateAfterEndDateError](https://developer.apple.com/documentation/appstoreserverapi/startdateafterenddateerror)
     case startDateAfterEndDate = 4000013
+
+    ///An error that indicates the pagination token is invalid.
+    ///
+    ///[InvalidPaginationTokenError](https://developer.apple.com/documentation/appstoreserverapi/invalidpaginationtokenerror)
     case invalidPaginationToken = 4000014
+
+    ///An error that indicates the start date is invalid.
+    ///
+    ///[InvalidStartDateError](https://developer.apple.com/documentation/appstoreserverapi/invalidstartdateerror)
     case invalidStartDate = 4000015
+
+    ///An error that indicates the end date is invalid.
+    ///
+    ///[InvalidEndDateError](https://developer.apple.com/documentation/appstoreserverapi/invalidenddateerror)
     case invalidEndDate = 4000016
+    
+    ///An error that indicates the pagination token expired.
+    ///
+    ///[PaginationTokenExpiredError](https://developer.apple.com/documentation/appstoreserverapi/paginationtokenexpirederror)
     case paginationTokenExpired = 4000017
+
+    ///An error that indicates the notification type or subtype is invalid.
+    ///
+    ///[InvalidNotificationTypeError](https://developer.apple.com/documentation/appstoreserverapi/invalidnotificationtypeerror)
     case invalidNotificationType = 4000018
+
+    ///An error that indicates the request is invalid because it has too many constraints applied.
+    ///
+    ///[MultipleFiltersSuppliedError](https://developer.apple.com/documentation/appstoreserverapi/multiplefilterssuppliederror)
     case multipleFiltersSupplied = 4000019
+
+    ///An error that indicates the test notification token is invalid.
+    ///
+    ///[InvalidTestNotificationTokenError](https://developer.apple.com/documentation/appstoreserverapi/invalidtestnotificationtokenerror)
     case invalidTestNotificationToken = 4000020
+
+    ///An error that indicates an invalid sort parameter.
+    ///
+    ///[InvalidSortError](https://developer.apple.com/documentation/appstoreserverapi/invalidsorterror)
     case invalidSort = 4000021
+
+    ///An error that indicates an invalid product type parameter.
+    ///
+    ///[InvalidProductTypeError](https://developer.apple.com/documentation/appstoreserverapi/invalidproducttypeerror)
     case invalidProductType = 4000022
+
+    ///An error that indicates the product ID parameter is invalid.
+    ///
+    ///[InvalidProductIdError](https://developer.apple.com/documentation/appstoreserverapi/invalidproductiderror)
     case invalidProductId = 4000023
+
+    ///An error that indicates an invalid subscription group identifier.
+    ///
+    ///[InvalidSubscriptionGroupIdentifierError](https://developer.apple.com/documentation/appstoreserverapi/invalidsubscriptiongroupidentifiererror)
     case invalidSubscriptionGroupIdentifier = 4000024
+
+    ///An error that indicates the query parameter exclude-revoked is invalid.
+    ///
+    ///[InvalidExcludeRevokedError](https://developer.apple.com/documentation/appstoreserverapi/invalidexcluderevokederror)
     case invalidExcludeRevoked = 4000025
+
+    ///An error that indicates an invalid in-app ownership type parameter.
+    ///
+    ///[InvalidInAppOwnershipTypeError](https://developer.apple.com/documentation/appstoreserverapi/invalidinappownershiptypeerror)
     case invalidInAppOwnershipType = 4000026
+
+    ///An error that indicates a required storefront country code is empty.
+    ///
+    ///[InvalidEmptyStorefrontCountryCodeListError](https://developer.apple.com/documentation/appstoreserverapi/invalidemptystorefrontcountrycodelisterror)
     case invalidEmptyStorefrontCountryCodeList = 4000027
+
+    ///An error that indicates a storefront code is invalid.
+    ///
+    ///[InvalidStorefrontCountryCodeError](https://developer.apple.com/documentation/appstoreserverapi/invalidstorefrontcountrycodeerror)
     case invalidStorefrontCountryCode = 4000028
-    case invaildRevoked = 4000030
+
+    ///An error that indicates the revoked parameter contains an invalid value.
+    ///
+    ///[InvalidRevokedError](https://developer.apple.com/documentation/appstoreserverapi/invalidrevokederror)
+    case invalidRevoked = 4000030
+
+    ///An error that indicates the status parameter is invalid.
+    ///
+    ///[InvalidStatusError](https://developer.apple.com/documentation/appstoreserverapi/invalidstatuserror)
     case invalidStatus = 4000031
+
+    ///An error that indicates the value of the account tenure field is invalid.
+    ///
+    ///[InvalidAccountTenureError](https://developer.apple.com/documentation/appstoreserverapi/invalidaccounttenureerror)
     case invalidAccountTenure = 4000032
+
+    ///An error that indicates the value of the app account token field is invalid.
+    ///
+    ///[InvalidAppAccountTokenError](https://developer.apple.com/documentation/appstoreserverapi/invalidappaccounttokenerror)
     case invalidAppAccountToken = 4000033
+
+    ///An error that indicates the value of the consumption status field is invalid.
+    ///
+    ///[InvalidConsumptionStatusError](https://developer.apple.com/documentation/appstoreserverapi/invalidconsumptionstatuserror)
     case invalidConsumptionStatus = 4000034
+
+    ///An error that indicates the customer consented field is invalid or doesn’t indicate that the customer consented.
+    ///
+    ///[InvalidCustomerConsentedError](https://developer.apple.com/documentation/appstoreserverapi/invalidcustomerconsentederror)
     case invalidCustomerConsented = 4000035
+
+    ///An error that indicates the value in the delivery status field is invalid.
+    ///
+    ///[InvalidDeliveryStatusError](https://developer.apple.com/documentation/appstoreserverapi/invaliddeliverystatuserror)
     case invalidDeliveryStatus = 4000036
+
+    ///An error that indicates the value in the lifetime dollars purchased field is invalid.
+    ///
+    ///[InvalidLifetimeDollarsPurchasedError](https://developer.apple.com/documentation/appstoreserverapi/invalidlifetimedollarspurchasederror)
     case invalidLifetimeDollarsPurchased = 4000037
+
+    ///An error that indicates the value in the lifetime dollars refunded field is invalid.
+    ///
+    ///[InvalidLifetimeDollarsRefundedError](https://developer.apple.com/documentation/appstoreserverapi/invalidlifetimedollarsrefundederror)
     case invalidLifetimeDollarsRefunded = 4000038
+
+    ///An error that indicates the value in the platform field is invalid.
+    ///
+    ///[InvalidPlatformError](https://developer.apple.com/documentation/appstoreserverapi/invalidplatformerror)
     case invalidPlatform = 4000039
+
+    ///An error that indicates the value in the playtime field is invalid.
+    ///
+    ///[InvalidPlayTimeError](https://developer.apple.com/documentation/appstoreserverapi/invalidplaytimeerror)
     case invalidPlayTime = 4000040
+
+    ///An error that indicates the value in the sample content provided field is invalid.
+    ///
+    ///[InvalidSampleContentProvidedError](https://developer.apple.com/documentation/appstoreserverapi/invalidsamplecontentprovidederror)
     case invalidSampleContentProvided = 4000041
+
+    ///An error that indicates the value in the user status field is invalid.
+    ///
+    ///[InvalidUserStatusError](https://developer.apple.com/documentation/appstoreserverapi/invaliduserstatuserror)
     case invalidUserStatus = 4000042
+
+    ///An error that indicates the transaction identifier doesn’t represent a consumable in-app purchase.
+    ///
+    ///[InvalidTransactionNotConsumableError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactionnotconsumableerror)
     case invalidTransactionNotConsumable = 4000043
+
+    ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
+    ///
+    ///[SubscriptionExtensionIneligibleError](https://developer.apple.com/documentation/appstoreserverapi/subscriptionextensionineligibleerror)
     case subscriptionExtensionIneligible = 4030004
+
+    ///An error that indicates the subscription doesn’t qualify for a renewal-date extension because it has already received the maximum extensions.
+    ///
+    ///[SubscriptionMaxExtensionError](https://developer.apple.com/documentation/appstoreserverapi/subscriptionmaxextensionerror)
     case subscriptionMaxExtension = 4030005
+
+    ///An error that indicates a subscription isn't directly eligible for a renewal date extension because the user obtained it through Family Sharing.
+    ///
+    ///[FamilySharedSubscriptionExtensionIneligibleError](https://developer.apple.com/documentation/appstoreserverapi/familysharedsubscriptionextensionineligibleerror)
     case familySharedSubscriptionExtensionIneligible = 4030007
+
+    ///An error that indicates the App Store account wasn’t found.
+    ///
+    ///[AccountNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/accountnotfounderror)
     case accountNotFound = 4040001
+
+    ///An error response that indicates the App Store account wasn’t found, but you can try again.
+    ///
+    ///[AccountNotFoundRetryableError](https://developer.apple.com/documentation/appstoreserverapi/accountnotfoundretryableerror)
     case accountNotFoundRetryable = 4040002
+
+    ///An error that indicates the app wasn’t found.
+    ///
+    ///[AppNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/appnotfounderror)
     case appNotFound = 4040003
+
+    ///An error response that indicates the app wasn’t found, but you can try again.
+    ///
+    ///[AppNotFoundRetryableError](https://developer.apple.com/documentation/appstoreserverapi/appnotfoundretryableerror)
     case appNotFoundRetryable = 4040004
+
+    ///An error that indicates an original transaction identifier wasn't found.
+    ///
+    ///[OriginalTransactionIdNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionidnotfounderror)
     case originalTransactionIdNotFound = 4040005
+
+    ///An error response that indicates the original transaction identifier wasn’t found, but you can try again.
+    ///
+    ///[OriginalTransactionIdNotFoundRetryableError](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionidnotfoundretryableerror)
     case originalTransactionIdNotFoundRetryable = 4040006
+
+    ///An error that indicates that the App Store server couldn’t find a notifications URL for your app in this environment.
+    ///
+    ///[ServerNotificationUrlNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/servernotificationurlnotfounderror)
     case serverNotificationUrlNotFound = 4040007
+
+    ///An error that indicates that the test notification token is expired or the test notification status isn’t available.
+    ///
+    ///[TestNotificationNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/testnotificationnotfounderror)
     case testNotificationNotFound = 4040008
+
+    ///An error that indicates the server didn't find a subscription-renewal-date extension request for the request identifier and product identifier you provided.
+    ///
+    ///[StatusRequestNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/statusrequestnotfounderror)
     case statusRequestNotFound = 4040009
+
+    ///An error that indicates a transaction identifier wasn't found.
+    ///
+    ///[TransactionIdNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/transactionidnotfounderror)
     case transactionIdNotFound = 4040010
+
+    ///An error that indicates that the request exceeded the rate limit.
+    ///
+    ///[RateLimitExceededError](https://developer.apple.com/documentation/appstoreserverapi/ratelimitexceedederror)
     case rateLimitExceeded = 4290000
+
+    ///An error that indicates a general internal error.
+    ///
+    ///[GeneralInternalError](https://developer.apple.com/documentation/appstoreserverapi/generalinternalerror)
     case generalInternal = 5000000
+
+    ///An error response that indicates an unknown error occurred, but you can try again.
+    ///
+    ///[GeneralInternalRetryableError](https://developer.apple.com/documentation/appstoreserverapi/generalinternalretryableerror)
     case generalInternalRetryable = 5000001
 }
