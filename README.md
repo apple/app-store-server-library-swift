@@ -8,17 +8,13 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 4. [Usage](#usage)
 5. [Support](#support)
 
-## ⚠️ Beta ⚠️
-
-This software is currently in Beta testing. Therefore, it should only be used for testing purposes, like for the Sandbox environment. API signatures may change between releases and signature verification may receive security updates.
-
 ## Installation
 
 ### Swift Package Manager
 ```swift
 Add the following dependency
 
-.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "0.1.0")),
+.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "1.0.0")),
 ```
 
 ## Documentation
