@@ -2,11 +2,10 @@
 The Swift server library for the [App Store Server API](https://developer.apple.com/documentation/appstoreserverapi) and [App Store Server Notifications](https://developer.apple.com/documentation/appstoreservernotifications). Also available in [Java](https://github.com/apple/app-store-server-library-java), [Python](https://github.com/apple/app-store-server-library-python), and [Node.js](https://github.com/apple/app-store-server-library-node).
 
 ## Table of Contents
-1. [Beta](#-beta-)
-2. [Installation](#installation)
-3. [Documentation](#documentation)
-4. [Usage](#usage)
-5. [Support](#support)
+1. [Installation](#installation)
+2. [Documentation](#documentation)
+3. [Usage](#usage)
+4. [Support](#support)
 
 ## Installation
 
