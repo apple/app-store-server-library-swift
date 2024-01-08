@@ -8,7 +8,7 @@ import Foundation
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable {
     
-    init(receiptType: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+    public init(receiptType: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
         self.receiptType = receiptType
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -22,7 +22,7 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable 
         self.preorderDate = preorderDate
     }
     
-    init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+    public init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
         self.rawReceiptType = rawReceiptType
         self.appAppleId = appAppleId
         self.bundleId = bundleId

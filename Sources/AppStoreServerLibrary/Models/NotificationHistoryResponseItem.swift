@@ -4,6 +4,12 @@
 ///
 ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
 public struct NotificationHistoryResponseItem: Decodable, Encodable, Hashable {
+
+    public init(signedPayload: String? = nil, sendAttempts: [SendAttemptItem]? = nil) {
+        self.signedPayload = signedPayload
+        self.sendAttempts = sendAttempts
+    }
+
     ///A cryptographically signed payload, in JSON Web Signature (JWS) format, containing the response body for a version 2 notification.
     ///
     ///[signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)

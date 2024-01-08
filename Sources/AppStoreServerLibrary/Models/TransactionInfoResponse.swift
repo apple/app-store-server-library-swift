@@ -4,7 +4,11 @@
 ///
 ///[TransactionInfoResponse](https://developer.apple.com/documentation/appstoreserverapi/transactioninforesponse)
 public struct TransactionInfoResponse: Decodable, Encodable, Hashable {
-    
+
+    public init(signedTransactionInfo: String? = nil) {
+        self.signedTransactionInfo = signedTransactionInfo
+    }
+
     ///A customer’s in-app purchase transaction, signed by Apple, in JSON Web Signature (JWS) format.
     ///
     ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)

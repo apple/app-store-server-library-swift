@@ -6,7 +6,7 @@ import Foundation
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable {
     
-    init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
         self.notificationType = notificationType
         self.subtype = subtype
         self.notificationUUID = notificationUUID
@@ -16,7 +16,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.summary = summary
     }
     
-    init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
         self.rawNotificationType = rawNotificationType
         self.rawSubtype = rawSubtype
         self.notificationUUID = notificationUUID

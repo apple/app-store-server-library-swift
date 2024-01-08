@@ -5,7 +5,7 @@
 ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
 public struct Data: Decodable, Encodable, Hashable {
     
-    init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil) {
+    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil) {
         self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -15,7 +15,7 @@ public struct Data: Decodable, Encodable, Hashable {
         self.status = status
     }
     
-    init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil) {
+    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil) {
         self.rawEnvironment = rawEnvironment
         self.appAppleId = appAppleId
         self.bundleId = bundleId

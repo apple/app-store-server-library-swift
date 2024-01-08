@@ -4,6 +4,13 @@
 ///
 ///[RefundHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/refundhistoryresponse)
 public struct RefundHistoryResponse: Decodable, Encodable, Hashable {
+
+    public init(signedTransactions: [String]? = nil, revision: String? = nil, hasMore: Bool? = nil) {
+        self.signedTransactions = signedTransactions
+        self.revision = revision
+        self.hasMore = hasMore
+    }
+
     ///A list of up to 20 JWS transactions, or an empty array if the customer hasn&#39;t received any refunds in your app. The transactions are sorted in ascending order by revocationDate.
     public var signedTransactions: [String]?
     

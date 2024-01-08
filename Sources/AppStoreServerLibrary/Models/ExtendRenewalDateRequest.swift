@@ -5,6 +5,12 @@
 ///[ExtendRenewalDateRequest](https://developer.apple.com/documentation/appstoreserverapi/extendrenewaldaterequest)
 public struct ExtendRenewalDateRequest: Decodable, Encodable, Hashable {
     
+    public init(extendByDays: Int32? = nil, extendReasonCode: ExtendReasonCode? = nil, requestIdentifier: String? = nil) {
+        self.extendByDays = extendByDays
+        self.extendReasonCode = extendReasonCode
+        self.requestIdentifier = requestIdentifier
+    }
+
     ///The number of days to extend the subscription renewal date.
     ///
     ///[extendByDays](https://developer.apple.com/documentation/appstoreserverapi/extendbydays)
