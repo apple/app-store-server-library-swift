@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.0.1
+- Add public constructors to all models [#26]
+
 ## Version 1.0.0
 - Add status field to the data model [#7]
 - Adding new error codes from App Store Server API v1.9 [#9]
