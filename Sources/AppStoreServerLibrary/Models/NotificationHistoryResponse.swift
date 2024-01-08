@@ -4,6 +4,13 @@
 ///
 ///[NotificationHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponse)
 public struct NotificationHistoryResponse: Decodable, Encodable, Hashable {
+
+    public init(paginationToken: String? = nil, hasMore: Bool? = nil, notificationHistory: [NotificationHistoryResponseItem]? = nil) {
+        self.paginationToken = paginationToken
+        self.hasMore = hasMore
+        self.notificationHistory = notificationHistory
+    }
+
     ///A pagination token that you return to the endpoint on a subsequent call to receive the next set of results.
     ///
     ///[paginationToken](https://developer.apple.com/documentation/appstoreserverapi/paginationtoken)

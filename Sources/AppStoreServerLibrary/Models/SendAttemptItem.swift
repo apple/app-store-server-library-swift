@@ -6,12 +6,12 @@ import Foundation
 ///[sendAttemptItem](https://developer.apple.com/documentation/appstoreserverapi/sendattemptitem)
 public struct SendAttemptItem: Decodable, Encodable, Hashable {
     
-    init(attemptDate: Date? = nil, sendAttemptResult: SendAttemptResult? = nil) {
+    public init(attemptDate: Date? = nil, sendAttemptResult: SendAttemptResult? = nil) {
         self.attemptDate = attemptDate
         self.sendAttemptResult = sendAttemptResult
     }
     
-    init(attemptDate: Date? = nil, rawSendAttemptResult: String? = nil) {
+    public init(attemptDate: Date? = nil, rawSendAttemptResult: String? = nil) {
         self.attemptDate = attemptDate
         self.rawSendAttemptResult = rawSendAttemptResult
     }

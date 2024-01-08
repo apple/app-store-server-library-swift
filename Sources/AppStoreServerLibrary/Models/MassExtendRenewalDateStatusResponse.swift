@@ -5,6 +5,15 @@ import Foundation
 ///
 ///[MassExtendRenewalDateStatusResponse](https://developer.apple.com/documentation/appstoreserverapi/massextendrenewaldatestatusresponse)
 public struct MassExtendRenewalDateStatusResponse: Decodable, Encodable, Hashable {
+
+    public init(requestIdentifier: String? = nil, complete: Bool? = nil, completeDate: Date? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
+        self.requestIdentifier = requestIdentifier
+        self.complete = complete
+        self.completeDate = completeDate
+        self.succeededCount = succeededCount
+        self.failedCount = failedCount
+    }
+
     ///A string that contains a unique identifier you provide to track each subscription-renewal-date extension request.
     ///
     ///[requestIdentifier](https://developer.apple.com/documentation/appstoreserverapi/requestidentifier)

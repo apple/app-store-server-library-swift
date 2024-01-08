@@ -4,6 +4,11 @@
 ///
 ///[SendTestNotificationResponse](https://developer.apple.com/documentation/appstoreserverapi/sendtestnotificationresponse)
 public struct SendTestNotificationResponse: Decodable, Encodable, Hashable {
+
+    public init(testNotificationToken: String? = nil) {
+        self.testNotificationToken = testNotificationToken
+    }
+
     ///A unique identifier for a notification test that the App Store server sends to your server.
     ///
     ///[testNotificationToken](https://developer.apple.com/documentation/appstoreserverapi/testnotificationtoken)

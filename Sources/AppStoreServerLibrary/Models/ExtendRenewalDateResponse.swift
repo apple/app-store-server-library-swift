@@ -5,7 +5,14 @@ import Foundation
 ///
 ///[ExtendRenewalDateResponse](https://developer.apple.com/documentation/appstoreserverapi/extendrenewaldateresponse)
 public struct ExtendRenewalDateResponse: Decodable, Encodable, Hashable {
-    
+
+    public init(originalTransactionId: String? = nil, webOrderLineItemId: String? = nil, success: Bool? = nil, effectiveDate: Date? = nil) {
+        self.originalTransactionId = originalTransactionId
+        self.webOrderLineItemId = webOrderLineItemId
+        self.success = success
+        self.effectiveDate = effectiveDate
+    }
+
     ///The original transaction identifier of a purchase.
     ///
     ///[originalTransactionId](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionid)

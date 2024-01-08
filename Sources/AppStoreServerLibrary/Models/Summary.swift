@@ -5,7 +5,7 @@
 ///[summary](https://developer.apple.com/documentation/appstoreservernotifications/summary)
 public struct Summary: Decodable, Encodable, Hashable {
     
-    init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
+    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
         self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -16,7 +16,7 @@ public struct Summary: Decodable, Encodable, Hashable {
         self.failedCount = failedCount
     }
     
-    init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
+    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
         self.rawEnvironment = rawEnvironment
         self.appAppleId = appAppleId
         self.bundleId = bundleId

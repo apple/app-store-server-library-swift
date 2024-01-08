@@ -5,12 +5,12 @@
 ///[OrderLookupResponse](https://developer.apple.com/documentation/appstoreserverapi/orderlookupresponse)
 public struct OrderLookupResponse: Decodable, Encodable, Hashable {
     
-    init(status: OrderLookupStatus? = nil, signedTransactions: [String]? = nil) {
+    public init(status: OrderLookupStatus? = nil, signedTransactions: [String]? = nil) {
         self.status = status
         self.signedTransactions = signedTransactions
     }
     
-    init(rawStatus: Int32? = nil, signedTransactions: [String]? = nil) {
+    public init(rawStatus: Int32? = nil, signedTransactions: [String]? = nil) {
         self.rawStatus = rawStatus
         self.signedTransactions = signedTransactions
     }

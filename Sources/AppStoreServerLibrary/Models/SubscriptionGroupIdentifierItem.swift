@@ -4,6 +4,12 @@
 ///
 ///[SubscriptionGroupIdentifierItem](https://developer.apple.com/documentation/appstoreserverapi/subscriptiongroupidentifieritem)
 public struct SubscriptionGroupIdentifierItem: Decodable, Encodable, Hashable {
+
+    public init(subscriptionGroupIdentifier: String? = nil, lastTransactions: [LastTransactionsItem]? = nil) {
+        self.subscriptionGroupIdentifier = subscriptionGroupIdentifier
+        self.lastTransactions = lastTransactions
+    }
+
     ///The identifier of the subscription group that the subscription belongs to.
     ///
     ///[subscriptionGroupIdentifier](https://developer.apple.com/documentation/appstoreserverapi/subscriptiongroupidentifier)

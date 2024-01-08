@@ -4,6 +4,11 @@
 ///
 ///[MassExtendRenewalDateResponse](https://developer.apple.com/documentation/appstoreserverapi/massextendrenewaldateresponse)
 public struct MassExtendRenewalDateResponse: Decodable, Encodable, Hashable {
+
+    public init(requestIdentifier: String? = nil) {
+        self.requestIdentifier = requestIdentifier
+    }
+
     ///A string that contains a unique identifier you provide to track each subscription-renewal-date extension request.
     ///
     ///[requestIdentifier](https://developer.apple.com/documentation/appstoreserverapi/requestidentifier)

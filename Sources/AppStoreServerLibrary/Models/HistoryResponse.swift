@@ -5,7 +5,7 @@
 ///[HistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/historyresponse)
 public struct HistoryResponse: Decodable, Encodable, Hashable {
     
-    init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: Environment? = nil, signedTransactions: [String]? = nil) {
+    public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: Environment? = nil, signedTransactions: [String]? = nil) {
         self.revision = revision
         self.hasMore = hasMore
         self.bundleId = bundleId
@@ -14,7 +14,7 @@ public struct HistoryResponse: Decodable, Encodable, Hashable {
         self.signedTransactions = signedTransactions
     }
     
-    init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, rawEnvironment: String? = nil, signedTransactions: [String]? = nil) {
+    public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, rawEnvironment: String? = nil, signedTransactions: [String]? = nil) {
         self.revision = revision
         self.hasMore = hasMore
         self.bundleId = bundleId

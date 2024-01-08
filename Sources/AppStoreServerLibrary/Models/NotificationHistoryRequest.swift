@@ -5,6 +5,16 @@ import Foundation
 ///
 ///[NotificationHistoryRequest](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryrequest)
 public struct NotificationHistoryRequest: Decodable, Encodable, Hashable {
+
+    public init(startDate: Date? = nil, endDate: Date? = nil, notificationType: NotificationTypeV2? = nil, notificationSubtype: Subtype? = nil, transactionId: String? = nil, onlyFailures: Bool? = nil) {
+        self.startDate = startDate
+        self.endDate = endDate
+        self.notificationType = notificationType
+        self.notificationSubtype = notificationSubtype
+        self.transactionId = transactionId
+        self.onlyFailures = onlyFailures
+    }
+
     ///The start date of the timespan for the requested App Store Server Notification history records. The startDate needs to precede the endDate. Choose a startDate that’s within the past 180 days from the current date.
     ///
     ///[startDate](https://developer.apple.com/documentation/appstoreserverapi/startdate)

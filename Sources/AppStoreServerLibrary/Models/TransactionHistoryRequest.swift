@@ -3,6 +3,18 @@
 import Foundation
 
 public struct TransactionHistoryRequest: Hashable {
+
+    public init(startDate: Date? = nil, endDate: Date? = nil, productIds: [String]? = nil, productTypes: [ProductType]? = nil, sort: Order? = nil, subscriptionGroupIdentifiers: [String]? = nil, inAppOwnershipType: InAppOwnershipType? = nil, revoked: Bool? = nil) {
+        self.startDate = startDate
+        self.endDate = endDate
+        self.productIds = productIds
+        self.productTypes = productTypes
+        self.sort = sort
+        self.subscriptionGroupIdentifiers = subscriptionGroupIdentifiers
+        self.inAppOwnershipType = inAppOwnershipType
+        self.revoked = revoked
+    }
+
     /// An optional start date of the timespan for the transaction history records you’re requesting. The startDate must precede the endDate if you specify both dates. To be included in results, the transaction’s purchaseDate must be equal to or greater than the startDate.
     ///
     ///[startDate](https://developer.apple.com/documentation/appstoreserverapi/startdate)
