@@ -224,7 +224,7 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[storefrontId](https://developer.apple.com/documentation/appstoreserverapi/storefrontid)
     public var storefrontId: String?
 
-    ///The reason for the purchase transaction, which indicates whether it’s a customer’s purchase or a renewal for an auto-renewable subscription that the system initates.
+    ///The reason for the purchase transaction, which indicates whether it’s a customer’s purchase or a renewal for an auto-renewable subscription that the system initiates.
     ///
     ///[transactionReason](https://developer.apple.com/documentation/appstoreserverapi/transactionreason)
     public var transactionReason: TransactionReason? {
