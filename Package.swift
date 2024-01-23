@@ -7,10 +7,7 @@ import PackageDescription
 let package = Package(
     name: "AppStoreServerLibrary",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v13),
-        .watchOS(.v6),
-        .tvOS(.v13),
+        .macOS(.v11), // And other server environments
     ],
     products: [
         .library(
