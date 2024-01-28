@@ -41,9 +41,11 @@ let response = await client.requestTestNotification()
 switch response {
 case .success(let response):
     print(response.testNotificationToken)
-case .failure(let errorCode, let apiError, let causedBy):
+case .failure(let errorCode, let rawApiError, let apiError, let errorMessage, let causedBy):
     print(errorCode)
+    print(rawApiError)
     print(apiError)
+    print(errorMessage)
     print(causedBy)
 }
 ```
