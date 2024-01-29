@@ -98,7 +98,7 @@ if let transactionId = transactionIdOptional {
     var transactions: [String] = []
     repeat {
         let revisionToken = response?.revision
-        let apiResponse = await client.getTransactionHistory(originalTransactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest)
+        let apiResponse = await client.getTransactionHistory(transactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest)
         switch apiResponse {
         case .success(let successfulResponse):
             response = successfulResponse
