@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import AsyncHTTPClient
-import Crypto
 import Foundation
 import JWTKit
 import NIOFoundationCompat
@@ -13,7 +12,7 @@ public class AppStoreServerAPIClient {
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
     private static let appStoreConnectAudience = "appstoreconnect-v1"
 
-    private let signingKey: P256.Signing.PrivateKey
+    private let signingKey: ES256PrivateKey
     private let keyId: String
     private let issuerId: String
     private let bundleId: String
@@ -26,7 +25,7 @@ public class AppStoreServerAPIClient {
     /// - Parameter bundleId: Your app’s bundle ID
     /// - Parameter environment: The environment to target
     public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: Environment) throws {
-        self.signingKey = try P256.Signing.PrivateKey(pemRepresentation: signingKey)
+        self.signingKey = try ES256PrivateKey(pem: signingKey)
         self.keyId = keyId
         self.issuerId = issuerId
         self.bundleId = bundleId
@@ -57,7 +56,7 @@ public class AppStoreServerAPIClient {
             }
 
             var urlRequest = HTTPClientRequest(url: url.absoluteString)
-            let token = try generateToken()
+            let token = try await generateToken()
             urlRequest.headers.add(name: "User-Agent", value: AppStoreServerAPIClient.userAgent)
             urlRequest.headers.add(name: "Authorization", value: "Bearer \(token)")
             urlRequest.headers.add(name: "Accept", value: "application/json")
@@ -131,9 +130,8 @@ public class AppStoreServerAPIClient {
             aud: .init(value: AppStoreServerAPIClient.appStoreConnectAudience),
             iat: .init(value: Date())
         )
-        let key = try ES256Key.private(pem: self.signingKey.pemRepresentation)
-        await keys.addES256(key: key)
-        return try await keys.sign(payload, typ: "JWT", kid: JWKIdentifier(stringLiteral: self.keyId))
+        await keys.addES256(key: signingKey)
+        return try await keys.sign(payload, header: ["typ": "JWT", "kid": .string(self.keyId)])
     }
 
     /// Uses a subscription’s product identifier to extend the renewal date for all of its eligible active subscribers.
