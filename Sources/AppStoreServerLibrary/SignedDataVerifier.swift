@@ -4,7 +4,11 @@ import Foundation
 
 ///A verifier and decoder class designed to decode signed data from the App Store.
 public struct SignedDataVerifier {
-    
+
+    public enum ConfigurationError: Error {
+        case INVALID_APP_APPLE_ID
+    }
+
     private var bundleId: String
     private var appAppleId: Int64?
     private var environment: Environment
@@ -18,6 +22,11 @@ public struct SignedDataVerifier {
     /// - Parameter enableOnlineChecks: Whether to enable revocation checking and check expiration using the current date
     /// - Throws: When the root certificates are malformed
     public init(rootCertificates: [Foundation.Data], bundleId: String, appAppleId: Int64?, environment: Environment, enableOnlineChecks: Bool) throws {
+
+        guard !(environment == .production && appAppleId == nil) else {
+            throw ConfigurationError.INVALID_APP_APPLE_ID
+        }
+
         self.bundleId = bundleId
         self.appAppleId = appAppleId
         self.environment = environment
