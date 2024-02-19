@@ -57,11 +57,12 @@ import AppStoreServerLibrary
 
 let bundleId = "com.example"
 let appleRootCAs = loadRootCAs() // Specific implementation may vary
+let appAppleId: String? = nil // For production environments, it's required
 let enableOnlineChecks = true
 let environment = Environment.sandbox
 
 // try! used for example purposes only
-let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, appAppleId: nil, environment: environment, enableOnlineChecks: enableOnlineChecks)
+let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, appAppleId: appAppleId, environment: environment, enableOnlineChecks: enableOnlineChecks)
 
 let notificationPayload = "ey..."
 let notificationResult = await verifier.verifyAndDecodeNotification(signedPayload: notificationPayload)
