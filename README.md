@@ -57,7 +57,7 @@ import AppStoreServerLibrary
 
 let bundleId = "com.example"
 let appleRootCAs = loadRootCAs() // Specific implementation may vary
-let appAppleId: String? = nil // For production environments, it's required
+let appAppleId: Int64? = nil // appAppleId must be provided for the Production environment
 let enableOnlineChecks = true
 let environment = Environment.sandbox
 
