@@ -20,4 +20,5 @@ public enum Subtype: String, Decodable, Encodable, Hashable {
     case productNotForSale = "PRODUCT_NOT_FOR_SALE"
     case summary = "SUMMARY"
     case failure = "FAILURE"
+    case unreported = "UNREPORTED"
 }

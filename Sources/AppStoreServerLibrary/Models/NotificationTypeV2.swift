@@ -20,5 +20,6 @@ public enum NotificationTypeV2: String, Decodable, Encodable, Hashable {
     case revoke = "REVOKE"
     case test = "TEST"
     case renewalExtension = "RENEWAL_EXTENSION"
-    case refundReversed = "REFUND_REVERSED" 
+    case refundReversed = "REFUND_REVERSED"
+    case externalPurchaseToken = "EXTERNAL_PURCHASE_TOKEN"
 }
