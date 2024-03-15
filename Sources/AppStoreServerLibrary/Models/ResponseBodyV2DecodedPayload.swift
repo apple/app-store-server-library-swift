@@ -6,7 +6,7 @@ import Foundation
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable {
     
-    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
         self.notificationType = notificationType
         self.subtype = subtype
         self.notificationUUID = notificationUUID
@@ -14,9 +14,10 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.version = version
         self.signedDate = signedDate
         self.summary = summary
+        self.externalPurchaseToken = externalPurchaseToken
     }
     
-    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil) {
+    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
         self.rawNotificationType = rawNotificationType
         self.rawSubtype = rawSubtype
         self.notificationUUID = notificationUUID
@@ -24,6 +25,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.version = version
         self.signedDate = signedDate
         self.summary = summary
+        self.externalPurchaseToken = externalPurchaseToken
     }
     
     ///The in-app purchase event for which the App Store sends this version 2 notification.
@@ -62,7 +64,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     public var notificationUUID: String?
 
     ///The object that contains the app metadata and signed renewal and transaction information.
-    ///The data and summary fields are mutually exclusive. The payload contains one of the fields, but not both.
+    ///The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
     ///
     ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
     public var data: Data?
@@ -78,8 +80,14 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     public var signedDate: Date?
 
     ///The summary data that appears when the App Store server completes your request to extend a subscription renewal date for eligible subscribers.
-    ///The data and summary fields are mutually exclusive. The payload contains one of the fields, but not both.
+    ///The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
     ///
     ///[summary](https://developer.apple.com/documentation/appstoreservernotifications/summary)
     public var summary: Summary?
+
+    ///This field appears when the notificationType is EXTERNAL_PURCHASE_TOKEN.
+    ///The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
+    ///
+    ///[externalPurchaseToken](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken)
+    public var externalPurchaseToken: ExternalPurchaseToken?
 }
