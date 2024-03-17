@@ -172,7 +172,7 @@ public enum VerificationResult<T> {
     case invalid(VerificationError)
 }
 
-public enum VerificationError: Hashable, Sendable {
+public enum VerificationError: Error, Hashable, Sendable {
     case INVALID_JWT_FORMAT
     case INVALID_CERTIFICATE
     case VERIFICATION_FAILURE
