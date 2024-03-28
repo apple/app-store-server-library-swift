@@ -49,6 +49,22 @@ public struct SignedDataVerifier {
         }
         return renewalInfoResult
     }
+
+    ///  Verifies and decodes a signedRenewalInfo obtained from the App Store Server API, an App Store Server Notification, or from a device
+    ///
+    ///  - Parameter signedRenewalInfo The signedRenewalInfo field
+    ///  - Throws:  the reason for verification failure error of type `VerificationError`
+    ///  - Returns: the decoded renewal info after verification
+    public func verifyAndDecodeRenewalInfoThrowing(signedRenewalInfo: String) async throws -> JWSRenewalInfoDecodedPayload {
+        let result: VerificationResult<JWSRenewalInfoDecodedPayload> = await verifyAndDecodeRenewalInfo(signedRenewalInfo: signedRenewalInfo)
+        switch result {
+        case .valid(let result):
+            return result
+        case .invalid(let verificationError):
+            throw verificationError
+        }
+    }
+
     ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
     ///
     ///  - Parameter signedTransaction The signedTransaction field
@@ -68,6 +84,22 @@ public struct SignedDataVerifier {
         }
         return transactionResult
     }
+
+    ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
+    ///
+    ///  - Parameter signedTransaction The signedTransaction field
+    ///  - Throws:  the reason for verification failure error of type `VerificationError`
+    ///  - Returns: the decoded transaction info after verification
+    public func verifyAndDecodeTransactionThrowing(signedTransaction: String) async throws -> JWSTransactionDecodedPayload {
+        let result: VerificationResult<JWSTransactionDecodedPayload> = await verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+        switch result {
+        case .valid(let result):
+            return result
+        case .invalid(let verificationError):
+            throw verificationError
+        }
+    }
+
     ///  Verifies and decodes an App Store Server Notification signedPayload
     ///
     ///  - Parameter signedPayload The payload received by your server
@@ -122,11 +154,26 @@ public struct SignedDataVerifier {
         }
         return nil
     }
-    
-    ///Verifies and decodes a signed AppTransaction
+
+    ///  Verifies and decodes an App Store Server Notification signedPayload
     ///
-    ///- Parameter signedAppTransaction The signed AppTransaction
-    ///- Returns: If success, the decoded AppTransaction after validation, else the reason for verification failure
+    /// - Parameter signedPayload The payload received by your server
+    /// - Throws:  the reason for verification failure error of type `VerificationError`
+    /// - Returns: the decoded payload after verification
+    public func verifyAndDecodeNotificationThrowing(signedPayload: String) async throws -> ResponseBodyV2DecodedPayload {
+        let result: VerificationResult<ResponseBodyV2DecodedPayload> = await verifyAndDecodeNotification(signedPayload: signedPayload)
+        switch result {
+        case .valid(let result):
+            return result
+        case .invalid(let verificationError):
+            throw verificationError
+        }
+    }
+    
+    ///  Verifies and decodes a signed AppTransaction
+    ///
+    /// - Parameter signedAppTransaction The signed AppTransaction
+    /// - Returns: If success, the decoded AppTransaction after validation, else the reason for verification failure
     public func verifyAndDecodeAppTransaction(signedAppTransaction: String) async -> VerificationResult<AppTransaction> {
         let appTransactionResult = await decodeSignedData(signedData: signedAppTransaction, type: AppTransaction.self)
         switch appTransactionResult {
@@ -142,6 +189,21 @@ public struct SignedDataVerifier {
             break
         }
         return appTransactionResult
+    }
+    
+    ///  Verifies and decodes a signed AppTransaction
+    ///
+    /// - Parameter signedAppTransaction The signed AppTransaction
+    /// - Throws:  the reason for verification failure error of type `VerificationError`
+    /// - Returns: the decoded AppTransaction after validation
+    public func verifyAndDecodeAppTransactionThrowing(signedAppTransaction: String) async throws -> AppTransaction {
+        let result: VerificationResult<AppTransaction> = await verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
+        switch result {
+        case .valid(let result):
+            return result
+        case .invalid(let verificationError):
+            throw verificationError
+        }
     }
     
     private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
