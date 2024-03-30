@@ -66,9 +66,9 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(5, notification.summary!.succeededCount)
         XCTAssertEqual(2, notification.summary!.failedCount)
     }
-    
+
     public func testExternalPurchaseTokenNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
             XCTAssertEqual("com.example", bundleId)
@@ -76,8 +76,8 @@ final class SignedModelTests: XCTestCase {
             XCTAssertEqual(.production, environment)
             return nil
         }
-        
-        guard case .valid(let notification) = verifiedNotification else {
+
+        guard case let .valid(notification) = verifiedNotification else {
             XCTAssertTrue(false)
             return
         }
@@ -88,18 +88,18 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("UNREPORTED", notification.rawSubtype)
         XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
         XCTAssertEqual("2.0", notification.version)
-        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_900), notification.signedDate)
         XCTAssertNil(notification.data)
         XCTAssertNil(notification.summary)
         XCTAssertNotNil(notification.externalPurchaseToken)
         XCTAssertEqual("b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
-        XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
+        XCTAssertEqual(1_698_148_950_000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
     }
-    
+
     public func testExternalPurchaseTokenSandboxNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenSandboxNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenSandboxNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
             XCTAssertEqual("com.example", bundleId)
@@ -107,8 +107,8 @@ final class SignedModelTests: XCTestCase {
             XCTAssertEqual(.sandbox, environment)
             return nil
         }
-        
-        guard case .valid(let notification) = verifiedNotification else {
+
+        guard case let .valid(notification) = verifiedNotification else {
             XCTAssertTrue(false)
             return
         }
@@ -119,16 +119,16 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("UNREPORTED", notification.rawSubtype)
         XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
         XCTAssertEqual("2.0", notification.version)
-        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_900), notification.signedDate)
         XCTAssertNil(notification.data)
         XCTAssertNil(notification.summary)
         XCTAssertNotNil(notification.externalPurchaseToken)
         XCTAssertEqual("SANDBOX_b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
-        XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
+        XCTAssertEqual(1_698_148_950_000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
     }
-    
+
     public func testTransactionDecoding() async throws {
         let signedTransaction = try await TestingUtility.createSignedDataFromJson("resources/models/signedTransaction.json", as: JWSTransactionDecodedPayload.self)
 
