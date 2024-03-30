@@ -7,7 +7,7 @@ import NIOFoundationCompat
 import NIOHTTP1
 
 public class AppStoreServerAPIClient {
-    private static let userAgent = "app-store-server-library/swift/1.0.2"
+    private static let userAgent = "app-store-server-library/swift/2.0.0"
     private static let productionUrl = "https://api.storekit.itunes.apple.com"
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
     private static let appStoreConnectAudience = "appstoreconnect-v1"

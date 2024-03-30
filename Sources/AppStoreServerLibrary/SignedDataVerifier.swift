@@ -5,6 +5,11 @@ import JWTKit
 
 /// A verifier and decoder class designed to decode signed data from the App Store.
 public struct SignedDataVerifier {
+
+    public enum ConfigurationError: Error {
+        case INVALID_APP_APPLE_ID
+    }
+
     private var bundleId: String
     private var appAppleId: Int64?
     private var environment: Environment
@@ -18,6 +23,11 @@ public struct SignedDataVerifier {
     /// - Parameter enableOnlineChecks: Whether to enable revocation checking and check expiration using the current date
     /// - Throws: When the root certificates are malformed
     public init(rootCertificates: [Foundation.Data], bundleId: String, appAppleId: Int64?, environment: Environment, enableOnlineChecks: Bool) throws {
+
+        guard !(environment == .production && appAppleId == nil) else {
+            throw ConfigurationError.INVALID_APP_APPLE_ID
+        }
+
         self.bundleId = bundleId
         self.appAppleId = appAppleId
         self.environment = environment
@@ -26,6 +36,7 @@ public struct SignedDataVerifier {
     }
 
     /// Verifies and decodes a signedRenewalInfo obtained from the App Store Server API, an App Store Server Notification, or from a device
+    /// See [JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
     ///
     ///  - Parameter signedRenewalInfo The signedRenewalInfo field
     ///  - Returns: If success, the decoded renewal info after verification, else the reason for verification failure
@@ -43,6 +54,7 @@ public struct SignedDataVerifier {
     }
 
     ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
+    ///  See [JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     ///
     ///  - Parameter signedTransaction The signedTransaction field
     ///  - Returns: If success, the decoded transaction info after verification, else the reason for verification failure
@@ -63,21 +75,44 @@ public struct SignedDataVerifier {
     }
 
     ///  Verifies and decodes an App Store Server Notification signedPayload
+    ///  See [signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)
     ///
     ///  - Parameter signedPayload The payload received by your server
     ///  - Returns: If success, the decoded payload after verification, else the reason for verification failure
     public func verifyAndDecodeNotification(signedPayload: String) async -> VerificationResult<ResponseBodyV2DecodedPayload> {
+        return await verifyAndDecodeNotification(signedPayload: signedPayload, validateNotification: self.verifyNotificationAppIdentifierAndEnvironment)
+    }
+        
+    internal func verifyAndDecodeNotification(signedPayload: String, validateNotification: (_ appBundleID: String?, _ appAppleID: Int64?, _ environment: Environment?) -> VerificationError?) async -> VerificationResult<ResponseBodyV2DecodedPayload> {
         let notificationResult = await decodeSignedData(signedData: signedPayload, type: ResponseBodyV2DecodedPayload.self)
         switch notificationResult {
-        case let .valid(notification):
-            let appAppleId = notification.data?.appAppleId ?? notification.summary?.appAppleId
-            let bundleId = notification.data?.bundleId ?? notification.summary?.bundleId
-            let environment = notification.data?.environment ?? notification.summary?.environment
-            if self.bundleId != bundleId || (self.environment == .production && self.appAppleId != appAppleId) {
-                return VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER)
+        case .valid(let notification):
+            let appAppleId: Int64?
+            let bundleId : String?
+            let environment: Environment?
+            if let data = notification.data {
+                appAppleId = data.appAppleId
+                bundleId = data.bundleId
+                environment = data.environment
+            } else if let summary = notification.summary {
+                appAppleId = summary.appAppleId
+                bundleId = summary.bundleId
+                environment = summary.environment
+            } else if let externalPurchaseToken = notification.externalPurchaseToken {
+                appAppleId = externalPurchaseToken.appAppleId
+                bundleId = externalPurchaseToken.bundleId
+                if externalPurchaseToken.externalPurchaseId?.starts(with: "SANDBOX") == true {
+                    environment = .sandbox
+                } else {
+                    environment = .production
+                }
+            } else {
+                appAppleId = nil
+                bundleId = nil
+                environment = nil
             }
-            if self.environment != environment {
-                return VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT)
+            if let result = validateNotification(bundleId, appAppleId, environment) {
+                return .invalid(result)
             }
         case .invalid:
             break
@@ -85,7 +120,18 @@ public struct SignedDataVerifier {
         return notificationResult
     }
 
-    /// Verifies and decodes a signed AppTransaction
+    internal func verifyNotificationAppIdentifierAndEnvironment(bundleId: String?, appAppleId: Int64?, environment: Environment?) -> VerificationError? {
+        if self.bundleId != bundleId || (self.environment == .production && self.appAppleId != appAppleId) {
+            return .INVALID_APP_IDENTIFIER
+        }
+        if self.environment != environment {
+            return .INVALID_ENVIRONMENT
+        }
+        return nil
+    }
+    
+    ///Verifies and decodes a signed AppTransaction
+    ///See [AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
     ///
     /// - Parameter signedAppTransaction The signed AppTransaction
     /// - Returns: If success, the decoded AppTransaction after validation, else the reason for verification failure

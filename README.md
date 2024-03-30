@@ -13,7 +13,7 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 ```swift
 Add the following dependency
 
-.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "1.0.2")),
+.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.0.0")),
 ```
 
 ## Documentation
@@ -21,6 +21,15 @@ Add the following dependency
 [Documentation](https://apple.github.io/app-store-server-library-swift/documentation/appstoreserverlibrary/)
 
 [WWDC Video](https://developer.apple.com/videos/play/wwdc2023/10143/)
+
+### Obtaining an In-App Purchase key from App Store Connect
+
+To use the App Store Server API or create promotional offer signatures, a signing key downloaded from App Store Connect is required. To obtain this key, you must have the Admin role. Go to Users and Access > Integrations > In-App Purchase. Here you can create and manage keys, as well as find your issuer ID. When using a key, you'll need the key ID and issuer ID as well.
+
+### Obtaining Apple Root Certificates
+
+Download and store the root certificates found in the Apple Root Certificates section of the [Apple PKI](https://www.apple.com/certificateauthority/) site. Provide these certificates as an array to a SignedDataVerifier to allow verifying the signed data comes from Apple.
+
 ## Usage
 
 ### API Usage
@@ -57,11 +66,12 @@ import AppStoreServerLibrary
 
 let bundleId = "com.example"
 let appleRootCAs = loadRootCAs() // Specific implementation may vary
+let appAppleId: Int64? = nil // appAppleId must be provided for the Production environment
 let enableOnlineChecks = true
 let environment = Environment.sandbox
 
 // try! used for example purposes only
-let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, appAppleId: nil, environment: environment, enableOnlineChecks: enableOnlineChecks)
+let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, appAppleId: appAppleId, environment: environment, enableOnlineChecks: enableOnlineChecks)
 
 let notificationPayload = "ey..."
 let notificationResult = await verifier.verifyAndDecodeNotification(signedPayload: notificationPayload)
