@@ -34,6 +34,7 @@ public struct SignedDataVerifier {
         self.enableOnlineChecks = enableOnlineChecks
     }
     /// Verifies and decodes a signedRenewalInfo obtained from the App Store Server API, an App Store Server Notification, or from a device
+    /// See [JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
     ///
     ///  - Parameter signedRenewalInfo The signedRenewalInfo field
     ///  - Returns: If success, the decoded renewal info after verification, else the reason for verification failure
@@ -66,6 +67,7 @@ public struct SignedDataVerifier {
     }
 
     ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
+    ///  See [JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     ///
     ///  - Parameter signedTransaction The signedTransaction field
     ///  - Returns: If success, the decoded transaction info after verification, else the reason for verification failure
@@ -101,6 +103,7 @@ public struct SignedDataVerifier {
     }
 
     ///  Verifies and decodes an App Store Server Notification signedPayload
+    ///  See [signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)
     ///
     ///  - Parameter signedPayload The payload received by your server
     ///  - Returns: If success, the decoded payload after verification, else the reason for verification failure
@@ -171,6 +174,7 @@ public struct SignedDataVerifier {
     }
     
     ///  Verifies and decodes a signed AppTransaction
+    ///  See [AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
     ///
     /// - Parameter signedAppTransaction The signed AppTransaction
     /// - Returns: If success, the decoded AppTransaction after validation, else the reason for verification failure
