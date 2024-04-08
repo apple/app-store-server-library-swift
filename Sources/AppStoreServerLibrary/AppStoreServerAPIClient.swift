@@ -8,10 +8,16 @@ import NIOHTTP1
 import NIOFoundationCompat
 
 public class AppStoreServerAPIClient {
+
+    public enum ConfigurationError: Error {
+        /// Xcode is not a supported environment for an AppStoreServerAPIClient
+        case invalidEnvironment
+    }
     
     private static let userAgent = "app-store-server-library/swift/2.0.0"
     private static let productionUrl = "https://api.storekit.itunes.apple.com"
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
+    private static let localTestingUrl = "https://local-testing-base-url"
     private static let appStoreConnectAudience = "appstoreconnect-v1"
     
     private let signingKey: P256.Signing.PrivateKey
@@ -31,7 +37,19 @@ public class AppStoreServerAPIClient {
         self.keyId = keyId
         self.issuerId = issuerId
         self.bundleId = bundleId
-        self.url = environment == Environment.production ? AppStoreServerAPIClient.productionUrl : AppStoreServerAPIClient.sandboxUrl
+        switch(environment) {
+        case .xcode:
+            throw ConfigurationError.invalidEnvironment
+        case .production:
+            self.url = AppStoreServerAPIClient.productionUrl
+            break
+        case .localTesting:
+            self.url = AppStoreServerAPIClient.localTestingUrl
+            break
+        case .sandbox:
+            self.url = AppStoreServerAPIClient.sandboxUrl
+            break
+        }
         self.client = .init()
     }
     

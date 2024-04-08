@@ -15,7 +15,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testExtendRenewalDateForAllActiveSubscribers() async throws {
         let client = try getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/mass", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(45, decodedJson["extendByDays"] as! Int)
             XCTAssertEqual(1, decodedJson["extendReasonCode"] as! Int)
@@ -44,7 +44,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testExtendSubscriptionRenewalDate() async throws {
         let client = try getClientWithBody("resources/models/extendSubscriptionRenewalDateResponse.json") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/4124214", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/4124214", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(45, decodedJson["extendByDays"] as! Int)
             XCTAssertEqual(1, decodedJson["extendReasonCode"] as! Int)
@@ -71,7 +71,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetAllSubscriptionStatuses() async throws {
         let client = try getClientWithBody("resources/models/getAllSubscriptionStatusesResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/4321?status=2&status=1", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/4321?status=2&status=1", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -116,7 +116,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetRefundHistory() async throws {
         let client = try getClientWithBody("resources/models/getRefundHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v2/refund/lookup/555555?revision=revision_input", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v2/refund/lookup/555555?revision=revision_input", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -134,7 +134,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetStatusOfSubscriptionRenewalDateExtensions() async throws {
         let client = try getClientWithBody("resources/models/getStatusOfSubscriptionRenewalDateExtensionsResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/mass/20fba8a0-2b80-4a7d-a17f-85c1854727f8/com.example.product", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass/20fba8a0-2b80-4a7d-a17f-85c1854727f8/com.example.product", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -154,7 +154,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetTestNotificationStatus() async throws {
         let client = try getClientWithBody("resources/models/getTestNotificationStatusResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/test/8cd2974c-f905-492a-bf9a-b2f47c791d19", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test/8cd2974c-f905-492a-bf9a-b2f47c791d19", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -180,7 +180,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetNotificationHistory() async throws {
         let client = try getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/history?paginationToken=a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/history?paginationToken=a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request.url)
             
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(1698148900000, decodedJson["startDate"] as! Int)
@@ -283,7 +283,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testGetTransactionInfo() async throws {
         let client = try getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/1234", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/1234", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -299,7 +299,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testLookUpOrderId() async throws {
         let client = try getClientWithBody("resources/models/lookupOrderIdResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/lookup/W002182", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/lookup/W002182", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -317,7 +317,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testRequestTestNotification() async throws {
         let client = try getClientWithBody("resources/models/requestTestNotificationResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/test", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -333,7 +333,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testSendConsumptionData() async throws {
         let client = try getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/consumption/49571273", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/consumption/49571273", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(true, decodedJson["customerConsented"] as! Bool)
@@ -495,6 +495,17 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertNotNil(causedBy)
     }
     
+    public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
+        let key = getSigningKey()
+        do {
+            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.xcode)
+            XCTAssertTrue(false)
+            return
+        } catch (let e) {
+            XCTAssertEqual(AppStoreServerAPIClient.ConfigurationError.invalidEnvironment, e as! AppStoreServerAPIClient.ConfigurationError)
+        }
+    }
+    
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
         return try getAppStoreServerAPIClient(body, requestVerifier)
@@ -505,7 +516,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) throws -> AppStoreServerAPIClient {
-        let key = TestingUtility.readFile("resources/certs/testSigningKey.p8")
+        let key = getSigningKey()
         let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.localTesting) { request, requestBody in
             try requestVerifier.map { try $0(request, requestBody) }
             let headers = [("Content-Type", "application/json")]
@@ -513,6 +524,10 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return HTTPClientResponse(version: .http1_1, status: status, headers: HTTPHeaders(headers), body: bufferedBody)
         }
         return client;
+    }
+    
+    private func getSigningKey() -> String {
+        return TestingUtility.readFile("resources/certs/testSigningKey.p8")
     }
     
     class AppStoreServerAPIClientTest: AppStoreServerAPIClient {
