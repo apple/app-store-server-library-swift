@@ -119,7 +119,7 @@ public class AppStoreServerAPIClient {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
         case .success(let data):
-            let decoder = getJsonDecoder();
+            let decoder = getJsonDecoder()
             do {
                 let decodedBody = try decoder.decode(R.self, from: data)
                 return APIResult.success(response: decodedBody)
