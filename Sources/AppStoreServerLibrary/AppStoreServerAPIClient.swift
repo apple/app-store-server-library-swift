@@ -533,7 +533,13 @@ public enum APIError: Int64 {
     ///An error that indicates the transaction identifier doesn’t represent a consumable in-app purchase.
     ///
     ///[InvalidTransactionNotConsumableError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactionnotconsumableerror)
+    @available(*, deprecated)
     case invalidTransactionNotConsumable = 4000043
+
+    ///An error that indicates the transaction identifier represents an unsupported in-app purchase type.
+    ///
+    ///[InvalidTransactionTypeNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactiontypenotsupportederror)
+    case invalidTransactionTypeNotSupported = 4000047
 
     ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
     ///

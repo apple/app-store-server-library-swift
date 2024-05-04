@@ -7,7 +7,7 @@ import Foundation
 ///[ConsumptionRequest](https://developer.apple.com/documentation/appstoreserverapi/consumptionrequest)
 public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     
-    public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatus? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil) {
+    public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatus? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil, refundPreference: RefundPreference? = nil) {
         self.customerConsented = customerConsented
         self.consumptionStatus = consumptionStatus
         self.platform = platform
@@ -19,9 +19,10 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
         self.lifetimeDollarsRefunded = lifetimeDollarsRefunded
         self.lifetimeDollarsPurchased = lifetimeDollarsPurchased
         self.userStatus = userStatus
+        self.refundPreference = refundPreference
     }
     
-    public init(customerConsented: Bool? = nil, rawConsumptionStatus: Int32? = nil, rawPlatform: Int32? = nil, sampleContentProvided: Bool? = nil, rawDeliveryStatus: Int32? = nil, appAccountToken: UUID? = nil, rawAccountTenure: Int32? = nil, rawPlayTime: Int32? = nil, rawLifetimeDollarsRefunded: Int32? = nil, rawLifetimeDollarsPurchased: Int32? = nil, rawUserStatus: Int32? = nil) {
+    public init(customerConsented: Bool? = nil, rawConsumptionStatus: Int32? = nil, rawPlatform: Int32? = nil, sampleContentProvided: Bool? = nil, rawDeliveryStatus: Int32? = nil, appAccountToken: UUID? = nil, rawAccountTenure: Int32? = nil, rawPlayTime: Int32? = nil, rawLifetimeDollarsRefunded: Int32? = nil, rawLifetimeDollarsPurchased: Int32? = nil, rawUserStatus: Int32? = nil, rawRefundPreference: Int32? = nil) {
         self.customerConsented = customerConsented
         self.rawConsumptionStatus = rawConsumptionStatus
         self.rawPlatform = rawPlatform
@@ -33,6 +34,7 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
         self.rawLifetimeDollarsRefunded = rawLifetimeDollarsRefunded
         self.rawLifetimeDollarsPurchased = rawLifetimeDollarsPurchased
         self.rawUserStatus = rawUserStatus
+        self.rawRefundPreference = rawRefundPreference
     }
     
     ///A Boolean value that indicates whether the customer consented to provide consumption data to the App Store.
@@ -169,5 +171,20 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     
     ///See ``userStatus``
     public var rawUserStatus: Int32?
+
+    ///A value that indicates your preference, based on your operational logic, as to whether Apple should grant the refund.
+    ///
+    ///[refundPreference](https://developer.apple.com/documentation/appstoreserverapi/refundpreference)
+    public var refundPreference: RefundPreference? {
+        get {
+            return rawRefundPreference.flatMap { RefundPreference(rawValue: $0) }
+        }
+        set {
+            self.rawRefundPreference = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``refundPreference``
+    public var rawRefundPreference: Int32?
     
 }

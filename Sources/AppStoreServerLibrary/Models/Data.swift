@@ -5,7 +5,7 @@
 ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
 public struct Data: Decodable, Encodable, Hashable {
     
-    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil) {
+    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil, consumptionRequestReason: ConsumptionRequestReason? = nil) {
         self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -13,9 +13,10 @@ public struct Data: Decodable, Encodable, Hashable {
         self.signedTransactionInfo = signedTransactionInfo
         self.signedRenewalInfo = signedRenewalInfo
         self.status = status
+        self.consumptionRequestReason = consumptionRequestReason
     }
     
-    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil) {
+    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil, rawConsumptionRequestReason: String? = nil) {
         self.rawEnvironment = rawEnvironment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -23,6 +24,7 @@ public struct Data: Decodable, Encodable, Hashable {
         self.signedTransactionInfo = signedTransactionInfo
         self.signedRenewalInfo = signedRenewalInfo
         self.rawStatus = rawStatus
+        self.rawConsumptionRequestReason = rawConsumptionRequestReason
     }
     
     ///The server environment that the notification applies to, either sandbox or production.
@@ -79,4 +81,19 @@ public struct Data: Decodable, Encodable, Hashable {
     
     ///See ``status``
     public var rawStatus: Int32?
+
+    ///The reason the customer requested the refund.
+    ///
+    ///[consumptionRequestReason](https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason)
+    public var consumptionRequestReason: ConsumptionRequestReason? {
+        get {
+            return rawConsumptionRequestReason.flatMap { ConsumptionRequestReason(rawValue: $0) }
+        }
+        set {
+            self.rawConsumptionRequestReason = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``consumptionRequestReason``
+    public var rawConsumptionRequestReason: String?
 }
