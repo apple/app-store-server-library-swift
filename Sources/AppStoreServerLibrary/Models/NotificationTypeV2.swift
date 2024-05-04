@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
-///A notification type value that App Store Server Notifications V2 uses.
+///The type that describes the in-app purchase or external purchase event for which the App Store sends the version 2 notification.
 ///
-///[notificationType](https://developer.apple.com/documentation/appstoreserverapi/notificationtype)
+///[notificationType](https://developer.apple.com/documentation/appstoreservernotifications/notificationtype)
 public enum NotificationTypeV2: String, Decodable, Encodable, Hashable {
     case subscribed = "SUBSCRIBED"
     case didChangeRenewalPref = "DID_CHANGE_RENEWAL_PREF"

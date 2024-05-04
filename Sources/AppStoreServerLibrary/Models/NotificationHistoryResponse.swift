@@ -22,5 +22,7 @@ public struct NotificationHistoryResponse: Decodable, Encodable, Hashable {
     public var hasMore: Bool?
 
     ///An array of App Store server notification history records.
+    ///
+    ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
     public var notificationHistory: [NotificationHistoryResponseItem]?
 }
