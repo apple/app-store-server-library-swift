@@ -347,6 +347,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(6, decodedJson["lifetimeDollarsRefunded"] as! Int)
             XCTAssertEqual(7, decodedJson["lifetimeDollarsPurchased"] as! Int)
             XCTAssertEqual(4, decodedJson["userStatus"] as! Int)
+            XCTAssertEqual(3, decodedJson["refundPreference"] as! Int)
         }
         
         let consumptionRequest = ConsumptionRequest(
@@ -360,7 +361,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             playTime: PlayTime.oneDayToFourDays,
             lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
-            userStatus: UserStatus.limitedAccess
+            userStatus: UserStatus.limitedAccess,
+            refundPreference: RefundPreference.noPreference
         )
         
         let response = await client.sendConsumptionData(transactionId: "49571273", consumptionRequest: consumptionRequest)

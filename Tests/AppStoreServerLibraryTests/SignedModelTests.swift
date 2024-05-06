@@ -34,6 +34,41 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("signed_renewal_info_value", notification.data!.signedRenewalInfo)
         XCTAssertEqual(Status.active, notification.data!.status)
         XCTAssertEqual(1, notification.data!.rawStatus)
+        XCTAssertNil(notification.data!.consumptionRequestReason)
+        XCTAssertNil(notification.data!.rawConsumptionRequestReason)
+    }
+
+    public func testConsumptionRequestNotificationDecoding() async throws {
+        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json")
+
+        let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
+        
+        guard case .valid(let notification) = verifiedNotification else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual(NotificationTypeV2.consumptionRequest, notification.notificationType)
+        XCTAssertEqual("CONSUMPTION_REQUEST", notification.rawNotificationType)
+        XCTAssertNil(notification.subtype)
+        XCTAssertNil(notification.rawSubtype)
+        XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
+        XCTAssertEqual("2.0", notification.version)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertNotNil(notification.data)
+        XCTAssertNil(notification.summary)
+        XCTAssertNil(notification.externalPurchaseToken)
+        XCTAssertEqual(Environment.localTesting, notification.data!.environment)
+        XCTAssertEqual("LocalTesting", notification.data!.rawEnvironment)
+        XCTAssertEqual(41234, notification.data!.appAppleId)
+        XCTAssertEqual("com.example", notification.data!.bundleId)
+        XCTAssertEqual("1.2.3", notification.data!.bundleVersion)
+        XCTAssertEqual("signed_transaction_info_value", notification.data!.signedTransactionInfo)
+        XCTAssertEqual("signed_renewal_info_value", notification.data!.signedRenewalInfo)
+        XCTAssertEqual(Status.active, notification.data!.status)
+        XCTAssertEqual(1, notification.data!.rawStatus)
+        XCTAssertEqual(ConsumptionRequestReason.unintendedPurchase, notification.data!.consumptionRequestReason)
+        XCTAssertEqual("UNINTENDED_PURCHASE", notification.data!.rawConsumptionRequestReason)
     }
 
     public func testSummaryNotificationDecoding() async throws {
