@@ -12,6 +12,8 @@ public struct RefundHistoryResponse: Decodable, Encodable, Hashable {
     }
 
     ///A list of up to 20 JWS transactions, or an empty array if the customer hasn&#39;t received any refunds in your app. The transactions are sorted in ascending order by revocationDate.
+    ///
+    ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     public var signedTransactions: [String]?
     
     ///A token you use in a query to request the next set of transactions for the customer.
