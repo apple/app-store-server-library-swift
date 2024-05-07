@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 2.1.0
+- Incorporate changes for App Store Server API v1.11 and App Store Server Notifications v2.11 [https://github.com/apple/app-store-server-library-swift/pull/49]
+- Various documentation and quality of life improvements, including contributions from @Fidetro
+
 ## Version 2.0.0
 - Incorporate changes for App Store Server API v1.10.1 [https://github.com/apple/app-store-server-library-swift/pull/42]
   - This change is a breaking change, as the datatype of the price field has changed from Int32? to Int64?
