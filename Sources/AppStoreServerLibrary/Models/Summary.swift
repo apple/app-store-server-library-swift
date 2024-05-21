@@ -76,4 +76,39 @@ public struct Summary: Decodable, Encodable, Hashable {
     ///
     ///[failedCount](https://developer.apple.com/documentation/appstoreserverapi/failedcount)
     public var failedCount: Int64?
+    
+    public enum CodingKeys: CodingKey {
+        case environment
+        case appAppleId
+        case bundleId
+        case productId
+        case requestIdentifier
+        case storefrontCountryCodes
+        case succeededCount
+        case failedCount
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.productId = try container.decodeIfPresent(String.self, forKey: .productId)
+        self.requestIdentifier = try container.decodeIfPresent(String.self, forKey: .requestIdentifier)
+        self.storefrontCountryCodes = try container.decodeIfPresent([String].self, forKey: .storefrontCountryCodes)
+        self.succeededCount = try container.decodeIfPresent(Int64.self, forKey: .succeededCount)
+        self.failedCount = try container.decodeIfPresent(Int64.self, forKey: .failedCount)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.productId, forKey: .productId)
+        try container.encodeIfPresent(self.requestIdentifier, forKey: .requestIdentifier)
+        try container.encodeIfPresent(self.storefrontCountryCodes, forKey: .storefrontCountryCodes)
+        try container.encodeIfPresent(self.succeededCount, forKey: .succeededCount)
+        try container.encodeIfPresent(self.failedCount, forKey: .failedCount)
+    }
 }

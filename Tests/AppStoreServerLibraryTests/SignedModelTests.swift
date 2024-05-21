@@ -36,6 +36,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1, notification.data!.rawStatus)
         XCTAssertNil(notification.data!.consumptionRequestReason)
         XCTAssertNil(notification.data!.rawConsumptionRequestReason)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testConsumptionRequestNotificationDecoding() async throws {
@@ -69,6 +70,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1, notification.data!.rawStatus)
         XCTAssertEqual(ConsumptionRequestReason.unintendedPurchase, notification.data!.consumptionRequestReason)
         XCTAssertEqual("UNINTENDED_PURCHASE", notification.data!.rawConsumptionRequestReason)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testSummaryNotificationDecoding() async throws {
@@ -100,6 +102,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(["CAN", "USA", "MEX"], notification.summary!.storefrontCountryCodes)
         XCTAssertEqual(5, notification.summary!.succeededCount)
         XCTAssertEqual(2, notification.summary!.failedCount)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
     public func testExternalPurchaseTokenNotificationDecoding() async throws {
@@ -131,6 +134,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
     public func testExternalPurchaseTokenSandboxNotificationDecoding() async throws {
@@ -162,6 +166,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
     public func testTransactionDecoding() async throws {
@@ -203,6 +208,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
         XCTAssertEqual(Environment.localTesting, transaction.environment)
         XCTAssertEqual("LocalTesting", transaction.rawEnvironment)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
     
     public func testRenewalInfoDecoding() async throws {
@@ -234,6 +240,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("LocalTesting", renewalInfo.rawEnvironment)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148800), renewalInfo.recentSubscriptionStartDate)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148850), renewalInfo.renewalDate)
+        TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
     
     public func testAppTransactionDecoding() async throws {
@@ -258,6 +265,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("device_verification_value", appTransaction.deviceVerification)
         XCTAssertEqual(UUID(uuidString: "48ccfa42-7431-4f22-9908-7e88983e105a"), appTransaction.deviceVerificationNonce)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148700), appTransaction.preorderDate)
+        TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
     
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision

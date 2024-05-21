@@ -263,4 +263,93 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     
     ///See ``offerDiscountType``
     public var rawOfferDiscountType: String?
+    
+    public enum CodingKeys: CodingKey {
+        case originalTransactionId
+        case transactionId
+        case webOrderLineItemId
+        case bundleId
+        case productId
+        case subscriptionGroupIdentifier
+        case purchaseDate
+        case originalPurchaseDate
+        case expiresDate
+        case quantity
+        case type
+        case appAccountToken
+        case inAppOwnershipType
+        case signedDate
+        case revocationReason
+        case revocationDate
+        case isUpgraded
+        case offerType
+        case offerIdentifier
+        case environment
+        case storefront
+        case storefrontId
+        case transactionReason
+        case currency
+        case price
+        case offerDiscountType
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.originalTransactionId = try container.decodeIfPresent(String.self, forKey: .originalTransactionId)
+        self.transactionId = try container.decodeIfPresent(String.self, forKey: .transactionId)
+        self.webOrderLineItemId = try container.decodeIfPresent(String.self, forKey: .webOrderLineItemId)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.productId = try container.decodeIfPresent(String.self, forKey: .productId)
+        self.subscriptionGroupIdentifier = try container.decodeIfPresent(String.self, forKey: .subscriptionGroupIdentifier)
+        self.purchaseDate = try container.decodeIfPresent(Date.self, forKey: .purchaseDate)
+        self.originalPurchaseDate = try container.decodeIfPresent(Date.self, forKey: .originalPurchaseDate)
+        self.expiresDate = try container.decodeIfPresent(Date.self, forKey: .expiresDate)
+        self.quantity = try container.decodeIfPresent(Int32.self, forKey: .quantity)
+        self.rawType = try container.decodeIfPresent(String.self, forKey: .type)
+        self.appAccountToken = try container.decodeIfPresent(UUID.self, forKey: .appAccountToken)
+        self.rawInAppOwnershipType = try container.decodeIfPresent(String.self, forKey: .inAppOwnershipType)
+        self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
+        self.rawRevocationReason = try container.decodeIfPresent(Int32.self, forKey: .revocationReason)
+        self.revocationDate = try container.decodeIfPresent(Date.self, forKey: .revocationDate)
+        self.isUpgraded = try container.decodeIfPresent(Bool.self, forKey: .isUpgraded)
+        self.rawOfferType = try container.decodeIfPresent(Int32.self, forKey: .offerType)
+        self.offerIdentifier = try container.decodeIfPresent(String.self, forKey: .offerIdentifier)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.storefront = try container.decodeIfPresent(String.self, forKey: .storefront)
+        self.storefrontId = try container.decodeIfPresent(String.self, forKey: .storefrontId)
+        self.rawTransactionReason = try container.decodeIfPresent(String.self, forKey: .transactionReason)
+        self.currency = try container.decodeIfPresent(String.self, forKey: .currency)
+        self.price = try container.decodeIfPresent(Int64.self, forKey: .price)
+        self.rawOfferDiscountType = try container.decodeIfPresent(String.self, forKey: .offerDiscountType)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.originalTransactionId, forKey: .originalTransactionId)
+        try container.encodeIfPresent(self.transactionId, forKey: .transactionId)
+        try container.encodeIfPresent(self.webOrderLineItemId, forKey: .webOrderLineItemId)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.productId, forKey: .productId)
+        try container.encodeIfPresent(self.subscriptionGroupIdentifier, forKey: .subscriptionGroupIdentifier)
+        try container.encodeIfPresent(self.purchaseDate, forKey: .purchaseDate)
+        try container.encodeIfPresent(self.originalPurchaseDate, forKey: .originalPurchaseDate)
+        try container.encodeIfPresent(self.expiresDate, forKey: .expiresDate)
+        try container.encodeIfPresent(self.quantity, forKey: .quantity)
+        try container.encodeIfPresent(self.rawType, forKey: .type)
+        try container.encodeIfPresent(self.appAccountToken, forKey: .appAccountToken)
+        try container.encodeIfPresent(self.rawInAppOwnershipType, forKey: .inAppOwnershipType)
+        try container.encodeIfPresent(self.signedDate, forKey: .signedDate)
+        try container.encodeIfPresent(self.rawRevocationReason, forKey: .revocationReason)
+        try container.encodeIfPresent(self.revocationDate, forKey: .revocationDate)
+        try container.encodeIfPresent(self.isUpgraded, forKey: .isUpgraded)
+        try container.encodeIfPresent(self.rawOfferType, forKey: .offerType)
+        try container.encodeIfPresent(self.offerIdentifier, forKey: .offerIdentifier)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.storefront, forKey: .storefront)
+        try container.encodeIfPresent(self.storefrontId, forKey: .storefrontId)
+        try container.encodeIfPresent(self.rawTransactionReason, forKey: .transactionReason)
+        try container.encodeIfPresent(self.currency, forKey: .currency)
+        try container.encodeIfPresent(self.price, forKey: .price)
+        try container.encodeIfPresent(self.rawOfferDiscountType, forKey: .offerDiscountType)
+    }
 }

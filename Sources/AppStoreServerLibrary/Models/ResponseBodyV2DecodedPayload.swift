@@ -90,4 +90,39 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[externalPurchaseToken](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken)
     public var externalPurchaseToken: ExternalPurchaseToken?
+    
+    enum CodingKeys: CodingKey {
+        case notificationType
+        case subtype
+        case notificationUUID
+        case data
+        case version
+        case signedDate
+        case summary
+        case externalPurchaseToken
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawNotificationType = try container.decodeIfPresent(String.self, forKey: .notificationType)
+        self.rawSubtype = try container.decodeIfPresent(String.self, forKey: .subtype)
+        self.notificationUUID = try container.decodeIfPresent(String.self, forKey: .notificationUUID)
+        self.data = try container.decodeIfPresent(Data.self, forKey: .data)
+        self.version = try container.decodeIfPresent(String.self, forKey: .version)
+        self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
+        self.summary = try container.decodeIfPresent(Summary.self, forKey: .summary)
+        self.externalPurchaseToken = try container.decodeIfPresent(ExternalPurchaseToken.self, forKey: .externalPurchaseToken)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawNotificationType, forKey: .notificationType)
+        try container.encodeIfPresent(self.rawSubtype, forKey: .subtype)
+        try container.encodeIfPresent(self.notificationUUID, forKey: .notificationUUID)
+        try container.encodeIfPresent(self.data, forKey: .data)
+        try container.encodeIfPresent(self.version, forKey: .version)
+        try container.encodeIfPresent(self.signedDate, forKey: .signedDate)
+        try container.encodeIfPresent(self.summary, forKey: .summary)
+        try container.encodeIfPresent(self.externalPurchaseToken, forKey: .externalPurchaseToken)
+    }
 }

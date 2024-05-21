@@ -34,4 +34,21 @@ public struct OrderLookupResponse: Decodable, Encodable, Hashable {
     ///
     ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     public var signedTransactions: [String]?
+    
+    public enum CodingKeys: CodingKey {
+        case status
+        case signedTransactions
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
+        self.signedTransactions = try container.decodeIfPresent([String].self, forKey: .signedTransactions)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawStatus, forKey: .status)
+        try container.encodeIfPresent(self.signedTransactions, forKey: .signedTransactions)
+    }
 }
