@@ -46,4 +46,27 @@ public struct StatusResponse: Decodable, Encodable, Hashable {
                  
     ///An array of information for auto-renewable subscriptions, including App Store-signed transaction information and App Store-signed renewal information.
     public var data: [SubscriptionGroupIdentifierItem]?
+
+    public enum CodingKeys: CodingKey {
+        case environment
+        case bundleId
+        case appAppleId
+        case data
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.data = try container.decodeIfPresent([SubscriptionGroupIdentifierItem].self, forKey: .data)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.data, forKey: .data)
+    }
 }

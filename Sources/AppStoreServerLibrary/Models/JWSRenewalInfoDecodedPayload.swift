@@ -159,4 +159,57 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[renewalDate](https://developer.apple.com/documentation/appstoreserverapi/renewaldate)
     public var renewalDate: Date?
+    
+    public enum CodingKeys: CodingKey {
+        case expirationIntent
+        case originalTransactionId
+        case autoRenewProductId
+        case productId
+        case autoRenewStatus
+        case isInBillingRetryPeriod
+        case priceIncreaseStatus
+        case gracePeriodExpiresDate
+        case offerType
+        case offerIdentifier
+        case signedDate
+        case environment
+        case recentSubscriptionStartDate
+        case renewalDate
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawExpirationIntent = try container.decodeIfPresent(Int32.self, forKey: .expirationIntent)
+        self.originalTransactionId = try container.decodeIfPresent(String.self, forKey: .originalTransactionId)
+        self.autoRenewProductId = try container.decodeIfPresent(String.self, forKey: .autoRenewProductId)
+        self.productId = try container.decodeIfPresent(String.self, forKey: .productId)
+        self.rawAutoRenewStatus = try container.decodeIfPresent(Int32.self, forKey: .autoRenewStatus)
+        self.isInBillingRetryPeriod = try container.decodeIfPresent(Bool.self, forKey: .isInBillingRetryPeriod)
+        self.rawPriceIncreaseStatus = try container.decodeIfPresent(Int32.self, forKey: .priceIncreaseStatus)
+        self.gracePeriodExpiresDate = try container.decodeIfPresent(Date.self, forKey: .gracePeriodExpiresDate)
+        self.rawOfferType = try container.decodeIfPresent(Int32.self, forKey: .offerType)
+        self.offerIdentifier = try container.decodeIfPresent(String.self, forKey: .offerIdentifier)
+        self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.recentSubscriptionStartDate = try container.decodeIfPresent(Date.self, forKey: .recentSubscriptionStartDate)
+        self.renewalDate = try container.decodeIfPresent(Date.self, forKey: .renewalDate)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawExpirationIntent, forKey: .expirationIntent)
+        try container.encodeIfPresent(self.originalTransactionId, forKey: .originalTransactionId)
+        try container.encodeIfPresent(self.autoRenewProductId, forKey: .autoRenewProductId)
+        try container.encodeIfPresent(self.productId, forKey: .productId)
+        try container.encodeIfPresent(self.rawAutoRenewStatus, forKey: .autoRenewStatus)
+        try container.encodeIfPresent(self.isInBillingRetryPeriod, forKey: .isInBillingRetryPeriod)
+        try container.encodeIfPresent(self.rawPriceIncreaseStatus, forKey: .priceIncreaseStatus)
+        try container.encodeIfPresent(self.gracePeriodExpiresDate, forKey: .gracePeriodExpiresDate)
+        try container.encodeIfPresent(self.rawOfferType, forKey: .offerType)
+        try container.encodeIfPresent(self.offerIdentifier, forKey: .offerIdentifier)
+        try container.encodeIfPresent(self.signedDate, forKey: .signedDate)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.recentSubscriptionStartDate, forKey: .recentSubscriptionStartDate)
+        try container.encodeIfPresent(self.renewalDate, forKey: .renewalDate)
+    }
 }

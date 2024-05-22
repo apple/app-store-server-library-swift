@@ -96,4 +96,39 @@ public struct Data: Decodable, Encodable, Hashable {
     
     ///See ``consumptionRequestReason``
     public var rawConsumptionRequestReason: String?
+    
+    public enum CodingKeys: CodingKey {
+        case environment
+        case appAppleId
+        case bundleId
+        case bundleVersion
+        case signedTransactionInfo
+        case signedRenewalInfo
+        case status
+        case consumptionRequestReason
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.bundleVersion = try container.decodeIfPresent(String.self, forKey: .bundleVersion)
+        self.signedTransactionInfo = try container.decodeIfPresent(String.self, forKey: .signedTransactionInfo)
+        self.signedRenewalInfo = try container.decodeIfPresent(String.self, forKey: .signedRenewalInfo)
+        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
+        self.rawConsumptionRequestReason = try container.decodeIfPresent(String.self, forKey: .consumptionRequestReason)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.bundleVersion, forKey: .bundleVersion)
+        try container.encodeIfPresent(self.signedTransactionInfo, forKey: .signedTransactionInfo)
+        try container.encodeIfPresent(self.signedRenewalInfo, forKey: .signedRenewalInfo)
+        try container.encodeIfPresent(self.rawStatus, forKey: .status)
+        try container.encodeIfPresent(self.rawConsumptionRequestReason, forKey: .consumptionRequestReason)
+    }
 }

@@ -5,6 +5,7 @@ import Foundation
 
 import JWTKit
 import Crypto
+import XCTest
 
 public class TestingUtility {
 
@@ -28,6 +29,12 @@ public class TestingUtility {
     
     public static func getSignedDataVerifier() -> SignedDataVerifier {
         return getSignedDataVerifier(.localTesting, "com.example")
+}
+    
+    public static func confirmCodableInternallyConsistent<T>(_ codable: T) where T : Codable, T : Equatable {
+        let type = type(of: codable)
+        let parsedValue = try! getJsonDecoder().decode(type, from: getJsonEncoder().encode(codable))
+        XCTAssertEqual(parsedValue, codable)
     }
     
     public static func createSignedDataFromJson(_ path: String) -> String {

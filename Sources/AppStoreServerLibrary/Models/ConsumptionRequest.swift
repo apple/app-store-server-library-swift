@@ -95,7 +95,16 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     ///The UUID that an app optionally generates to map a customer’s in-app purchase with its resulting App Store transaction.
     ///
     ///[appAccountToken](https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken)
-    public var appAccountToken: UUID?
+    public var appAccountToken: UUID? {
+        get {
+            return rawAppAccountToken != "" ? UUID(uuidString: rawAppAccountToken) : nil
+        }
+        set {
+            self.rawAppAccountToken = newValue.map { $0.uuidString } ?? ""
+        }
+    }
+    
+    private var rawAppAccountToken: String = ""
 
     ///The age of the customer’s account.
     ///
@@ -187,4 +196,50 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     ///See ``refundPreference``
     public var rawRefundPreference: Int32?
     
+    public enum CodingKeys: CodingKey {
+        case customerConsented
+        case consumptionStatus
+        case platform
+        case sampleContentProvided
+        case deliveryStatus
+        case appAccountToken
+        case accountTenure
+        case playTime
+        case lifetimeDollarsRefunded
+        case lifetimeDollarsPurchased
+        case userStatus
+        case refundPreference
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.customerConsented = try container.decodeIfPresent(Bool.self, forKey: .customerConsented)
+        self.rawConsumptionStatus = try container.decodeIfPresent(Int32.self, forKey: .consumptionStatus)
+        self.rawPlatform = try container.decodeIfPresent(Int32.self, forKey: .platform)
+        self.sampleContentProvided = try container.decodeIfPresent(Bool.self, forKey: .sampleContentProvided)
+        self.rawDeliveryStatus = try container.decodeIfPresent(Int32.self, forKey: .deliveryStatus)
+        self.rawAppAccountToken = try container.decode(String.self, forKey: .appAccountToken)
+        self.rawAccountTenure = try container.decodeIfPresent(Int32.self, forKey: .accountTenure)
+        self.rawPlayTime = try container.decodeIfPresent(Int32.self, forKey: .playTime)
+        self.rawLifetimeDollarsRefunded = try container.decodeIfPresent(Int32.self, forKey: .lifetimeDollarsRefunded)
+        self.rawLifetimeDollarsPurchased = try container.decodeIfPresent(Int32.self, forKey: .lifetimeDollarsPurchased)
+        self.rawUserStatus = try container.decodeIfPresent(Int32.self, forKey: .userStatus)
+        self.rawRefundPreference = try container.decodeIfPresent(Int32.self, forKey: .refundPreference)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.customerConsented, forKey: .customerConsented)
+        try container.encodeIfPresent(self.rawConsumptionStatus, forKey: .consumptionStatus)
+        try container.encodeIfPresent(self.rawPlatform, forKey: .platform)
+        try container.encodeIfPresent(self.sampleContentProvided, forKey: .sampleContentProvided)
+        try container.encodeIfPresent(self.rawDeliveryStatus, forKey: .deliveryStatus)
+        try container.encode(self.rawAppAccountToken, forKey: .appAccountToken)
+        try container.encodeIfPresent(self.rawAccountTenure, forKey: .accountTenure)
+        try container.encodeIfPresent(self.rawPlayTime, forKey: .playTime)
+        try container.encodeIfPresent(self.rawLifetimeDollarsRefunded, forKey: .lifetimeDollarsRefunded)
+        try container.encodeIfPresent(self.rawLifetimeDollarsPurchased, forKey: .lifetimeDollarsPurchased)
+        try container.encodeIfPresent(self.rawUserStatus, forKey: .userStatus)
+        try container.encodeIfPresent(self.rawRefundPreference, forKey: .refundPreference)
+    }
 }

@@ -48,4 +48,27 @@ public struct LastTransactionsItem: Decodable, Encodable, Hashable {
     ///
     ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
     public var signedRenewalInfo: String?
+    
+    public enum CodingKeys: CodingKey {
+        case status
+        case originalTransactionId
+        case signedTransactionInfo
+        case signedRenewalInfo
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
+        self.originalTransactionId = try container.decodeIfPresent(String.self, forKey: .originalTransactionId)
+        self.signedTransactionInfo = try container.decodeIfPresent(String.self, forKey: .signedTransactionInfo)
+        self.signedRenewalInfo = try container.decodeIfPresent(String.self, forKey: .signedRenewalInfo)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawStatus, forKey: .status)
+        try container.encodeIfPresent(self.originalTransactionId, forKey: .originalTransactionId)
+        try container.encodeIfPresent(self.signedTransactionInfo, forKey: .signedTransactionInfo)
+        try container.encodeIfPresent(self.signedRenewalInfo, forKey: .signedRenewalInfo)
+    }
 }
