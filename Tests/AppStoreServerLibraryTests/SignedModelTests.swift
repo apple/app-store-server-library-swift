@@ -208,6 +208,10 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
         XCTAssertEqual(Environment.localTesting, transaction.environment)
         XCTAssertEqual("LocalTesting", transaction.rawEnvironment)
+        XCTAssertEqual(10990, transaction.price)
+        XCTAssertEqual("USD", transaction.currency)
+        XCTAssertEqual(OfferDiscountType.payAsYouGo, transaction.offerDiscountType)
+        XCTAssertEqual("PAY_AS_YOU_GO", transaction.rawOfferDiscountType)
         TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
     
@@ -240,6 +244,10 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("LocalTesting", renewalInfo.rawEnvironment)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148800), renewalInfo.recentSubscriptionStartDate)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148850), renewalInfo.renewalDate)
+        XCTAssertEqual(9990, renewalInfo.renewalPrice)
+        XCTAssertEqual("USD", renewalInfo.currency)
+        XCTAssertEqual(OfferDiscountType.payAsYouGo, renewalInfo.offerDiscountType)
+        XCTAssertEqual("PAY_AS_YOU_GO", renewalInfo.rawOfferDiscountType)
         TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
     
