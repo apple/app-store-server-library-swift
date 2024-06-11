@@ -227,14 +227,21 @@ public class AppStoreServerAPIClient {
         let request: String? = nil
         return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: .GET, queryParameters: [:], body: request)
     }
+
+    ///See `getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion)`
+    @available(*, deprecated)
+    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
+        return await self.getTransactionHistory(transactionId: transactionId, revision: revision, transactionHistoryRequest: transactionHistoryRequest, version: .v1)
+    }
     
     ///Get a customer’s in-app purchase transaction history for your app.
     ///
     ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
     ///- Parameter revision:      A token you provide to get the next set of up to 20 transactions. All responses include a revision token. Note: For requests that use the revision token, include the same query parameters from the initial request. Use the revision token from the previous HistoryResponse.
+    ///- Parameter version:      The version of the Get Transaction History endpoint to use. V2 is recommended.
     ///- Returns: A response that contains the customer’s transaction history for an app, or information about the failure
     ///[Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get_transaction_history)
-    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
+    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion) async -> APIResult<HistoryResponse> {
         let request: String? = nil
         var queryParams: [String: [String]] = [:]
         if let innerRevision = revision {
@@ -266,7 +273,7 @@ public class AppStoreServerAPIClient {
         if let innerRevoked = transactionHistoryRequest.revoked {
             queryParams["revoked"] = [String(innerRevoked)]
         }
-        return await makeRequestWithResponseBody(path: "/inApps/v1/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/" + version.rawValue + "/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     ///Get information about a single transaction for your app.
     ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
@@ -620,4 +627,10 @@ public enum APIError: Int64 {
     ///
     ///[GeneralInternalRetryableError](https://developer.apple.com/documentation/appstoreserverapi/generalinternalretryableerror)
     case generalInternalRetryable = 5000001
+}
+
+public enum GetTransactionHistoryVersion: String {
+    @available(*, deprecated)
+    case v1 = "v1"
+    case v2 = "v2"
 }

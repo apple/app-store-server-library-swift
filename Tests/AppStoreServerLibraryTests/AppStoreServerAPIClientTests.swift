@@ -246,7 +246,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(notificationHistoryResponse)
     }
     
-    public func testGetTransactionHistory() async throws {
+    public func testGetTransactionHistoryV1() async throws {
         let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             let url = request.url
@@ -279,6 +279,54 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         )
         
         let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
+        
+        guard case .success(let historyResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("revision_output", historyResponse.revision)
+        XCTAssertEqual(true, historyResponse.hasMore)
+        XCTAssertEqual("com.example", historyResponse.bundleId)
+        XCTAssertEqual(323232, historyResponse.appAppleId)
+        XCTAssertEqual(Environment.localTesting, historyResponse.environment)
+        XCTAssertEqual("LocalTesting", historyResponse.rawEnvironment)
+        XCTAssertEqual(["signed_transaction_value", "signed_transaction_value2"], historyResponse.signedTransactions)
+        TestingUtility.confirmCodableInternallyConsistent(historyResponse)
+    }
+    
+    public func testGetTransactionHistoryV2() async throws {
+        let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            let url = request.url
+            let urlComponents = URLComponents(string: url)
+            XCTAssertEqual("/inApps/v2/history/1234", urlComponents?.path)
+            let params: [String: [String]] = (urlComponents?.queryItems?.reduce(into: [String:[String]](), { dict, item in
+                dict[item.name, default: []].append(item.value!)
+            }))!
+            XCTAssertEqual(["revision_input"], params["revision"])
+            XCTAssertEqual(["123455"], params["startDate"])
+            XCTAssertEqual(["123456"], params["endDate"])
+            XCTAssertEqual(["com.example.1", "com.example.2"], params["productId"])
+            XCTAssertEqual(["CONSUMABLE", "AUTO_RENEWABLE"], params["productType"])
+            XCTAssertEqual(["ASCENDING"], params["sort"])
+            XCTAssertEqual(["sub_group_id", "sub_group_id_2"], params["subscriptionGroupIdentifier"])
+            XCTAssertEqual(["FAMILY_SHARED"], params["inAppOwnershipType"])
+            XCTAssertEqual(["false"], params["revoked"])
+            XCTAssertNil(request.body)
+        }
+        
+        let request = TransactionHistoryRequest(
+            startDate: Date(timeIntervalSince1970: 123.455),
+            endDate: Date(timeIntervalSince1970: 123.456),
+            productIds: ["com.example.1", "com.example.2"],
+            productTypes: [.consumable, .autoRenewable],
+            sort: TransactionHistoryRequest.Order.ascending,
+            subscriptionGroupIdentifiers: ["sub_group_id", "sub_group_id_2"],
+            inAppOwnershipType: InAppOwnershipType.familyShared,
+            revoked: false
+        )
+        
+        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
@@ -519,7 +567,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
+        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
