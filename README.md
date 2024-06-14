@@ -12,7 +12,7 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 ### Swift Package Manager
 Add the following dependency
 ```swift
-.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.1.0")),
+.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.2.0")),
 ```
 
 ## Documentation

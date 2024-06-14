@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 2.2.0
+- Incorporate changes for App Store Server API v1.12 and App Store Server Notifications v2.12 [https://github.com/apple/app-store-server-library-swift/pull/57]
+- Improve README installation code [https://github.com/apple/app-store-server-library-swift/pull/56] from @philmodin
+- Handle null appAccountToken appropriately in PromotionalOfferSignatureCreator and update JSON parsing logic to follow standard patterns [https://github.com/apple/app-store-server-library-java/pull/100]
+
 ## Version 2.1.0
 - Incorporate changes for App Store Server API v1.11 and App Store Server Notifications v2.11 [https://github.com/apple/app-store-server-library-swift/pull/49]
 - Various documentation and quality of life improvements, including contributions from @Fidetro
