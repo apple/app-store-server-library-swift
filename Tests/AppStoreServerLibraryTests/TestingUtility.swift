@@ -31,7 +31,7 @@ public enum TestingUtility {
     public static func createSignedDataFromJson<Payload: JWTPayload>(_ path: String, as: Payload.Type) async throws -> String {
         let payloadString = readFile(path)
         let serializer = DefaultJWTSerializer(jsonEncoder: getJsonEncoder())
-        let key = await JWTKeyCollection().addES256(key: ES256PrivateKey(), serializer: serializer)
+        let key = await JWTKeyCollection().add(ecdsa: ES256PrivateKey(), serializer: serializer)
 
         let payload = try getJsonDecoder().decode(Payload.self, from: .init(payloadString.utf8))
 

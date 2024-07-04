@@ -130,7 +130,7 @@ public class AppStoreServerAPIClient {
             aud: .init(value: AppStoreServerAPIClient.appStoreConnectAudience),
             iat: .init(value: Date())
         )
-        await keys.addES256(key: signingKey)
+        await keys.add(ecdsa: signingKey)
         return try await keys.sign(payload, header: ["typ": "JWT", "kid": .string(self.keyId)])
     }
 
@@ -306,7 +306,8 @@ public class AppStoreServerAPIClient {
         var bid: String
         var aud: AudienceClaim
         var iat: IssuedAtClaim
-        func verify(using signer: JWTAlgorithm) throws {
+
+        func verify(using algorithm: some JWTAlgorithm) async throws {
             fatalError("Do not attempt to locally verify a JWT")
         }
     }
