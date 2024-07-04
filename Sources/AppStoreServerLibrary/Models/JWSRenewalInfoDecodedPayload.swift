@@ -6,7 +6,7 @@ import Foundation
 ///[JWSRenewalInfoDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfodecodedpayload)
 public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable {
     
-    public init(expirationIntent: ExpirationIntent? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, autoRenewStatus: AutoRenewStatus? = nil, isInBillingRetryPeriod: Bool? = nil, priceIncreaseStatus: PriceIncreaseStatus? = nil, gracePeriodExpiresDate: Date? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, environment: Environment? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil) {
+    public init(expirationIntent: ExpirationIntent? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, autoRenewStatus: AutoRenewStatus? = nil, isInBillingRetryPeriod: Bool? = nil, priceIncreaseStatus: PriceIncreaseStatus? = nil, gracePeriodExpiresDate: Date? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, environment: Environment? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil) {
         self.expirationIntent = expirationIntent
         self.originalTransactionId = originalTransactionId
         self.autoRenewProductId = autoRenewProductId
@@ -21,9 +21,12 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.environment = environment
         self.recentSubscriptionStartDate = recentSubscriptionStartDate
         self.renewalDate = renewalDate
+        self.currency = currency
+        self.renewalPrice = renewalPrice
+        self.offerDiscountType = offerDiscountType
     }
     
-    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil) {
+    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil) {
         self.rawExpirationIntent = rawExpirationIntent
         self.originalTransactionId = originalTransactionId
         self.autoRenewProductId = autoRenewProductId
@@ -38,6 +41,9 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.rawEnvironment = rawEnvironment
         self.recentSubscriptionStartDate = recentSubscriptionStartDate
         self.renewalDate = renewalDate
+        self.currency = currency
+        self.renewalPrice = renewalPrice
+        self.offerDiscountType = offerDiscountType
     }
     
     ///The reason the subscription expired.
@@ -159,4 +165,91 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[renewalDate](https://developer.apple.com/documentation/appstoreserverapi/renewaldate)
     public var renewalDate: Date?
+
+    ///The currency code for the renewalPrice of the subscription.
+    ///
+    ///[currency](https://developer.apple.com/documentation/appstoreserverapi/currency)
+    public var currency: String?
+
+    ///The renewal price, in milliunits, of the auto-renewable subscription that renews at the next billing period.
+    ///
+    ///[renewalPrice](https://developer.apple.com/documentation/appstoreserverapi/renewalprice)
+    public var renewalPrice: Int64?
+
+    ///The payment mode of the discount offer.
+    ///
+    ///[offerDiscountType](https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype)
+    public var offerDiscountType: OfferDiscountType? {
+        get {
+            return rawOfferDiscountType.flatMap { OfferDiscountType(rawValue: $0) }
+        }
+        set {
+            self.rawOfferDiscountType = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``offerDiscountType``
+    public var rawOfferDiscountType: String?
+    
+    public enum CodingKeys: CodingKey {
+        case expirationIntent
+        case originalTransactionId
+        case autoRenewProductId
+        case productId
+        case autoRenewStatus
+        case isInBillingRetryPeriod
+        case priceIncreaseStatus
+        case gracePeriodExpiresDate
+        case offerType
+        case offerIdentifier
+        case signedDate
+        case environment
+        case recentSubscriptionStartDate
+        case renewalDate
+        case currency
+        case renewalPrice
+        case offerDiscountType
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawExpirationIntent = try container.decodeIfPresent(Int32.self, forKey: .expirationIntent)
+        self.originalTransactionId = try container.decodeIfPresent(String.self, forKey: .originalTransactionId)
+        self.autoRenewProductId = try container.decodeIfPresent(String.self, forKey: .autoRenewProductId)
+        self.productId = try container.decodeIfPresent(String.self, forKey: .productId)
+        self.rawAutoRenewStatus = try container.decodeIfPresent(Int32.self, forKey: .autoRenewStatus)
+        self.isInBillingRetryPeriod = try container.decodeIfPresent(Bool.self, forKey: .isInBillingRetryPeriod)
+        self.rawPriceIncreaseStatus = try container.decodeIfPresent(Int32.self, forKey: .priceIncreaseStatus)
+        self.gracePeriodExpiresDate = try container.decodeIfPresent(Date.self, forKey: .gracePeriodExpiresDate)
+        self.rawOfferType = try container.decodeIfPresent(Int32.self, forKey: .offerType)
+        self.offerIdentifier = try container.decodeIfPresent(String.self, forKey: .offerIdentifier)
+        self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.recentSubscriptionStartDate = try container.decodeIfPresent(Date.self, forKey: .recentSubscriptionStartDate)
+        self.renewalDate = try container.decodeIfPresent(Date.self, forKey: .renewalDate)
+        self.currency = try container.decodeIfPresent(String.self, forKey: .currency)
+        self.renewalPrice = try container.decodeIfPresent(Int64.self, forKey: .renewalPrice)
+        self.rawOfferDiscountType = try container.decodeIfPresent(String.self, forKey: .offerDiscountType)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawExpirationIntent, forKey: .expirationIntent)
+        try container.encodeIfPresent(self.originalTransactionId, forKey: .originalTransactionId)
+        try container.encodeIfPresent(self.autoRenewProductId, forKey: .autoRenewProductId)
+        try container.encodeIfPresent(self.productId, forKey: .productId)
+        try container.encodeIfPresent(self.rawAutoRenewStatus, forKey: .autoRenewStatus)
+        try container.encodeIfPresent(self.isInBillingRetryPeriod, forKey: .isInBillingRetryPeriod)
+        try container.encodeIfPresent(self.rawPriceIncreaseStatus, forKey: .priceIncreaseStatus)
+        try container.encodeIfPresent(self.gracePeriodExpiresDate, forKey: .gracePeriodExpiresDate)
+        try container.encodeIfPresent(self.rawOfferType, forKey: .offerType)
+        try container.encodeIfPresent(self.offerIdentifier, forKey: .offerIdentifier)
+        try container.encodeIfPresent(self.signedDate, forKey: .signedDate)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.recentSubscriptionStartDate, forKey: .recentSubscriptionStartDate)
+        try container.encodeIfPresent(self.renewalDate, forKey: .renewalDate)
+        try container.encodeIfPresent(self.currency, forKey: .currency)
+        try container.encodeIfPresent(self.renewalPrice, forKey: .renewalPrice)
+        try container.encodeIfPresent(self.rawOfferDiscountType, forKey: .offerDiscountType)
+    }
 }

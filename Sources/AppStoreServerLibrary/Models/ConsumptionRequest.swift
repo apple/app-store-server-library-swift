@@ -7,7 +7,7 @@ import Foundation
 ///[ConsumptionRequest](https://developer.apple.com/documentation/appstoreserverapi/consumptionrequest)
 public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     
-    public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatus? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil) {
+    public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatus? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil, refundPreference: RefundPreference? = nil) {
         self.customerConsented = customerConsented
         self.consumptionStatus = consumptionStatus
         self.platform = platform
@@ -19,9 +19,10 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
         self.lifetimeDollarsRefunded = lifetimeDollarsRefunded
         self.lifetimeDollarsPurchased = lifetimeDollarsPurchased
         self.userStatus = userStatus
+        self.refundPreference = refundPreference
     }
     
-    public init(customerConsented: Bool? = nil, rawConsumptionStatus: Int32? = nil, rawPlatform: Int32? = nil, sampleContentProvided: Bool? = nil, rawDeliveryStatus: Int32? = nil, appAccountToken: UUID? = nil, rawAccountTenure: Int32? = nil, rawPlayTime: Int32? = nil, rawLifetimeDollarsRefunded: Int32? = nil, rawLifetimeDollarsPurchased: Int32? = nil, rawUserStatus: Int32? = nil) {
+    public init(customerConsented: Bool? = nil, rawConsumptionStatus: Int32? = nil, rawPlatform: Int32? = nil, sampleContentProvided: Bool? = nil, rawDeliveryStatus: Int32? = nil, appAccountToken: UUID? = nil, rawAccountTenure: Int32? = nil, rawPlayTime: Int32? = nil, rawLifetimeDollarsRefunded: Int32? = nil, rawLifetimeDollarsPurchased: Int32? = nil, rawUserStatus: Int32? = nil, rawRefundPreference: Int32? = nil) {
         self.customerConsented = customerConsented
         self.rawConsumptionStatus = rawConsumptionStatus
         self.rawPlatform = rawPlatform
@@ -33,6 +34,7 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
         self.rawLifetimeDollarsRefunded = rawLifetimeDollarsRefunded
         self.rawLifetimeDollarsPurchased = rawLifetimeDollarsPurchased
         self.rawUserStatus = rawUserStatus
+        self.rawRefundPreference = rawRefundPreference
     }
     
     ///A Boolean value that indicates whether the customer consented to provide consumption data to the App Store.
@@ -93,7 +95,16 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     ///The UUID that an app optionally generates to map a customer’s in-app purchase with its resulting App Store transaction.
     ///
     ///[appAccountToken](https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken)
-    public var appAccountToken: UUID?
+    public var appAccountToken: UUID? {
+        get {
+            return rawAppAccountToken != "" ? UUID(uuidString: rawAppAccountToken) : nil
+        }
+        set {
+            self.rawAppAccountToken = newValue.map { $0.uuidString } ?? ""
+        }
+    }
+    
+    private var rawAppAccountToken: String = ""
 
     ///The age of the customer’s account.
     ///
@@ -169,5 +180,66 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable {
     
     ///See ``userStatus``
     public var rawUserStatus: Int32?
+
+    ///A value that indicates your preference, based on your operational logic, as to whether Apple should grant the refund.
+    ///
+    ///[refundPreference](https://developer.apple.com/documentation/appstoreserverapi/refundpreference)
+    public var refundPreference: RefundPreference? {
+        get {
+            return rawRefundPreference.flatMap { RefundPreference(rawValue: $0) }
+        }
+        set {
+            self.rawRefundPreference = newValue.map { $0.rawValue }
+        }
+    }
     
+    ///See ``refundPreference``
+    public var rawRefundPreference: Int32?
+    
+    public enum CodingKeys: CodingKey {
+        case customerConsented
+        case consumptionStatus
+        case platform
+        case sampleContentProvided
+        case deliveryStatus
+        case appAccountToken
+        case accountTenure
+        case playTime
+        case lifetimeDollarsRefunded
+        case lifetimeDollarsPurchased
+        case userStatus
+        case refundPreference
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.customerConsented = try container.decodeIfPresent(Bool.self, forKey: .customerConsented)
+        self.rawConsumptionStatus = try container.decodeIfPresent(Int32.self, forKey: .consumptionStatus)
+        self.rawPlatform = try container.decodeIfPresent(Int32.self, forKey: .platform)
+        self.sampleContentProvided = try container.decodeIfPresent(Bool.self, forKey: .sampleContentProvided)
+        self.rawDeliveryStatus = try container.decodeIfPresent(Int32.self, forKey: .deliveryStatus)
+        self.rawAppAccountToken = try container.decode(String.self, forKey: .appAccountToken)
+        self.rawAccountTenure = try container.decodeIfPresent(Int32.self, forKey: .accountTenure)
+        self.rawPlayTime = try container.decodeIfPresent(Int32.self, forKey: .playTime)
+        self.rawLifetimeDollarsRefunded = try container.decodeIfPresent(Int32.self, forKey: .lifetimeDollarsRefunded)
+        self.rawLifetimeDollarsPurchased = try container.decodeIfPresent(Int32.self, forKey: .lifetimeDollarsPurchased)
+        self.rawUserStatus = try container.decodeIfPresent(Int32.self, forKey: .userStatus)
+        self.rawRefundPreference = try container.decodeIfPresent(Int32.self, forKey: .refundPreference)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.customerConsented, forKey: .customerConsented)
+        try container.encodeIfPresent(self.rawConsumptionStatus, forKey: .consumptionStatus)
+        try container.encodeIfPresent(self.rawPlatform, forKey: .platform)
+        try container.encodeIfPresent(self.sampleContentProvided, forKey: .sampleContentProvided)
+        try container.encodeIfPresent(self.rawDeliveryStatus, forKey: .deliveryStatus)
+        try container.encode(self.rawAppAccountToken, forKey: .appAccountToken)
+        try container.encodeIfPresent(self.rawAccountTenure, forKey: .accountTenure)
+        try container.encodeIfPresent(self.rawPlayTime, forKey: .playTime)
+        try container.encodeIfPresent(self.rawLifetimeDollarsRefunded, forKey: .lifetimeDollarsRefunded)
+        try container.encodeIfPresent(self.rawLifetimeDollarsPurchased, forKey: .lifetimeDollarsPurchased)
+        try container.encodeIfPresent(self.rawUserStatus, forKey: .userStatus)
+        try container.encodeIfPresent(self.rawRefundPreference, forKey: .refundPreference)
+    }
 }

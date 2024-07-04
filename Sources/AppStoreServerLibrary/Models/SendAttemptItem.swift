@@ -35,4 +35,21 @@ public struct SendAttemptItem: Decodable, Encodable, Hashable {
     
     ///See ``sendAttemptResult``
     public var rawSendAttemptResult: String?
+    
+    public enum CodingKeys: CodingKey {
+        case attemptDate
+        case sendAttemptResult
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.attemptDate = try container.decodeIfPresent(Date.self, forKey: .attemptDate)
+        self.rawSendAttemptResult = try container.decodeIfPresent(String.self, forKey: .sendAttemptResult)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.attemptDate, forKey: .attemptDate)
+        try container.encodeIfPresent(self.rawSendAttemptResult, forKey: .sendAttemptResult)
+    }
 }

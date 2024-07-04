@@ -62,4 +62,33 @@ public struct HistoryResponse: Decodable, Encodable, Hashable {
     ///
     ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     public var signedTransactions: [String]?
+    
+    public enum CodingKeys: CodingKey {
+        case revision
+        case hasMore
+        case bundleId
+        case appAppleId
+        case environment
+        case signedTransactions
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.revision = try container.decodeIfPresent(String.self, forKey: .revision)
+        self.hasMore = try container.decodeIfPresent(Bool.self, forKey: .hasMore)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.signedTransactions = try container.decodeIfPresent([String].self, forKey: .signedTransactions)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.revision, forKey: .revision)
+        try container.encodeIfPresent(self.hasMore, forKey: .hasMore)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.signedTransactions, forKey: .signedTransactions)
+    }
 }

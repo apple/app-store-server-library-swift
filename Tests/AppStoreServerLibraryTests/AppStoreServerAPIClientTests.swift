@@ -15,7 +15,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testExtendRenewalDateForAllActiveSubscribers() async throws {
         let client = try getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/mass", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(45, decodedJson["extendByDays"] as! Int)
             XCTAssertEqual(1, decodedJson["extendReasonCode"] as! Int)
@@ -32,6 +32,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             productId: "com.example.productId"
         )
         
+        TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateRequest)
+        
         let response = await client.extendRenewalDateForAllActiveSubscribers(massExtendRenewalDateRequest: extendRenewalDateRequest)
         
         guard case .success(let massExtendRenewalDateResponse) = response else {
@@ -39,12 +41,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual("758883e8-151b-47b7-abd0-60c4d804c2f5", massExtendRenewalDateResponse.requestIdentifier)
+        TestingUtility.confirmCodableInternallyConsistent(massExtendRenewalDateResponse)
     }
     
     public func testExtendSubscriptionRenewalDate() async throws {
         let client = try getClientWithBody("resources/models/extendSubscriptionRenewalDateResponse.json") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/4124214", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/4124214", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(45, decodedJson["extendByDays"] as! Int)
             XCTAssertEqual(1, decodedJson["extendReasonCode"] as! Int)
@@ -56,6 +59,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             extendReasonCode: ExtendReasonCode.customerSatisfaction,
             requestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac")
         
+        TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateRequest)
+        
         let response = await client.extendSubscriptionRenewalDate(originalTransactionId: "4124214", extendRenewalDateRequest: extendRenewalDateRequest)
         
         guard case .success(let extendRenewalDateResponse) = response else {
@@ -66,12 +71,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual("9993", extendRenewalDateResponse.webOrderLineItemId)
         XCTAssertEqual(true, extendRenewalDateResponse.success)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), extendRenewalDateResponse.effectiveDate)
+        TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateResponse)
     }
     
     public func testGetAllSubscriptionStatuses() async throws {
         let client = try getClientWithBody("resources/models/getAllSubscriptionStatusesResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/4321?status=2&status=1", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/4321?status=2&status=1", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -111,12 +117,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
                     signedRenewalInfo: "signed_renewal_three"
                 )])
         XCTAssertEqual([item, secondItem], statusResponse.data)
+        TestingUtility.confirmCodableInternallyConsistent(statusResponse)
     }
     
     public func testGetRefundHistory() async throws {
         let client = try getClientWithBody("resources/models/getRefundHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v2/refund/lookup/555555?revision=revision_input", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v2/refund/lookup/555555?revision=revision_input", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -129,12 +136,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(["signed_transaction_one", "signed_transaction_two"], refundHistoryResponse.signedTransactions)
         XCTAssertEqual("revision_output", refundHistoryResponse.revision)
         XCTAssertEqual(true, refundHistoryResponse.hasMore)
+        TestingUtility.confirmCodableInternallyConsistent(refundHistoryResponse)
     }
     
     public func testGetStatusOfSubscriptionRenewalDateExtensions() async throws {
         let client = try getClientWithBody("resources/models/getStatusOfSubscriptionRenewalDateExtensionsResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/subscriptions/extend/mass/20fba8a0-2b80-4a7d-a17f-85c1854727f8/com.example.product", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass/20fba8a0-2b80-4a7d-a17f-85c1854727f8/com.example.product", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -149,12 +157,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), massExtendRenewalDateStatusResponse.completeDate)
         XCTAssertEqual(30, massExtendRenewalDateStatusResponse.succeededCount)
         XCTAssertEqual(2, massExtendRenewalDateStatusResponse.failedCount)
+        TestingUtility.confirmCodableInternallyConsistent(massExtendRenewalDateStatusResponse)
     }
     
     public func testGetTestNotificationStatus() async throws {
         let client = try getClientWithBody("resources/models/getTestNotificationStatusResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/test/8cd2974c-f905-492a-bf9a-b2f47c791d19", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test/8cd2974c-f905-492a-bf9a-b2f47c791d19", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -175,12 +184,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             )
         ]
         XCTAssertEqual(sendAttemptItems, checkTestNotificationResponse.sendAttempts)
+        TestingUtility.confirmCodableInternallyConsistent(checkTestNotificationResponse)
     }
     
     public func testGetNotificationHistory() async throws {
         let client = try getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/history?paginationToken=a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/history?paginationToken=a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request.url)
             
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(1698148900000, decodedJson["startDate"] as! Int)
@@ -199,6 +209,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             transactionId: "999733843",
             onlyFailures: true
         )
+        
+        TestingUtility.confirmCodableInternallyConsistent(notificationHistoryRequest)
         
         let response = await client.getNotificationHistory(paginationToken: "a036bc0e-52b8-4bee-82fc-8c24cb6715d6", notificationHistoryRequest: notificationHistoryRequest)
         
@@ -231,9 +243,10 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             )
         ]
         XCTAssertEqual(expectedNotificationHistory, notificationHistoryResponse.notificationHistory)
+        TestingUtility.confirmCodableInternallyConsistent(notificationHistoryResponse)
     }
     
-    public func testGetTransactionHistory() async throws {
+    public func testGetTransactionHistoryV1() async throws {
         let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             let url = request.url
@@ -278,12 +291,61 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(Environment.localTesting, historyResponse.environment)
         XCTAssertEqual("LocalTesting", historyResponse.rawEnvironment)
         XCTAssertEqual(["signed_transaction_value", "signed_transaction_value2"], historyResponse.signedTransactions)
+        TestingUtility.confirmCodableInternallyConsistent(historyResponse)
+    }
+    
+    public func testGetTransactionHistoryV2() async throws {
+        let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            let url = request.url
+            let urlComponents = URLComponents(string: url)
+            XCTAssertEqual("/inApps/v2/history/1234", urlComponents?.path)
+            let params: [String: [String]] = (urlComponents?.queryItems?.reduce(into: [String:[String]](), { dict, item in
+                dict[item.name, default: []].append(item.value!)
+            }))!
+            XCTAssertEqual(["revision_input"], params["revision"])
+            XCTAssertEqual(["123455"], params["startDate"])
+            XCTAssertEqual(["123456"], params["endDate"])
+            XCTAssertEqual(["com.example.1", "com.example.2"], params["productId"])
+            XCTAssertEqual(["CONSUMABLE", "AUTO_RENEWABLE"], params["productType"])
+            XCTAssertEqual(["ASCENDING"], params["sort"])
+            XCTAssertEqual(["sub_group_id", "sub_group_id_2"], params["subscriptionGroupIdentifier"])
+            XCTAssertEqual(["FAMILY_SHARED"], params["inAppOwnershipType"])
+            XCTAssertEqual(["false"], params["revoked"])
+            XCTAssertNil(request.body)
+        }
+        
+        let request = TransactionHistoryRequest(
+            startDate: Date(timeIntervalSince1970: 123.455),
+            endDate: Date(timeIntervalSince1970: 123.456),
+            productIds: ["com.example.1", "com.example.2"],
+            productTypes: [.consumable, .autoRenewable],
+            sort: TransactionHistoryRequest.Order.ascending,
+            subscriptionGroupIdentifiers: ["sub_group_id", "sub_group_id_2"],
+            inAppOwnershipType: InAppOwnershipType.familyShared,
+            revoked: false
+        )
+        
+        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
+        
+        guard case .success(let historyResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("revision_output", historyResponse.revision)
+        XCTAssertEqual(true, historyResponse.hasMore)
+        XCTAssertEqual("com.example", historyResponse.bundleId)
+        XCTAssertEqual(323232, historyResponse.appAppleId)
+        XCTAssertEqual(Environment.localTesting, historyResponse.environment)
+        XCTAssertEqual("LocalTesting", historyResponse.rawEnvironment)
+        XCTAssertEqual(["signed_transaction_value", "signed_transaction_value2"], historyResponse.signedTransactions)
+        TestingUtility.confirmCodableInternallyConsistent(historyResponse)
     }
     
     public func testGetTransactionInfo() async throws {
         let client = try getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/1234", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/1234", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -294,12 +356,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual("signed_transaction_info_value", transactionInfoResponse.signedTransactionInfo)
+        TestingUtility.confirmCodableInternallyConsistent(transactionInfoResponse)
     }
     
     public func testLookUpOrderId() async throws {
         let client = try getClientWithBody("resources/models/lookupOrderIdResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/lookup/W002182", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/lookup/W002182", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -312,12 +375,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(OrderLookupStatus.invalid, orderLookupResponse.status)
         XCTAssertEqual(1, orderLookupResponse.rawStatus)
         XCTAssertEqual(["signed_transaction_one", "signed_transaction_two"], orderLookupResponse.signedTransactions)
+        TestingUtility.confirmCodableInternallyConsistent(orderLookupResponse)
     }
     
     public func testRequestTestNotification() async throws {
         let client = try getClientWithBody("resources/models/requestTestNotificationResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/notifications/test", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test", request.url)
             XCTAssertNil(request.body)
         }
         
@@ -328,12 +392,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual("ce3af791-365e-4c60-841b-1674b43c1609", sendTestNotificationResponse.testNotificationToken)
+        TestingUtility.confirmCodableInternallyConsistent(sendTestNotificationResponse)
     }
     
     public func testSendConsumptionData() async throws {
         let client = try getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/consumption/49571273", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/consumption/49571273", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(true, decodedJson["customerConsented"] as! Bool)
@@ -347,6 +412,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(6, decodedJson["lifetimeDollarsRefunded"] as! Int)
             XCTAssertEqual(7, decodedJson["lifetimeDollarsPurchased"] as! Int)
             XCTAssertEqual(4, decodedJson["userStatus"] as! Int)
+            XCTAssertEqual(3, decodedJson["refundPreference"] as! Int)
         }
         
         let consumptionRequest = ConsumptionRequest(
@@ -360,8 +426,52 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             playTime: PlayTime.oneDayToFourDays,
             lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
+            userStatus: UserStatus.limitedAccess,
+            refundPreference: RefundPreference.noPreference
+        )
+        TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
+        
+        let response = await client.sendConsumptionData(transactionId: "49571273", consumptionRequest: consumptionRequest)
+        guard case .success(_) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+    
+    public func testSendConsumptionDataWithNullAppAccountToken() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/consumption/49571273", request.url)
+            XCTAssertEqual(["application/json"], request.headers["Content-Type"])
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual(true, decodedJson["customerConsented"] as! Bool)
+            XCTAssertEqual(1, decodedJson["consumptionStatus"] as! Int)
+            XCTAssertEqual(2, decodedJson["platform"] as! Int)
+            XCTAssertEqual(false, decodedJson["sampleContentProvided"] as! Bool)
+            XCTAssertEqual(3, decodedJson["deliveryStatus"] as! Int)
+            XCTAssertEqual("", decodedJson["appAccountToken"] as! String)
+            XCTAssertEqual(4, decodedJson["accountTenure"] as! Int)
+            XCTAssertEqual(5, decodedJson["playTime"] as! Int)
+            XCTAssertEqual(6, decodedJson["lifetimeDollarsRefunded"] as! Int)
+            XCTAssertEqual(7, decodedJson["lifetimeDollarsPurchased"] as! Int)
+            XCTAssertEqual(4, decodedJson["userStatus"] as! Int)
+        }
+        
+        let consumptionRequest = ConsumptionRequest(
+            customerConsented: true,
+            consumptionStatus: ConsumptionStatus.notConsumed,
+            platform: Platform.nonApple,
+            sampleContentProvided: false,
+            deliveryStatus: DeliveryStatus.didNotDeliverDueToServerOutage,
+            appAccountToken: nil,
+            accountTenure: AccountTenure.thirtyDaysToNinetyDays,
+            playTime: PlayTime.oneDayToFourDays,
+            lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
+            lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
             userStatus: UserStatus.limitedAccess
         )
+        
+        TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
         
         let response = await client.sendConsumptionData(transactionId: "49571273", consumptionRequest: consumptionRequest)
         guard case .success(_) = response else {
@@ -457,7 +567,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
+        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
@@ -495,6 +605,17 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertNotNil(causedBy)
     }
     
+    public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
+        let key = getSigningKey()
+        do {
+            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.xcode)
+            XCTAssertTrue(false)
+            return
+        } catch (let e) {
+            XCTAssertEqual(AppStoreServerAPIClient.ConfigurationError.invalidEnvironment, e as! AppStoreServerAPIClient.ConfigurationError)
+        }
+    }
+    
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
         return try getAppStoreServerAPIClient(body, requestVerifier)
@@ -505,7 +626,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) throws -> AppStoreServerAPIClient {
-        let key = TestingUtility.readFile("resources/certs/testSigningKey.p8")
+        let key = getSigningKey()
         let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.localTesting) { request, requestBody in
             try requestVerifier.map { try $0(request, requestBody) }
             let headers = [("Content-Type", "application/json")]
@@ -513,6 +634,10 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return HTTPClientResponse(version: .http1_1, status: status, headers: HTTPHeaders(headers), body: bufferedBody)
         }
         return client;
+    }
+    
+    private func getSigningKey() -> String {
+        return TestingUtility.readFile("resources/certs/testSigningKey.p8")
     }
     
     class AppStoreServerAPIClientTest: AppStoreServerAPIClient {

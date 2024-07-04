@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
-///A notification subtype value that App Store Server Notifications 2 uses.
+///A string that provides details about select notification types in version 2.
 ///
-///[notificationSubtype](https://developer.apple.com/documentation/appstoreserverapi/notificationsubtype)
+///[subtype](https://developer.apple.com/documentation/appstoreservernotifications/subtype)
 public enum Subtype: String, Decodable, Encodable, Hashable {
     case initialBuy = "INITIAL_BUY"
     case resubscribe = "RESUBSCRIBE"

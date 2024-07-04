@@ -16,5 +16,7 @@ public struct SubscriptionGroupIdentifierItem: Decodable, Encodable, Hashable {
     public var subscriptionGroupIdentifier: String?
     
     ///An array of the most recent App Store-signed transaction information and App Store-signed renewal information for all auto-renewable subscriptions in the subscription group.
+    ///
+    ///[lastTransactionsItem](https://developer.apple.com/documentation/appstoreserverapi/lasttransactionsitem)
     public var lastTransactions: [LastTransactionsItem]?
 }

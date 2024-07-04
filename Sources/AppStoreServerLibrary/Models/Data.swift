@@ -5,7 +5,7 @@
 ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
 public struct Data: Decodable, Encodable, Hashable {
     
-    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil) {
+    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil, consumptionRequestReason: ConsumptionRequestReason? = nil) {
         self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -13,9 +13,10 @@ public struct Data: Decodable, Encodable, Hashable {
         self.signedTransactionInfo = signedTransactionInfo
         self.signedRenewalInfo = signedRenewalInfo
         self.status = status
+        self.consumptionRequestReason = consumptionRequestReason
     }
     
-    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil) {
+    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil, rawConsumptionRequestReason: String? = nil) {
         self.rawEnvironment = rawEnvironment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -23,6 +24,7 @@ public struct Data: Decodable, Encodable, Hashable {
         self.signedTransactionInfo = signedTransactionInfo
         self.signedRenewalInfo = signedRenewalInfo
         self.rawStatus = rawStatus
+        self.rawConsumptionRequestReason = rawConsumptionRequestReason
     }
     
     ///The server environment that the notification applies to, either sandbox or production.
@@ -79,4 +81,54 @@ public struct Data: Decodable, Encodable, Hashable {
     
     ///See ``status``
     public var rawStatus: Int32?
+
+    ///The reason the customer requested the refund.
+    ///
+    ///[consumptionRequestReason](https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason)
+    public var consumptionRequestReason: ConsumptionRequestReason? {
+        get {
+            return rawConsumptionRequestReason.flatMap { ConsumptionRequestReason(rawValue: $0) }
+        }
+        set {
+            self.rawConsumptionRequestReason = newValue.map { $0.rawValue }
+        }
+    }
+    
+    ///See ``consumptionRequestReason``
+    public var rawConsumptionRequestReason: String?
+    
+    public enum CodingKeys: CodingKey {
+        case environment
+        case appAppleId
+        case bundleId
+        case bundleVersion
+        case signedTransactionInfo
+        case signedRenewalInfo
+        case status
+        case consumptionRequestReason
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawEnvironment = try container.decodeIfPresent(String.self, forKey: .environment)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.bundleVersion = try container.decodeIfPresent(String.self, forKey: .bundleVersion)
+        self.signedTransactionInfo = try container.decodeIfPresent(String.self, forKey: .signedTransactionInfo)
+        self.signedRenewalInfo = try container.decodeIfPresent(String.self, forKey: .signedRenewalInfo)
+        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
+        self.rawConsumptionRequestReason = try container.decodeIfPresent(String.self, forKey: .consumptionRequestReason)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.bundleVersion, forKey: .bundleVersion)
+        try container.encodeIfPresent(self.signedTransactionInfo, forKey: .signedTransactionInfo)
+        try container.encodeIfPresent(self.signedRenewalInfo, forKey: .signedRenewalInfo)
+        try container.encodeIfPresent(self.rawStatus, forKey: .status)
+        try container.encodeIfPresent(self.rawConsumptionRequestReason, forKey: .consumptionRequestReason)
+    }
 }

@@ -30,6 +30,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertNil(appTransaction.preorderDate)
         XCTAssertEqual(.xcode, appTransaction.receiptType)
         XCTAssertEqual("Xcode", appTransaction.rawReceiptType)
+        TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
 
     public func testXcodeSignedTransaction() async throws {
@@ -71,6 +72,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("143441", transaction.storefrontId)
         XCTAssertEqual(TransactionReason.purchase, transaction.transactionReason)
         XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
 
     public func testXcodeSignedRenewalInfo() async throws {
@@ -100,6 +102,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("Xcode", renewalInfo.rawEnvironment)
         compareXcodeDates(Date(timeIntervalSince1970: 1697679936.049), renewalInfo.recentSubscriptionStartDate)
         compareXcodeDates(Date(timeIntervalSince1970: 1700358336.049), renewalInfo.renewalDate)
+        TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
 
     public func testXcodeSignedAppTransactionWithProductionEnvironment() async throws {

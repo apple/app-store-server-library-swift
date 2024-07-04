@@ -7,9 +7,15 @@ import NIOFoundationCompat
 import NIOHTTP1
 
 public class AppStoreServerAPIClient {
-    private static let userAgent = "app-store-server-library/swift/2.0.0"
+    public enum ConfigurationError: Error {
+        /// Xcode is not a supported environment for an AppStoreServerAPIClient
+        case invalidEnvironment
+    }
+    
+    private static let userAgent = "app-store-server-library/swift/2.2.0"
     private static let productionUrl = "https://api.storekit.itunes.apple.com"
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
+    private static let localTestingUrl = "https://local-testing-base-url"
     private static let appStoreConnectAudience = "appstoreconnect-v1"
 
     private let signingKey: ES256PrivateKey
@@ -29,7 +35,19 @@ public class AppStoreServerAPIClient {
         self.keyId = keyId
         self.issuerId = issuerId
         self.bundleId = bundleId
-        self.url = environment == Environment.production ? AppStoreServerAPIClient.productionUrl : AppStoreServerAPIClient.sandboxUrl
+        switch(environment) {
+        case .xcode:
+            throw ConfigurationError.invalidEnvironment
+        case .production:
+            self.url = AppStoreServerAPIClient.productionUrl
+            break
+        case .localTesting:
+            self.url = AppStoreServerAPIClient.localTestingUrl
+            break
+        case .sandbox:
+            self.url = AppStoreServerAPIClient.sandboxUrl
+            break
+        }
         self.client = .init()
     }
 
@@ -98,7 +116,7 @@ public class AppStoreServerAPIClient {
     private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
-        case let .success(data):
+        case .success(let data):
             let decoder = getJsonDecoder()
             do {
                 let decodedBody = try decoder.decode(R.self, from: data)
@@ -207,13 +225,20 @@ public class AppStoreServerAPIClient {
         return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: .GET, queryParameters: [:], body: request)
     }
 
-    /// Get a customer’s in-app purchase transaction history for your app.
-    ///
-    /// - Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
-    /// - Parameter revision:      A token you provide to get the next set of up to 20 transactions. All responses include a revision token. Note: For requests that use the revision token, include the same query parameters from the initial request. Use the revision token from the previous HistoryResponse.
-    /// - Returns: A response that contains the customer’s transaction history for an app, or information about the failure
-    /// [Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get_transaction_history)
+    ///See `getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion)`
+    @available(*, deprecated)
     public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
+        return await self.getTransactionHistory(transactionId: transactionId, revision: revision, transactionHistoryRequest: transactionHistoryRequest, version: .v1)
+    }
+    
+    ///Get a customer’s in-app purchase transaction history for your app.
+    ///
+    ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
+    ///- Parameter revision:      A token you provide to get the next set of up to 20 transactions. All responses include a revision token. Note: For requests that use the revision token, include the same query parameters from the initial request. Use the revision token from the previous HistoryResponse.
+    ///- Parameter version:      The version of the Get Transaction History endpoint to use. V2 is recommended.
+    ///- Returns: A response that contains the customer’s transaction history for an app, or information about the failure
+    ///[Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get_transaction_history)
+    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion) async -> APIResult<HistoryResponse> {
         let request: String? = nil
         var queryParams: [String: [String]] = [:]
         if let innerRevision = revision {
@@ -245,7 +270,7 @@ public class AppStoreServerAPIClient {
         if let innerRevoked = transactionHistoryRequest.revoked {
             queryParams["revoked"] = [String(innerRevoked)]
         }
-        return await makeRequestWithResponseBody(path: "/inApps/v1/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/" + version.rawValue + "/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
 
     /// Get information about a single transaction for your app.
@@ -513,10 +538,16 @@ public enum APIError: Int64 {
 
     /// An error that indicates the transaction identifier doesn’t represent a consumable in-app purchase.
     ///
-    /// [InvalidTransactionNotConsumableError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactionnotconsumableerror)
-    case invalidTransactionNotConsumable = 4_000_043
+    ///[InvalidTransactionNotConsumableError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactionnotconsumableerror)
+    @available(*, deprecated)
+    case invalidTransactionNotConsumable = 4000043
 
-    /// An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
+    ///An error that indicates the transaction identifier represents an unsupported in-app purchase type.
+    ///
+    ///[InvalidTransactionTypeNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactiontypenotsupportederror)
+    case invalidTransactionTypeNotSupported = 4000047
+
+    ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
     ///
     /// [SubscriptionExtensionIneligibleError](https://developer.apple.com/documentation/appstoreserverapi/subscriptionextensionineligibleerror)
     case subscriptionExtensionIneligible = 4_030_004
@@ -595,4 +626,10 @@ public enum APIError: Int64 {
     ///
     /// [GeneralInternalRetryableError](https://developer.apple.com/documentation/appstoreserverapi/generalinternalretryableerror)
     case generalInternalRetryable = 5_000_001
+}
+
+public enum GetTransactionHistoryVersion: String {
+    @available(*, deprecated)
+    case v1 = "v1"
+    case v2 = "v2"
 }

@@ -34,6 +34,43 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("signed_renewal_info_value", notification.data!.signedRenewalInfo)
         XCTAssertEqual(Status.active, notification.data!.status)
         XCTAssertEqual(1, notification.data!.rawStatus)
+        XCTAssertNil(notification.data!.consumptionRequestReason)
+        XCTAssertNil(notification.data!.rawConsumptionRequestReason)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
+    }
+
+    public func testConsumptionRequestNotificationDecoding() async throws {
+        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json")
+
+        let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
+        
+        guard case .valid(let notification) = verifiedNotification else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual(NotificationTypeV2.consumptionRequest, notification.notificationType)
+        XCTAssertEqual("CONSUMPTION_REQUEST", notification.rawNotificationType)
+        XCTAssertNil(notification.subtype)
+        XCTAssertNil(notification.rawSubtype)
+        XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
+        XCTAssertEqual("2.0", notification.version)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertNotNil(notification.data)
+        XCTAssertNil(notification.summary)
+        XCTAssertNil(notification.externalPurchaseToken)
+        XCTAssertEqual(Environment.localTesting, notification.data!.environment)
+        XCTAssertEqual("LocalTesting", notification.data!.rawEnvironment)
+        XCTAssertEqual(41234, notification.data!.appAppleId)
+        XCTAssertEqual("com.example", notification.data!.bundleId)
+        XCTAssertEqual("1.2.3", notification.data!.bundleVersion)
+        XCTAssertEqual("signed_transaction_info_value", notification.data!.signedTransactionInfo)
+        XCTAssertEqual("signed_renewal_info_value", notification.data!.signedRenewalInfo)
+        XCTAssertEqual(Status.active, notification.data!.status)
+        XCTAssertEqual(1, notification.data!.rawStatus)
+        XCTAssertEqual(ConsumptionRequestReason.unintendedPurchase, notification.data!.consumptionRequestReason)
+        XCTAssertEqual("UNINTENDED_PURCHASE", notification.data!.rawConsumptionRequestReason)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testSummaryNotificationDecoding() async throws {
@@ -65,6 +102,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(["CAN", "USA", "MEX"], notification.summary!.storefrontCountryCodes)
         XCTAssertEqual(5, notification.summary!.succeededCount)
         XCTAssertEqual(2, notification.summary!.failedCount)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testExternalPurchaseTokenNotificationDecoding() async throws {
@@ -96,6 +134,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1_698_148_950_000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testExternalPurchaseTokenSandboxNotificationDecoding() async throws {
@@ -127,6 +166,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1_698_148_950_000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
     }
 
     public func testTransactionDecoding() async throws {
@@ -168,6 +208,11 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
         XCTAssertEqual(Environment.localTesting, transaction.environment)
         XCTAssertEqual("LocalTesting", transaction.rawEnvironment)
+        XCTAssertEqual(10990, transaction.price)
+        XCTAssertEqual("USD", transaction.currency)
+        XCTAssertEqual(OfferDiscountType.payAsYouGo, transaction.offerDiscountType)
+        XCTAssertEqual("PAY_AS_YOU_GO", transaction.rawOfferDiscountType)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
 
     public func testRenewalInfoDecoding() async throws {
@@ -197,8 +242,13 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_800), renewalInfo.signedDate)
         XCTAssertEqual(Environment.localTesting, renewalInfo.environment)
         XCTAssertEqual("LocalTesting", renewalInfo.rawEnvironment)
-        XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_800), renewalInfo.recentSubscriptionStartDate)
-        XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_850), renewalInfo.renewalDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148800), renewalInfo.recentSubscriptionStartDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148850), renewalInfo.renewalDate)
+        XCTAssertEqual(9990, renewalInfo.renewalPrice)
+        XCTAssertEqual("USD", renewalInfo.currency)
+        XCTAssertEqual(OfferDiscountType.payAsYouGo, renewalInfo.offerDiscountType)
+        XCTAssertEqual("PAY_AS_YOU_GO", renewalInfo.rawOfferDiscountType)
+        TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
 
     public func testAppTransactionDecoding() async throws {
@@ -222,7 +272,8 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("1.1.2", appTransaction.originalApplicationVersion)
         XCTAssertEqual("device_verification_value", appTransaction.deviceVerification)
         XCTAssertEqual(UUID(uuidString: "48ccfa42-7431-4f22-9908-7e88983e105a"), appTransaction.deviceVerificationNonce)
-        XCTAssertEqual(Date(timeIntervalSince1970: 1_698_148_700), appTransaction.preorderDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148700), appTransaction.preorderDate)
+        TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
 
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision

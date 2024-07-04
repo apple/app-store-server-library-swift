@@ -108,4 +108,49 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable 
     public var signedDate: Date? {
         receiptCreationDate
     }
+    
+    
+    public enum CodingKeys: CodingKey {
+        case receiptType
+        case appAppleId
+        case bundleId
+        case applicationVersion
+        case versionExternalIdentifier
+        case receiptCreationDate
+        case originalPurchaseDate
+        case originalApplicationVersion
+        case deviceVerification
+        case deviceVerificationNonce
+        case preorderDate
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.rawReceiptType = try container.decodeIfPresent(String.self, forKey: .receiptType)
+        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
+        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.applicationVersion = try container.decodeIfPresent(String.self, forKey: .applicationVersion)
+        self.versionExternalIdentifier = try container.decodeIfPresent(Int64.self, forKey: .versionExternalIdentifier)
+        self.receiptCreationDate = try container.decodeIfPresent(Date.self, forKey: .receiptCreationDate)
+        self.originalPurchaseDate = try container.decodeIfPresent(Date.self, forKey: .originalPurchaseDate)
+        self.originalApplicationVersion = try container.decodeIfPresent(String.self, forKey: .originalApplicationVersion)
+        self.deviceVerification = try container.decodeIfPresent(String.self, forKey: .deviceVerification)
+        self.deviceVerificationNonce = try container.decodeIfPresent(UUID.self, forKey: .deviceVerificationNonce)
+        self.preorderDate = try container.decodeIfPresent(Date.self, forKey: .preorderDate)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.rawReceiptType, forKey: .receiptType)
+        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
+        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.applicationVersion, forKey: .applicationVersion)
+        try container.encodeIfPresent(self.versionExternalIdentifier, forKey: .versionExternalIdentifier)
+        try container.encodeIfPresent(self.receiptCreationDate, forKey: .receiptCreationDate)
+        try container.encodeIfPresent(self.originalPurchaseDate, forKey: .originalPurchaseDate)
+        try container.encodeIfPresent(self.originalApplicationVersion, forKey: .originalApplicationVersion)
+        try container.encodeIfPresent(self.deviceVerification, forKey: .deviceVerification)
+        try container.encodeIfPresent(self.deviceVerificationNonce, forKey: .deviceVerificationNonce)
+        try container.encodeIfPresent(self.preorderDate, forKey: .preorderDate)
+    }
 }

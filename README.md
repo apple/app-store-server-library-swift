@@ -10,10 +10,9 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 ## Installation
 
 ### Swift Package Manager
-```swift
 Add the following dependency
-
-.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.0.0")),
+```swift
+.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.2.0")),
 ```
 
 ## Documentation
@@ -92,14 +91,13 @@ let issuerId = "99b16628-15e4-4668-972b-eeff55eeff55"
 let keyId = "ABCDEFGHIJ"
 let bundleId = "com.example"
 let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDEFGHIJ.p8")
-let environment = Environment.SANDBOX
+let environment = Environment.sandbox
 
 // try! used for example purposes only
 let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
 
 let appReceipt = "MI..."
-let receiptUtil = ReceiptUtility()
-let transactionIdOptional = receiptUtil.extractTransactionId(appReceipt: appReceipt)
+let transactionIdOptional = ReceiptUtility.extractTransactionId(appReceipt: appReceipt)
 if let transactionId = transactionIdOptional {
     var transactionHistoryRequest = TransactionHistoryRequest()
     transactionHistoryRequest.sort = TransactionHistoryRequest.Order.ascending
