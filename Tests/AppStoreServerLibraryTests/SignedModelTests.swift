@@ -40,7 +40,7 @@ final class SignedModelTests: XCTestCase {
     }
 
     public func testConsumptionRequestNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
         
