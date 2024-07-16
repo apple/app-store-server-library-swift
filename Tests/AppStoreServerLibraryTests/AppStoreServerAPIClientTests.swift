@@ -246,6 +246,25 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(notificationHistoryResponse)
     }
     
+    public func testGetNotificationHistoryWithMicrosecondValues() async throws {
+        let client = try getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual(1698148900000, decodedJson["startDate"] as! Int)
+            XCTAssertEqual(1698148950000, decodedJson["endDate"] as! Int)
+        }
+
+        let notificationHistoryRequest = NotificationHistoryRequest(
+            startDate: Date(timeIntervalSince1970: 1698148900).advanced(by: 0.000_9), // 900 microseconds
+            endDate: Date(timeIntervalSince1970: 1698148950).advanced(by: 0.000_001), // 1 microsecond
+            notificationType: NotificationTypeV2.subscribed,
+            notificationSubtype: Subtype.initialBuy,
+            transactionId: "999733843",
+            onlyFailures: true
+        )
+
+        let _ = await client.getNotificationHistory(paginationToken: "a036bc0e-52b8-4bee-82fc-8c24cb6715d6", notificationHistoryRequest: notificationHistoryRequest)
+    }
+    
     public func testGetTransactionHistoryV1() async throws {
         let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)

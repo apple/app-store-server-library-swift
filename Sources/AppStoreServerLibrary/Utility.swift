@@ -19,7 +19,11 @@ internal func getJsonDecoder() -> JSONDecoder  {
 }
 
 internal func getJsonEncoder() -> JSONEncoder  {
-    let decoder = JSONEncoder()
-    decoder.dateEncodingStrategy = .millisecondsSince1970
-    return decoder
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .custom({ date, e in
+        // To encode the same as millisecondsSince1970, however truncating the decimal part
+        var container = e.singleValueContainer()
+        try container.encode((date.timeIntervalSince1970 * 1000.0).rounded(.towardZero))
+    })
+    return encoder
 }

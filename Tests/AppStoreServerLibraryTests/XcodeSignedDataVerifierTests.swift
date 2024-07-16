@@ -30,7 +30,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertNil(appTransaction.preorderDate)
         XCTAssertEqual(.xcode, appTransaction.receiptType)
         XCTAssertEqual("Xcode", appTransaction.rawReceiptType)
-        TestingUtility.confirmCodableInternallyConsistent(appTransaction)
+        confirmCodableInternallyConsistentForXcode(appTransaction)
     }
 
     public func testXcodeSignedTransaction() async throws {
@@ -72,7 +72,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("143441", transaction.storefrontId)
         XCTAssertEqual(TransactionReason.purchase, transaction.transactionReason)
         XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
-        TestingUtility.confirmCodableInternallyConsistent(transaction)
+        confirmCodableInternallyConsistentForXcode(transaction)
     }
 
     public func testXcodeSignedRenewalInfo() async throws {
@@ -102,7 +102,7 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("Xcode", renewalInfo.rawEnvironment)
         compareXcodeDates(Date(timeIntervalSince1970: 1697679936.049), renewalInfo.recentSubscriptionStartDate)
         compareXcodeDates(Date(timeIntervalSince1970: 1700358336.049), renewalInfo.renewalDate)
-        TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
+        confirmCodableInternallyConsistentForXcode(renewalInfo)
     }
 
     public func testXcodeSignedAppTransactionWithProductionEnvironment() async throws {
@@ -121,5 +121,14 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision
     private func compareXcodeDates(_ first: Date, _ second: Date?) {
         XCTAssertEqual(floor((first.timeIntervalSince1970 * 1000)), floor(((second?.timeIntervalSince1970 ?? 0.0) * 1000)))
+    }
+    
+    private func confirmCodableInternallyConsistentForXcode<T>(_ codable: T) where T : Codable, T : Equatable {
+        let type = type(of: codable)
+        let encoder = JSONEncoder()
+        // Xcode receipts contain a decimal value, we encode the value as encoded in those receipts
+        encoder.dateEncodingStrategy = .millisecondsSince1970
+        let parsedValue = try! getJsonDecoder().decode(type, from: encoder.encode(codable))
+        XCTAssertEqual(parsedValue, codable)
     }
 }
