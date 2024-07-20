@@ -5,7 +5,7 @@ import Foundation
 ///The request body containing consumption information.
 ///
 ///[ConsumptionRequest](https://developer.apple.com/documentation/appstoreserverapi/consumptionrequest)
-public struct ConsumptionRequest: Decodable, Encodable, Hashable {
+public struct ConsumptionRequest: Decodable, Encodable, Hashable, Sendable {
     
     public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatus? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil, refundPreference: RefundPreference? = nil) {
         self.customerConsented = customerConsented

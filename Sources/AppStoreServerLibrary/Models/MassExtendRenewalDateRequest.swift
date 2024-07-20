@@ -3,7 +3,7 @@
 ///The request body that contains subscription-renewal-extension data to apply for all eligible active subscribers.
 ///
 ///[MassExtendRenewalDateRequest](https://developer.apple.com/documentation/appstoreserverapi/massextendrenewaldaterequest)
-public struct MassExtendRenewalDateRequest: Decodable, Encodable, Hashable {
+public struct MassExtendRenewalDateRequest: Decodable, Encodable, Hashable, Sendable {
     
     public init(extendByDays: Int32? = nil, extendReasonCode: ExtendReasonCode? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, productId: String? = nil) {
         self.extendByDays = extendByDays

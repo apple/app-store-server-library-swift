@@ -3,7 +3,7 @@
 ///Information for auto-renewable subscriptions, including signed transaction information and signed renewal information, for one subscription group.
 ///
 ///[SubscriptionGroupIdentifierItem](https://developer.apple.com/documentation/appstoreserverapi/subscriptiongroupidentifieritem)
-public struct SubscriptionGroupIdentifierItem: Decodable, Encodable, Hashable {
+public struct SubscriptionGroupIdentifierItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(subscriptionGroupIdentifier: String? = nil, lastTransactions: [LastTransactionsItem]? = nil) {
         self.subscriptionGroupIdentifier = subscriptionGroupIdentifier

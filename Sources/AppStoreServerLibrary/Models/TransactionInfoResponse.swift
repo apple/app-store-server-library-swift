@@ -3,7 +3,7 @@
 ///A response that contains signed transaction information for a single transaction.
 ///
 ///[TransactionInfoResponse](https://developer.apple.com/documentation/appstoreserverapi/transactioninforesponse)
-public struct TransactionInfoResponse: Decodable, Encodable, Hashable {
+public struct TransactionInfoResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(signedTransactionInfo: String? = nil) {
         self.signedTransactionInfo = signedTransactionInfo

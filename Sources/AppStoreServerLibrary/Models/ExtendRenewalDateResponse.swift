@@ -4,7 +4,7 @@ import Foundation
 ///A response that indicates whether an individual renewal-date extension succeeded, and related details.
 ///
 ///[ExtendRenewalDateResponse](https://developer.apple.com/documentation/appstoreserverapi/extendrenewaldateresponse)
-public struct ExtendRenewalDateResponse: Decodable, Encodable, Hashable {
+public struct ExtendRenewalDateResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(originalTransactionId: String? = nil, webOrderLineItemId: String? = nil, success: Bool? = nil, effectiveDate: Date? = nil) {
         self.originalTransactionId = originalTransactionId

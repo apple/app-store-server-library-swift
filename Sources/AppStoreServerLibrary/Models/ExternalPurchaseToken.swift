@@ -3,7 +3,7 @@
 ///The payload data that contains an external purchase token.
 ///
 ///[externalPurchaseToken](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken)
-public struct ExternalPurchaseToken: Decodable, Encodable, Hashable {
+public struct ExternalPurchaseToken: Decodable, Encodable, Hashable, Sendable {
     
     public init(externalPurchaseId: String? = nil, tokenCreationDate: Int64? = nil, appAppleId: Int64? = nil, bundleId: String? = nil) {
         self.externalPurchaseId = externalPurchaseId

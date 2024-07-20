@@ -3,7 +3,7 @@
 ///The server environment, either sandbox or production.
 ///
 ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
-public enum Environment: String, Decodable, Encodable, Hashable {
+public enum Environment: String, Decodable, Encodable, Hashable, Sendable {
     case sandbox = "Sandbox"
     case production = "Production"
     case xcode = "Xcode"

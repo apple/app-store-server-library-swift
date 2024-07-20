@@ -3,7 +3,7 @@
 ///The success or error information the App Store server records when it attempts to send an App Store server notification to your server.
 ///
 ///[sendAttemptResult](https://developer.apple.com/documentation/appstoreserverapi/sendattemptresult)
-public enum SendAttemptResult: String, Decodable, Encodable, Hashable {
+public enum SendAttemptResult: String, Decodable, Encodable, Hashable, Sendable {
     case success = "SUCCESS"
     case timedOut = "TIMED_OUT"
     case tlsIssue = "TLS_ISSUE"

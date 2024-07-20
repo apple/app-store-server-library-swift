@@ -3,7 +3,7 @@
 ///The platform on which the customer consumed the in-app purchase.
 ///
 ///[platform](https://developer.apple.com/documentation/appstoreserverapi/platform)
-public enum Platform: Int32, Decodable, Encodable, Hashable {
+public enum Platform: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case apple = 1
     case nonApple = 2

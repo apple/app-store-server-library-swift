@@ -2,7 +2,7 @@
 
 import Foundation
 
-public struct TransactionHistoryRequest: Hashable {
+public struct TransactionHistoryRequest: Hashable, Sendable {
 
     public init(startDate: Date? = nil, endDate: Date? = nil, productIds: [String]? = nil, productTypes: [ProductType]? = nil, sort: Order? = nil, subscriptionGroupIdentifiers: [String]? = nil, inAppOwnershipType: InAppOwnershipType? = nil, revoked: Bool? = nil) {
         self.startDate = startDate
@@ -49,14 +49,14 @@ public struct TransactionHistoryRequest: Hashable {
     ///An optional Boolean value that indicates whether the response includes only revoked transactions when the value is true, or contains only nonrevoked transactions when the value is false. By default, the request doesn't include this parameter.
     public var revoked: Bool?
 
-    public enum ProductType: String, Decodable, Encodable {
+    public enum ProductType: String, Decodable, Encodable, Sendable {
         case autoRenewable = "AUTO_RENEWABLE"
         case nonRenewable = "NON_RENEWABLE"
         case consumable = "CONSUMABLE"
         case nonConsumable = "NON_CONSUMABLE"
     }
 
-    public enum Order: String, Decodable, Encodable {
+    public enum Order: String, Decodable, Encodable, Sendable {
         case ascending = "ASCENDING"
         case descending = "DESCENDING"
     }

@@ -3,7 +3,7 @@
 ///The payload data for a subscription-renewal-date extension notification.
 ///
 ///[summary](https://developer.apple.com/documentation/appstoreservernotifications/summary)
-public struct Summary: Decodable, Encodable, Hashable {
+public struct Summary: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
         self.environment = environment

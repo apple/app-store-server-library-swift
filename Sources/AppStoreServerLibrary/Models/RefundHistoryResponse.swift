@@ -3,7 +3,7 @@
 ///A response that contains an array of signed JSON Web Signature (JWS) refunded transactions, and paging information.
 ///
 ///[RefundHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/refundhistoryresponse)
-public struct RefundHistoryResponse: Decodable, Encodable, Hashable {
+public struct RefundHistoryResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(signedTransactions: [String]? = nil, revision: String? = nil, hasMore: Bool? = nil) {
         self.signedTransactions = signedTransactions

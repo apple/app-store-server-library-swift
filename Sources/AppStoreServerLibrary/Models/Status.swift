@@ -3,7 +3,7 @@
 ///The status of an auto-renewable subscription.
 ///
 ///[status](https://developer.apple.com/documentation/appstoreserverapi/status)
-public enum Status: Int32, Decodable, Encodable, Hashable {
+public enum Status: Int32, Decodable, Encodable, Hashable, Sendable {
     case active = 1
     case expired = 2
     case billingRetry = 3

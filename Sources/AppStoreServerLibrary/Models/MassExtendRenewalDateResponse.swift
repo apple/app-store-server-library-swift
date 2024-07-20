@@ -3,7 +3,7 @@
 ///A response that indicates the server successfully received the subscription-renewal-date extension request.
 ///
 ///[MassExtendRenewalDateResponse](https://developer.apple.com/documentation/appstoreserverapi/massextendrenewaldateresponse)
-public struct MassExtendRenewalDateResponse: Decodable, Encodable, Hashable {
+public struct MassExtendRenewalDateResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(requestIdentifier: String? = nil) {
         self.requestIdentifier = requestIdentifier
