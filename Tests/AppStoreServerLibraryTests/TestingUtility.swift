@@ -52,7 +52,7 @@ public class TestingUtility {
 
         let signature = try! signer.algorithm.sign("\(encodedHeader).\(encodedPayload)".data(using: .utf8)!)
 
-        return "\(base64ToBase64URL(encodedHeader)).\(base64ToBase64URL(encodedPayload)).\(base64ToBase64URL(Data(signature).base64EncodedString()))";
+        return "\(base64ToBase64URL(encodedHeader)).\(base64ToBase64URL(encodedPayload)).\(base64ToBase64URL(Data(signature).base64EncodedString()))"
     }
     
     private static func base64ToBase64URL(_ encodedString: String) -> String {
