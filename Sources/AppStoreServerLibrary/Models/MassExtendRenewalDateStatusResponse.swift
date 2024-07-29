@@ -4,7 +4,7 @@ import Foundation
 ///A response that indicates the current status of a request to extend the subscription renewal date to all eligible subscribers.
 ///
 ///[MassExtendRenewalDateStatusResponse](https://developer.apple.com/documentation/appstoreserverapi/massextendrenewaldatestatusresponse)
-public struct MassExtendRenewalDateStatusResponse: Decodable, Encodable, Hashable {
+public struct MassExtendRenewalDateStatusResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(requestIdentifier: String? = nil, complete: Bool? = nil, completeDate: Date? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
         self.requestIdentifier = requestIdentifier

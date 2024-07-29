@@ -3,7 +3,7 @@
 ///A response that contains the contents of the test notification sent by the App Store server and the result from your server.
 ///
 ///[CheckTestNotificationResponse](https://developer.apple.com/documentation/appstoreserverapi/checktestnotificationresponse)
-public struct CheckTestNotificationResponse: Decodable, Encodable, Hashable {
+public struct CheckTestNotificationResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(signedPayload: String? = nil, sendAttempts: [SendAttemptItem]? = nil) {
         self.signedPayload = signedPayload

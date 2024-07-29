@@ -3,7 +3,7 @@
 ///The response body the App Store sends in a version 2 server notification.
 ///
 ///[responseBodyV2](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2)
-public struct ResponseBodyV2: Decodable, Encodable, Hashable {
+public struct ResponseBodyV2: Decodable, Encodable, Hashable, Sendable {
 
     public init(signedPayload: String? = nil) {
         self.signedPayload = signedPayload

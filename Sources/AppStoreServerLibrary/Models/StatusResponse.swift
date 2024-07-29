@@ -3,7 +3,7 @@
 ///A response that contains status information for all of a customer’s auto-renewable subscriptions in your app.
 ///
 ///[StatusResponse](https://developer.apple.com/documentation/appstoreserverapi/statusresponse)
-public struct StatusResponse: Decodable, Encodable, Hashable {
+public struct StatusResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: Environment? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
         self.environment = environment

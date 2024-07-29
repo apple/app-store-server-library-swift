@@ -3,7 +3,7 @@
 ///A response that contains the App Store Server Notifications history for your app.
 ///
 ///[NotificationHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponse)
-public struct NotificationHistoryResponse: Decodable, Encodable, Hashable {
+public struct NotificationHistoryResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(paginationToken: String? = nil, hasMore: Bool? = nil, notificationHistory: [NotificationHistoryResponseItem]? = nil) {
         self.paginationToken = paginationToken

@@ -6,7 +6,7 @@ import Foundation
 ///Information that represents the customer’s purchase of the app, cryptographically signed by the App Store.
 ///
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
-public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable {
+public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
     public init(receiptType: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
         self.receiptType = receiptType

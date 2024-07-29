@@ -3,7 +3,7 @@
 ///The age of the customer’s account.
 ///
 ///[accountTenure](https://developer.apple.com/documentation/appstoreserverapi/accounttenure)
-public enum AccountTenure: Int32, Decodable, Encodable, Hashable {
+public enum AccountTenure: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case zeroToThreeDays = 1
     case threeDaysToTenDays = 2

@@ -3,7 +3,7 @@
 ///A value that indicates the total amount, in USD, of in-app purchases the customer has made in your app, across all platforms.
 ///
 ///[lifetimeDollarsPurchased](https://developer.apple.com/documentation/appstoreserverapi/lifetimedollarspurchased)
-public enum LifetimeDollarsPurchased: Int32, Decodable, Encodable, Hashable {
+public enum LifetimeDollarsPurchased: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case zeroDollars = 1
     case oneCentToFortyNineDollarsAndNinetyNineCents = 2

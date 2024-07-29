@@ -3,7 +3,7 @@
 ///A string that provides details about select notification types in version 2.
 ///
 ///[subtype](https://developer.apple.com/documentation/appstoreservernotifications/subtype)
-public enum Subtype: String, Decodable, Encodable, Hashable {
+public enum Subtype: String, Decodable, Encodable, Hashable, Sendable {
     case initialBuy = "INITIAL_BUY"
     case resubscribe = "RESUBSCRIBE"
     case downgrade = "DOWNGRADE"

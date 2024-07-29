@@ -3,7 +3,7 @@
 ///A response that contains the test notification token.
 ///
 ///[SendTestNotificationResponse](https://developer.apple.com/documentation/appstoreserverapi/sendtestnotificationresponse)
-public struct SendTestNotificationResponse: Decodable, Encodable, Hashable {
+public struct SendTestNotificationResponse: Decodable, Encodable, Hashable, Sendable {
 
     public init(testNotificationToken: String? = nil) {
         self.testNotificationToken = testNotificationToken
