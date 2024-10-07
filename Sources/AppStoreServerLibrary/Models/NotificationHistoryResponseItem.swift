@@ -3,7 +3,7 @@
 ///The App Store server notification history record, including the signed notification payload and the result of the server’s first send attempt.
 ///
 ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
-public struct NotificationHistoryResponseItem: Decodable, Encodable, Hashable {
+public struct NotificationHistoryResponseItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(signedPayload: String? = nil, sendAttempts: [SendAttemptItem]? = nil) {
         self.signedPayload = signedPayload

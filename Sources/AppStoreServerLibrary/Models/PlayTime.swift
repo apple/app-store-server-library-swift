@@ -3,7 +3,7 @@
 ///A value that indicates the amount of time that the customer used the app.
 ///
 ///[playTime](https://developer.apple.com/documentation/appstoreserverapi/playtime)
-public enum PlayTime: Int32, Decodable, Encodable, Hashable {
+public enum PlayTime: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case zeroToFiveMinutes = 1
     case fiveToSixtyMinutes = 2

@@ -4,7 +4,7 @@ import Foundation
 ///The request body for notification history.
 ///
 ///[NotificationHistoryRequest](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryrequest)
-public struct NotificationHistoryRequest: Decodable, Encodable, Hashable {
+public struct NotificationHistoryRequest: Decodable, Encodable, Hashable, Sendable {
 
     public init(startDate: Date? = nil, endDate: Date? = nil, notificationType: NotificationTypeV2? = nil, notificationSubtype: Subtype? = nil, transactionId: String? = nil, onlyFailures: Bool? = nil) {
         self.startDate = startDate

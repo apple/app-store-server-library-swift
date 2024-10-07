@@ -3,7 +3,7 @@
 ///The status of a customer’s account within your app.
 ///
 ///[userStatus](https://developer.apple.com/documentation/appstoreserverapi/userstatus)
-public enum UserStatus: Int32, Decodable, Encodable, Hashable {
+public enum UserStatus: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case active = 1
     case suspended = 2

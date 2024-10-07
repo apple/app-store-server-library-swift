@@ -248,6 +248,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("USD", renewalInfo.currency)
         XCTAssertEqual(OfferDiscountType.payAsYouGo, renewalInfo.offerDiscountType)
         XCTAssertEqual("PAY_AS_YOU_GO", renewalInfo.rawOfferDiscountType)
+        XCTAssertEqual(["eligible1", "eligible2"], renewalInfo.eligibleWinBackOfferIds)
         TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
 

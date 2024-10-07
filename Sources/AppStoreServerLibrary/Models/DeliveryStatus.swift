@@ -3,7 +3,7 @@
 ///A value that indicates whether the app successfully delivered an in-app purchase that works properly.
 ///
 ///[deliveryStatus](https://developer.apple.com/documentation/appstoreserverapi/deliverystatus)
-public enum DeliveryStatus: Int32, Decodable, Encodable, Hashable {
+public enum DeliveryStatus: Int32, Decodable, Encodable, Hashable, Sendable {
     case deliveredAndWorkingProperly = 0
     case didNotDeliverDueToQualityIssue = 1
     case deliveredWrongItem = 2

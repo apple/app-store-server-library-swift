@@ -3,7 +3,7 @@
 ///The customer-provided reason for a refund request.
 ///
 ///[consumptionRequestReason](https://developer.apple.com/documentation/appstoreservernotifications/consumptionrequestreason)
-public enum ConsumptionRequestReason: String, Decodable, Encodable, Hashable {
+public enum ConsumptionRequestReason: String, Decodable, Encodable, Hashable, Sendable {
     case unintendedPurchase = "UNINTENDED_PURCHASE"
     case fulfillmentIssue = "FULFILLMENT_ISSUE"
     case unsatisfiedWithPurchase = "UNSATISFIED_WITH_PURCHASE"

@@ -3,7 +3,7 @@
 ///The type that describes the in-app purchase or external purchase event for which the App Store sends the version 2 notification.
 ///
 ///[notificationType](https://developer.apple.com/documentation/appstoreservernotifications/notificationtype)
-public enum NotificationTypeV2: String, Decodable, Encodable, Hashable {
+public enum NotificationTypeV2: String, Decodable, Encodable, Hashable, Sendable {
     case subscribed = "SUBSCRIBED"
     case didChangeRenewalPref = "DID_CHANGE_RENEWAL_PREF"
     case didChangeRenewalStatus = "DID_CHANGE_RENEWAL_STATUS"

@@ -3,7 +3,7 @@
 ///The most recent App Store-signed transaction information and App Store-signed renewal information for an auto-renewable subscription.
 ///
 ///[lastTransactionsItem](https://developer.apple.com/documentation/appstoreserverapi/lasttransactionsitem)
-public struct LastTransactionsItem: Decodable, Encodable, Hashable {
+public struct LastTransactionsItem: Decodable, Encodable, Hashable, Sendable {
     
     public init(status: Status? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
         self.status = status

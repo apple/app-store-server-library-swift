@@ -12,7 +12,7 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 ### Swift Package Manager
 Add the following dependency
 ```swift
-.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.2.0")),
+.package(url: "https://github.com/apple/app-store-server-library-swift.git", .upToNextMinor(from: "2.3.0")),
 ```
 
 ## Documentation
@@ -108,7 +108,7 @@ if let transactionId = transactionIdOptional {
     var transactions: [String] = []
     repeat {
         let revisionToken = response?.revision
-        let apiResponse = await client.getTransactionHistory(transactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest)
+        let apiResponse = await client.getTransactionHistory(transactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest, version: .v2)
         switch apiResponse {
         case .success(let successfulResponse):
             response = successfulResponse

@@ -3,7 +3,7 @@
 ///The reason an auto-renewable subscription expired.
 ///
 ///[expirationIntent](https://developer.apple.com/documentation/appstoreserverapi/expirationintent)
-public enum ExpirationIntent: Int32, Decodable, Encodable, Hashable {
+public enum ExpirationIntent: Int32, Decodable, Encodable, Hashable, Sendable {
     case customerCancelled = 1
     case billingError = 2
     case customerDidNotConsentToPriceIncrease = 3

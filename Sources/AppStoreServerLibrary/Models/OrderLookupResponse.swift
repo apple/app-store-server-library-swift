@@ -3,7 +3,7 @@
 ///A response that includes the order lookup status and an array of signed transactions for the in-app purchases in the order.
 ///
 ///[OrderLookupResponse](https://developer.apple.com/documentation/appstoreserverapi/orderlookupresponse)
-public struct OrderLookupResponse: Decodable, Encodable, Hashable {
+public struct OrderLookupResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(status: OrderLookupStatus? = nil, signedTransactions: [String]? = nil) {
         self.status = status

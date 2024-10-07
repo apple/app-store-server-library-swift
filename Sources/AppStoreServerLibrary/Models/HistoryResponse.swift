@@ -3,7 +3,7 @@
 ///A response that contains the customer’s transaction history for an app.
 ///
 ///[HistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/historyresponse)
-public struct HistoryResponse: Decodable, Encodable, Hashable {
+public struct HistoryResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: Environment? = nil, signedTransactions: [String]? = nil) {
         self.revision = revision

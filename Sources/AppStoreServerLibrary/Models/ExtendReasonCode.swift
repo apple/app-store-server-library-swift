@@ -3,7 +3,7 @@
 ///The code that represents the reason for the subscription-renewal-date extension.
 ///
 ///[extendReasonCode](https://developer.apple.com/documentation/appstoreserverapi/extendreasoncode)
-public enum ExtendReasonCode: Int32, Decodable, Encodable, Hashable {
+public enum ExtendReasonCode: Int32, Decodable, Encodable, Hashable, Sendable {
     case undeclared = 0
     case customerSatisfaction = 1
     case other = 2
