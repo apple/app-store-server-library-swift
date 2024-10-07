@@ -107,15 +107,11 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 final class Requester: OCSPRequester {
     func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
         do {
-            let httpClient = HTTPClient()
-            defer {
-                try? httpClient.syncShutdown()
-            }
             var urlRequest = HTTPClientRequest(url: uri)
             urlRequest.method = .POST
             urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
             urlRequest.body = .bytes(request)
-            let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
+            let response = try await HTTPClient.shared.execute(urlRequest, timeout: .seconds(30))
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
                 throw OCSPFetchError()
