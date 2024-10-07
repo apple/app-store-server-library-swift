@@ -627,7 +627,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
         let key = getSigningKey()
         do {
-            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.xcode)
+            let _ = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.xcode)
             XCTAssertTrue(false)
             return
         } catch (let e) {

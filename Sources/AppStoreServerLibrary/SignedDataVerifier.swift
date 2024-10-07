@@ -157,18 +157,18 @@ public struct SignedDataVerifier {
     }
 }
 
-extension AppTransaction: JWTPayload, @unchecked Sendable {
+extension AppTransaction: JWTPayload {
     public func verify(using algorithm: some JWTAlgorithm) async throws {}
 }
 
-extension ResponseBodyV2DecodedPayload: JWTPayload, @unchecked Sendable {
+extension ResponseBodyV2DecodedPayload: JWTPayload {
     public func verify(using algorithm: some JWTAlgorithm) async throws {}
 }
 
-extension JWSTransactionDecodedPayload: JWTPayload, @unchecked Sendable {
+extension JWSTransactionDecodedPayload: JWTPayload {
     public func verify(using algorithm: some JWTAlgorithm) async throws {}
 }
 
-extension JWSRenewalInfoDecodedPayload: JWTPayload, @unchecked Sendable {
+extension JWSRenewalInfoDecodedPayload: JWTPayload {
     public func verify(using algorithm: some JWTAlgorithm) async throws {}
 }
