@@ -40,19 +40,19 @@ public class TestingUtility {
     public static func createSignedDataFromJson(_ path: String) -> String {
         let payload = readFile(path)
         let signingKey = Crypto.P256.Signing.PrivateKey()
-        let signer: JWTSigner = try! .es256(key: .private(pem: signingKey.pemRepresentation))
         
         let header = JWTHeader(alg: "ES256")
 
         let encoder = JSONEncoder()
         let headerData = try! encoder.encode(header)
-        let encodedHeader = headerData.base64EncodedString()
+        let encodedHeader = base64ToBase64URL(headerData.base64EncodedString())
 
-        let encodedPayload = payload.data(using: .utf8)!.base64EncodedString()
+        let encodedPayload = base64ToBase64URL(payload.data(using: .utf8)!.base64EncodedString())
+        
+        var signingInput = "\(encodedHeader).\(encodedPayload)"
+        let signature = try! signingInput.withUTF8 { try signingKey.signature(for: $0) }
 
-        let signature = try! signer.algorithm.sign("\(encodedHeader).\(encodedPayload)".data(using: .utf8)!)
-
-        return "\(base64ToBase64URL(encodedHeader)).\(base64ToBase64URL(encodedPayload)).\(base64ToBase64URL(Data(signature).base64EncodedString()))";
+        return "\(signingInput).\(base64ToBase64URL(signature.rawRepresentation.base64EncodedString()))";
     }
     
     private static func base64ToBase64URL(_ encodedString: String) -> String {
