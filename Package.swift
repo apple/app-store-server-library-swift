@@ -7,7 +7,7 @@ import PackageDescription
 let package = Package(
     name: "AppStoreServerLibrary",
     platforms: [
-        .macOS(.v11), // And other server environments
+        .macOS(.v13), // And other server environments
     ],
     products: [
         .library(
@@ -18,7 +18,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
-        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-nio", from: "2.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.9.0"),
