@@ -212,6 +212,8 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("USD", transaction.currency)
         XCTAssertEqual(OfferDiscountType.payAsYouGo, transaction.offerDiscountType)
         XCTAssertEqual("PAY_AS_YOU_GO", transaction.rawOfferDiscountType)
+        XCTAssertEqual("71134", transaction.appTransactionId)
+        XCTAssertEqual("P1Y", transaction.offerPeriod)
         TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
     
@@ -249,6 +251,9 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(OfferDiscountType.payAsYouGo, renewalInfo.offerDiscountType)
         XCTAssertEqual("PAY_AS_YOU_GO", renewalInfo.rawOfferDiscountType)
         XCTAssertEqual(["eligible1", "eligible2"], renewalInfo.eligibleWinBackOfferIds)
+        XCTAssertEqual(UUID(uuidString: "7e3fb20b-4cdb-47cc-936d-99d65f608138"), renewalInfo.appAccountToken)
+        XCTAssertEqual("71134", renewalInfo.appTransactionId)
+        XCTAssertEqual("P1Y", renewalInfo.offerPeriod)
         TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
     }
     
@@ -274,6 +279,9 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("device_verification_value", appTransaction.deviceVerification)
         XCTAssertEqual(UUID(uuidString: "48ccfa42-7431-4f22-9908-7e88983e105a"), appTransaction.deviceVerificationNonce)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148700), appTransaction.preorderDate)
+        XCTAssertEqual("71134", appTransaction.appTransactionId)
+        XCTAssertEqual(PurchasePlatform.iOS, appTransaction.originalPlatform)
+        XCTAssertEqual("iOS", appTransaction.rawOriginalPlatform)
         TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
     
