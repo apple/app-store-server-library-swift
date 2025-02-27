@@ -15,10 +15,12 @@ struct ChainVerifier {
     private static let EXPECTED_ALGORITHM = "ES256"
     
     private let store: CertificateStore
+    private let requester: Requester
     
     init(rootCertificates: [Foundation.Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
         self.store = CertificateStore(parsedCertificates)
+        self.requester = Requester()
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: Environment) async -> VerificationResult<T> where T: Decodable {
@@ -92,7 +94,7 @@ struct ChainVerifier {
             RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
             if online {
-                OCSPVerifierPolicy(failureMode: .hard, requester: Requester(), validationTime: Date())
+                OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: Date())
             }
         }
         let intermediateStore = CertificateStore([intermediate])
@@ -143,17 +145,20 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 }
 
 final class Requester: OCSPRequester {
+    
+    private let client: HTTPClient
+    
+    init() {
+        self.client = .init()
+    }
+
     func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
         do {
-            let httpClient = HTTPClient()
-            defer {
-                try? httpClient.syncShutdown()
-            }
             var urlRequest = HTTPClientRequest(url: uri)
             urlRequest.method = .POST
             urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
             urlRequest.body = .bytes(request)
-            let response = try await httpClient.execute(urlRequest, timeout: .seconds(30))
+            let response = try await client.execute(urlRequest, timeout: .seconds(30))
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
                 throw OCSPFetchError()
@@ -162,6 +167,10 @@ final class Requester: OCSPRequester {
         } catch {
             return .terminalError(error)
         }
+    }
+    
+    deinit {
+        try? self.client.syncShutdown()
     }
     
     private struct OCSPFetchError: Error {}
