@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-      - name: Set up Swift 5.8
-        uses: swift-actions/setup-swift@v1
+      - name: Set up Swift 5
+        uses: swift-actions/setup-swift@v2
         with:
-          swift-version: 5.8
+          swift-version: 5
       - name: Swift build
         run: swift build
       - name: Build docs
