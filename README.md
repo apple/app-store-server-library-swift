@@ -9,6 +9,10 @@ The Swift server library for the [App Store Server API](https://developer.apple.
 
 ## Installation
 
+### Requirements
+
+- Swift 6
+
 ### Swift Package Manager
 Add the following dependency
 ```swift

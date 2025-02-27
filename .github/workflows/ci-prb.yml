@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        swift: [ "5" ]
+        swift: [ "6" ]
         os: [ ubuntu-latest ]
     steps:
       - name: Checkout Code
