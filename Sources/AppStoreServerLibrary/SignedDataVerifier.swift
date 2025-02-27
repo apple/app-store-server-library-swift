@@ -21,7 +21,7 @@ public struct SignedDataVerifier {
     /// - Parameter environment: The server environment, either sandbox or production.
     /// - Parameter enableOnlineChecks: Whether to enable revocation checking and check expiration using the current date
     /// - Throws: When the root certificates are malformed
-    public init(rootCertificates: [Foundation.Data], bundleId: String, appAppleId: Int64?, environment: Environment, enableOnlineChecks: Bool) throws {
+    public init(rootCertificates: [Data], bundleId: String, appAppleId: Int64?, environment: Environment, enableOnlineChecks: Bool) throws {
 
         guard !(environment == .production && appAppleId == nil) else {
             throw ConfigurationError.INVALID_APP_APPLE_ID

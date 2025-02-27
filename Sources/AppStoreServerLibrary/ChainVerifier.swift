@@ -17,7 +17,7 @@ struct ChainVerifier {
     private let store: CertificateStore
     private let requester: Requester
     
-    init(rootCertificates: [Foundation.Data]) throws {
+    init(rootCertificates: [Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
         self.store = CertificateStore(parsedCertificates)
         self.requester = Requester()
@@ -32,7 +32,7 @@ struct ChainVerifier {
                 return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
             }
             let jsonDecoder = getJsonDecoder()
-            guard let headerData = Foundation.Data(base64Encoded: base64URLToBase64(bodySegments[0])), let bodyData = Foundation.Data(base64Encoded: base64URLToBase64(bodySegments[1])) else {
+            guard let headerData = Data(base64Encoded: base64URLToBase64(bodySegments[0])), let bodyData = Data(base64Encoded: base64URLToBase64(bodySegments[1])) else {
                 return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
             }
             header = try jsonDecoder.decode(JWTHeader.self, from: headerData)
@@ -55,8 +55,8 @@ struct ChainVerifier {
         }
         
 
-        guard let leaf_der_enocded = Foundation.Data(base64Encoded: x5c_header[0]),
-              let intermeidate_der_encoded = Foundation.Data(base64Encoded: x5c_header[1]) else {
+        guard let leaf_der_enocded = Data(base64Encoded: x5c_header[0]),
+              let intermeidate_der_encoded = Data(base64Encoded: x5c_header[1]) else {
             return VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE)
         }
         do {

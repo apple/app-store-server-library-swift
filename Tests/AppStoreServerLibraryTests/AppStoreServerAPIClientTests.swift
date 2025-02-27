@@ -10,7 +10,7 @@ import JWTKit
 
 final class AppStoreServerAPIClientTests: XCTestCase {
     
-    typealias RequestVerifier = (HTTPClientRequest, Foundation.Data?) throws -> ()
+    typealias RequestVerifier = (HTTPClientRequest, Data?) throws -> ()
     
     public func testExtendRenewalDateForAllActiveSubscribers() async throws {
         let client = try getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
@@ -508,8 +508,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertTrue(authorization.starts(with: "Bearer "))
             let tokenComponents = authorization[authorization.index(authorization.startIndex, offsetBy: 7)...]
                 .components(separatedBy: ".")
-            guard let headerData = Foundation.Data(base64Encoded: base64URLToBase64(tokenComponents[0])),
-                  let payloadData = Foundation.Data(base64Encoded: base64URLToBase64(tokenComponents[1])) else {
+            guard let headerData = Data(base64Encoded: base64URLToBase64(tokenComponents[0])),
+                  let payloadData = Data(base64Encoded: base64URLToBase64(tokenComponents[1])) else {
                 XCTAssertTrue(false)
                 return
             }
@@ -661,14 +661,14 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     class AppStoreServerAPIClientTest: AppStoreServerAPIClient {
         
-        private var requestOverride: ((HTTPClientRequest, Foundation.Data?) throws -> HTTPClientResponse)?
+        private var requestOverride: ((HTTPClientRequest, Data?) throws -> HTTPClientResponse)?
         
-        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: Environment, requestOverride: @escaping (HTTPClientRequest, Foundation.Data?) throws -> HTTPClientResponse) throws {
+        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: Environment, requestOverride: @escaping (HTTPClientRequest, Data?) throws -> HTTPClientResponse) throws {
             try super.init(signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
             self.requestOverride = requestOverride
         }
         
-        internal override func executeRequest(_ urlRequest: HTTPClientRequest, _ body: Foundation.Data?) async throws -> HTTPClientResponse {
+        internal override func executeRequest(_ urlRequest: HTTPClientRequest, _ body: Data?) async throws -> HTTPClientResponse {
             return try requestOverride!(urlRequest, body)
         }
     }
