@@ -21,7 +21,7 @@ jobs:
       - name: Build docs
         run: swift package --allow-writing-to-directory docs generate-documentation --target AppStoreServerLibrary --product AppStoreServerLibrary --disable-indexing --hosting-base-path app-store-server-library-swift --output-path docs
       - name: Upload docs
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs
   deploy:
