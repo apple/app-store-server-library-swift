@@ -15,7 +15,7 @@ public class ReceiptUtility {
     ///- Returns A transaction id from the array of in-app purchases, null if the receipt contains no in-app purchases
     public static func extractTransactionId(appReceipt: String) -> String? {
         var result: String? = nil
-        if let parsedData = Foundation.Data(base64Encoded: appReceipt), let parsedContainer = try? BER.parse([UInt8](parsedData)) {
+        if let parsedData = Data(base64Encoded: appReceipt), let parsedContainer = try? BER.parse([UInt8](parsedData)) {
             try? BER.sequence(parsedContainer, identifier: ASN1Identifier.sequence) { nodes in
                 let _ = try ASN1ObjectIdentifier(berEncoded: &nodes)
                 try? BER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { arrayNode in
@@ -89,14 +89,14 @@ public class ReceiptUtility {
     /// - Parameter transactionReceipt The unmodified transactionReceipt
     /// - Returns A transaction id, or null if no transactionId is found in the receipt
     public static func extractTransactionId(transactionReceipt: String) -> String? {
-        if let d = Foundation.Data(base64Encoded: transactionReceipt), let decodedReceipt = String(bytes: d, encoding: .utf8) {
+        if let d = Data(base64Encoded: transactionReceipt), let decodedReceipt = String(bytes: d, encoding: .utf8) {
             let purchaseInfoRange = NSRange(decodedReceipt.startIndex..<decodedReceipt.endIndex, in: decodedReceipt)
             if let purchaseInfoRegex = try? NSRegularExpression(pattern: #"\"purchase-info\"\s+=\s+\"([a-zA-Z0-9+/=]+)\";"#, options: []), let purchaseInfoMatch = purchaseInfoRegex.firstMatch(in: decodedReceipt, range: purchaseInfoRange) {
                 let purchaseInfoResultRange = purchaseInfoMatch.range(at: 1)
                 if purchaseInfoResultRange.location != NSNotFound, let purchaseInfoRange = Range(purchaseInfoResultRange, in: decodedReceipt)
                 {
                     let purchaseInfo = decodedReceipt[purchaseInfoRange]
-                    if let e = Foundation.Data(base64Encoded: String(purchaseInfo)), let decodedPurchaseInfo = String(bytes: e, encoding: .utf8) {
+                    if let e = Data(base64Encoded: String(purchaseInfo)), let decodedPurchaseInfo = String(bytes: e, encoding: .utf8) {
                         let transactionIdNSRange = NSRange(decodedPurchaseInfo.startIndex..<decodedPurchaseInfo.endIndex, in: decodedPurchaseInfo)
                         if let transactionIdRegex = try? NSRegularExpression(pattern: #"\"transaction-id\"\s+=\s+\"([a-zA-Z0-9+/=]+)\";"#, options: []), let transactionIdMatch = transactionIdRegex.firstMatch(in: decodedPurchaseInfo, range: transactionIdNSRange) {
                             let transactionIdResultRange = transactionIdMatch.range(at: 1)

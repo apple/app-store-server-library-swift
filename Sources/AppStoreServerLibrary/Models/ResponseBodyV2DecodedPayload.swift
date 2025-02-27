@@ -6,7 +6,7 @@ import Foundation
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
 
-    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
+    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
         self.notificationType = notificationType
         self.subtype = subtype
         self.notificationUUID = notificationUUID
@@ -17,7 +17,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.externalPurchaseToken = externalPurchaseToken
     }
     
-    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: Data? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
+    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
         self.rawNotificationType = rawNotificationType
         self.rawSubtype = rawSubtype
         self.notificationUUID = notificationUUID
@@ -67,7 +67,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     ///The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
     ///
     ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
-    public var data: Data?
+    public var data: NotificationData?
 
     ///A string that indicates the notification’s App Store Server Notifications version number.
     ///
@@ -107,7 +107,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.rawNotificationType = try container.decodeIfPresent(String.self, forKey: .notificationType)
         self.rawSubtype = try container.decodeIfPresent(String.self, forKey: .subtype)
         self.notificationUUID = try container.decodeIfPresent(String.self, forKey: .notificationUUID)
-        self.data = try container.decodeIfPresent(Data.self, forKey: .data)
+        self.data = try container.decodeIfPresent(NotificationData.self, forKey: .data)
         self.version = try container.decodeIfPresent(String.self, forKey: .version)
         self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
         self.summary = try container.decodeIfPresent(Summary.self, forKey: .summary)

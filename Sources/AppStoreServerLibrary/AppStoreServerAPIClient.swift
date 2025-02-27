@@ -57,7 +57,7 @@ public class AppStoreServerAPIClient {
         try? self.client.syncShutdown()
     }
     
-    private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Foundation.Data> {
+    private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Data> {
         do {
             var queryItems: [URLQueryItem] = []
             for (parameter, values) in queryParameters {
@@ -82,7 +82,7 @@ public class AppStoreServerAPIClient {
             urlRequest.headers.add(name: "Accept", value: "application/json")
             urlRequest.method = method
             
-            let requestBody: Foundation.Data?
+            let requestBody: Data?
             if let b = body {
                 let jsonEncoder = getJsonEncoder()
                 let encodedBody = try jsonEncoder.encode(b)
@@ -111,7 +111,7 @@ public class AppStoreServerAPIClient {
     }
     
     // requestBody passed for testing purposes
-    internal func executeRequest(_ urlRequest: HTTPClientRequest, _ requestBody: Foundation.Data?) async throws -> HTTPClientResponse {
+    internal func executeRequest(_ urlRequest: HTTPClientRequest, _ requestBody: Data?) async throws -> HTTPClientResponse {
         return try await self.client.execute(urlRequest, timeout: .seconds(30))
     }
     

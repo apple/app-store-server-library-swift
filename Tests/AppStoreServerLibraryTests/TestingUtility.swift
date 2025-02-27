@@ -14,7 +14,7 @@ public class TestingUtility {
         return try! String(contentsOf: absolutePath, encoding: .utf8)
     }
     
-    public static func readBytes(_ path: String) -> Foundation.Data {
+    public static func readBytes(_ path: String) -> Data {
         let absolutePath = Bundle.module.url(forResource: path, withExtension: "")!
         return try! Data(contentsOf: absolutePath)
     }

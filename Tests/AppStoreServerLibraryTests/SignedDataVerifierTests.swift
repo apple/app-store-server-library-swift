@@ -25,17 +25,17 @@ final class SignedDataVerifierTests: XCTestCase {
 
     func testValidChainWithoutOCSP() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
-        let root = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: ROOT_CA_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let root = try! Certificate(derEncoded: Array(Data(base64Encoded: ROOT_CA_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
         XCTAssertEqual(result, .validCertificate([leaf, intermediate, root]))
     }
     
     func testValidChainInvalidIntermediateOIDWithoutOCSP() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: INTERMEDIATE_CA_INVALID_OID_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_INVALID_OID_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
         switch result {
         case .validCertificate(_):
@@ -47,8 +47,8 @@ final class SignedDataVerifierTests: XCTestCase {
     
     func testValidChainInvalidLeafOIDWithoutOCSP() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: LEAF_CERT_INVALID_OID_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_INVALID_OID_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
         switch result {
         case .validCertificate(_):
@@ -61,8 +61,8 @@ final class SignedDataVerifierTests: XCTestCase {
     func testValidChainExpired() async throws {
         let EXPIRED_DATE: Date = Date(timeIntervalSince1970: TimeInterval(2280946846))
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: LEAF_CERT_INVALID_OID_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_INVALID_OID_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EXPIRED_DATE)
         switch result {
         case .validCertificate(_):
@@ -74,8 +74,8 @@ final class SignedDataVerifierTests: XCTestCase {
     
     func testChainDifferentThanRootCertificate() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
         switch result {
         case .validCertificate(_):
@@ -88,9 +88,9 @@ final class SignedDataVerifierTests: XCTestCase {
     // The following test will communicate with Apple's OCSP servers, disable this test for offline testing
     func testAppleChainIsValidWithOCSP() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED)!))
-        let intermediate = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
-        let root = try! Certificate(derEncoded: Array(Foundation.Data(base64Encoded: REAL_APPLE_ROOT_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
+        let root = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_ROOT_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
         XCTAssertEqual(result, .validCertificate([leaf, intermediate, root]))
     }
