@@ -87,7 +87,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(Environment.localTesting, statusResponse.environment)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, statusResponse.environment)
         XCTAssertEqual("LocalTesting", statusResponse.rawEnvironment)
         XCTAssertEqual("com.example", statusResponse.bundleId)
         XCTAssertEqual(5454545, statusResponse.appAppleId)
@@ -307,7 +307,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(true, historyResponse.hasMore)
         XCTAssertEqual("com.example", historyResponse.bundleId)
         XCTAssertEqual(323232, historyResponse.appAppleId)
-        XCTAssertEqual(Environment.localTesting, historyResponse.environment)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, historyResponse.environment)
         XCTAssertEqual("LocalTesting", historyResponse.rawEnvironment)
         XCTAssertEqual(["signed_transaction_value", "signed_transaction_value2"], historyResponse.signedTransactions)
         TestingUtility.confirmCodableInternallyConsistent(historyResponse)
@@ -355,7 +355,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(true, historyResponse.hasMore)
         XCTAssertEqual("com.example", historyResponse.bundleId)
         XCTAssertEqual(323232, historyResponse.appAppleId)
-        XCTAssertEqual(Environment.localTesting, historyResponse.environment)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, historyResponse.environment)
         XCTAssertEqual("LocalTesting", historyResponse.rawEnvironment)
         XCTAssertEqual(["signed_transaction_value", "signed_transaction_value2"], historyResponse.signedTransactions)
         TestingUtility.confirmCodableInternallyConsistent(historyResponse)
@@ -627,7 +627,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
         let key = getSigningKey()
         do {
-            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.xcode)
+            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.xcode)
             XCTAssertTrue(false)
             return
         } catch (let e) {
@@ -646,7 +646,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) throws -> AppStoreServerAPIClient {
         let key = getSigningKey()
-        let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: Environment.localTesting) { request, requestBody in
+        let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.localTesting) { request, requestBody in
             try requestVerifier.map { try $0(request, requestBody) }
             let headers = [("Content-Type", "application/json")]
             let bufferedBody = HTTPClientResponse.Body.bytes(.init(string: body))
@@ -663,7 +663,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         
         private var requestOverride: ((HTTPClientRequest, Data?) throws -> HTTPClientResponse)?
         
-        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: Environment, requestOverride: @escaping (HTTPClientRequest, Data?) throws -> HTTPClientResponse) throws {
+        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: AppStoreEnvironment, requestOverride: @escaping (HTTPClientRequest, Data?) throws -> HTTPClientResponse) throws {
             try super.init(signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
             self.requestOverride = requestOverride
         }

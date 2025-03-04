@@ -44,7 +44,7 @@ let issuerId = "99b16628-15e4-4668-972b-eeff55eeff55"
 let keyId = "ABCDEFGHIJ"
 let bundleId = "com.example"
 let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDEFGHIJ.p8")
-let environment = Environment.sandbox
+let environment = AppStoreEnvironment.sandbox
 
 // try! used for example purposes only
 let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
@@ -71,7 +71,7 @@ let bundleId = "com.example"
 let appleRootCAs = loadRootCAs() // Specific implementation may vary
 let appAppleId: Int64? = nil // appAppleId must be provided for the Production environment
 let enableOnlineChecks = true
-let environment = Environment.sandbox
+let environment = AppStoreEnvironment.sandbox
 
 // try! used for example purposes only
 let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, appAppleId: appAppleId, environment: environment, enableOnlineChecks: enableOnlineChecks)
@@ -95,7 +95,7 @@ let issuerId = "99b16628-15e4-4668-972b-eeff55eeff55"
 let keyId = "ABCDEFGHIJ"
 let bundleId = "com.example"
 let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDEFGHIJ.p8")
-let environment = Environment.sandbox
+let environment = AppStoreEnvironment.sandbox
 
 // try! used for example purposes only
 let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)

@@ -173,7 +173,7 @@ final class SignedDataVerifierTests: XCTestCase {
         let renewalInfoResult = await verifier.verifyAndDecodeRenewalInfo(signedRenewalInfo: renewalInfo)
         switch renewalInfoResult {
         case .valid(let renewalInfo):
-            XCTAssertEqual(Environment.sandbox, renewalInfo.environment)
+            XCTAssertEqual(AppStoreEnvironment.sandbox, renewalInfo.environment)
         case .invalid(_):
             XCTAssert(false)
         }
@@ -185,7 +185,7 @@ final class SignedDataVerifierTests: XCTestCase {
         let transactionInfoResult = await verifier.verifyAndDecodeTransaction(signedTransaction: transactionInfo)
         switch transactionInfoResult {
         case .valid(let transactionInfo):
-            XCTAssertEqual(Environment.sandbox, transactionInfo.environment)
+            XCTAssertEqual(AppStoreEnvironment.sandbox, transactionInfo.environment)
         case .invalid(_):
             XCTAssert(false)
         }

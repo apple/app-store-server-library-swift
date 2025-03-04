@@ -23,7 +23,7 @@ struct ChainVerifier {
         self.requester = Requester()
     }
     
-    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: Environment) async -> VerificationResult<T> where T: Decodable {
+    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable {
         let header: JWTHeader;
         let decodedBody: T;
         do {
@@ -41,7 +41,7 @@ struct ChainVerifier {
             return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
         }
         
-        if (environment == Environment.xcode || environment == Environment.localTesting) {
+        if (environment == AppStoreEnvironment.xcode || environment == AppStoreEnvironment.localTesting) {
             // Data is not signed by the App Store, and verification should be skipped
             // The environment MUST be checked in the public method calling this
             return VerificationResult.valid(decodedBody)

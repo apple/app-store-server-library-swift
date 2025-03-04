@@ -5,7 +5,7 @@
 ///[summary](https://developer.apple.com/documentation/appstoreservernotifications/summary)
 public struct Summary: Decodable, Encodable, Hashable, Sendable {
     
-    public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
+    public init(environment: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
         self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -30,9 +30,9 @@ public struct Summary: Decodable, Encodable, Hashable, Sendable {
     ///The server environment that the notification applies to, either sandbox or production.
     ///
     ///[environment](https://developer.apple.com/documentation/appstoreservernotifications/environment)
-    public var environment: Environment? {
+    public var environment: AppStoreEnvironment? {
         get {
-            return rawEnvironment.flatMap { Environment(rawValue: $0) }
+            return rawEnvironment.flatMap { AppStoreEnvironment(rawValue: $0) }
         }
         set {
             self.rawEnvironment = newValue.map { $0.rawValue }
