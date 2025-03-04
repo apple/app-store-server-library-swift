@@ -3,7 +3,7 @@
 ///The app metadata and the signed renewal and transaction information.
 ///
 ///[data](https://developer.apple.com/documentation/appstoreservernotifications/data)
-public struct Data: Decodable, Encodable, Hashable, Sendable {
+public struct NotificationData: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: Environment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil, consumptionRequestReason: ConsumptionRequestReason? = nil) {
         self.environment = environment

@@ -26,7 +26,7 @@ public struct PromotionalOfferSignatureCreator {
     /// - Throws: If there was an error creating the signature
     public func createSignature(productIdentifier: String, subscriptionOfferID: String, applicationUsername: String, nonce: UUID, timestamp: Int64) throws -> String {
         let payload = "\(self.bundleId)\u{2063}\(self.keyId)\u{2063}\(productIdentifier)\u{2063}\(subscriptionOfferID)\u{2063}\(applicationUsername.lowercased())\u{2063}\(nonce.uuidString.lowercased())\u{2063}\(timestamp)"
-        let dataBytes = Foundation.Data(payload.utf8)
+        let dataBytes = Data(payload.utf8)
         let signature = try ecPrivateKey.signature(for: SHA256.hash(data: dataBytes))
         return signature.derRepresentation.base64EncodedString()
     }
