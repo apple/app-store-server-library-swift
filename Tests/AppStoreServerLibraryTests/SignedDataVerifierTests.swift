@@ -22,6 +22,7 @@ final class SignedDataVerifierTests: XCTestCase {
     private var REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED = "MIIEMDCCA7agAwIBAgIQaPoPldvpSoEH0lBrjDPv9jAKBggqhkjOPQQDAzB1MUQwQgYDVQQDDDtBcHBsZSBXb3JsZHdpZGUgRGV2ZWxvcGVyIFJlbGF0aW9ucyBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTELMAkGA1UECwwCRzYxEzARBgNVBAoMCkFwcGxlIEluYy4xCzAJBgNVBAYTAlVTMB4XDTIxMDgyNTAyNTAzNFoXDTIzMDkyNDAyNTAzM1owgZIxQDA+BgNVBAMMN1Byb2QgRUNDIE1hYyBBcHAgU3RvcmUgYW5kIGlUdW5lcyBTdG9yZSBSZWNlaXB0IFNpZ25pbmcxLDAqBgNVBAsMI0FwcGxlIFdvcmxkd2lkZSBEZXZlbG9wZXIgUmVsYXRpb25zMRMwEQYDVQQKDApBcHBsZSBJbmMuMQswCQYDVQQGEwJVUzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOoTcaPcpeipNL9eQ06tCu7pUcwdCXdN8vGqaUjd58Z8tLxiUC0dBeA+euMYggh1/5iAk+FMxUFmA2a1r4aCZ8SjggIIMIICBDAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFD8vlCNR01DJmig97bB85c+lkGKZMHAGCCsGAQUFBwEBBGQwYjAtBggrBgEFBQcwAoYhaHR0cDovL2NlcnRzLmFwcGxlLmNvbS93d2RyZzYuZGVyMDEGCCsGAQUFBzABhiVodHRwOi8vb2NzcC5hcHBsZS5jb20vb2NzcDAzLXd3ZHJnNjAyMIIBHgYDVR0gBIIBFTCCAREwggENBgoqhkiG92NkBQYBMIH+MIHDBggrBgEFBQcCAjCBtgyBs1JlbGlhbmNlIG9uIHRoaXMgY2VydGlmaWNhdGUgYnkgYW55IHBhcnR5IGFzc3VtZXMgYWNjZXB0YW5jZSBvZiB0aGUgdGhlbiBhcHBsaWNhYmxlIHN0YW5kYXJkIHRlcm1zIGFuZCBjb25kaXRpb25zIG9mIHVzZSwgY2VydGlmaWNhdGUgcG9saWN5IGFuZCBjZXJ0aWZpY2F0aW9uIHByYWN0aWNlIHN0YXRlbWVudHMuMDYGCCsGAQUFBwIBFipodHRwOi8vd3d3LmFwcGxlLmNvbS9jZXJ0aWZpY2F0ZWF1dGhvcml0eS8wHQYDVR0OBBYEFCOCmMBq//1L5imvVmqX1oCYeqrMMA4GA1UdDwEB/wQEAwIHgDAQBgoqhkiG92NkBgsBBAIFADAKBggqhkjOPQQDAwNoADBlAjEAl4JB9GJHixP2nuibyU1k3wri5psGIxPME05sFKq7hQuzvbeyBu82FozzxmbzpogoAjBLSFl0dZWIYl2ejPV+Di5fBnKPu8mymBQtoE/H2bES0qAs8bNueU3CBjjh1lwnDsI="
 
     private var EFFECTIVE_DATE: Date = Date(timeIntervalSince1970: TimeInterval(1681312846)); // April 2023
+    private let CLOCK_DATE: Int64 = 41231
 
     func testValidChainWithoutOCSP() async throws {
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
@@ -83,6 +84,43 @@ final class SignedDataVerifierTests: XCTestCase {
         case .couldNotValidate(_):
             break
         }
+    }
+    
+    func testOcspResponseCaching() async throws {
+        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 1, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        verifier.setDate(newDate: CLOCK_DATE + 1) // 1 second
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+    }
+    
+    func testOcspResponseCachingHasExpiration() async throws {
+        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        verifier.setDate(newDate: CLOCK_DATE + 900) // 15 minutes
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+    }
+    
+    func testOcspResponseCachingWithDifferentChains() async throws {
+        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let altLeaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let altIntermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let _ = await verifier.verifyChain(leaf: altLeaf, intermediate: altIntermediate, online: true, validationTime: EFFECTIVE_DATE)
+    }
+    
+    func testOcspResponseCachingWithSlightlyDifferentChains() async throws {
+        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let altIntermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: altIntermediate, online: true, validationTime: EFFECTIVE_DATE)
     }
     
     // The following test will communicate with Apple's OCSP servers, disable this test for offline testing
@@ -215,5 +253,31 @@ final class SignedDataVerifierTests: XCTestCase {
     
     private func getChainVerifier(base64EncodedRootCertificate: String) -> ChainVerifier {
         return try! ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
+    }
+    
+    class DateOverrideChainVerifier: ChainVerifier {
+        var currentDate: Int64
+        var expectation : XCTestExpectation
+        
+        init?(expectedCalls: Int, currentDate: Int64, base64EncodedRootCertificate: String) {
+            self.currentDate = currentDate
+            self.expectation = XCTestExpectation()
+            self.expectation.assertForOverFulfill = true
+            self.expectation.expectedFulfillmentCount = expectedCalls
+            try? super.init(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
+        }
+        
+        func setDate(newDate: Int64) {
+            self.currentDate = newDate
+        }
+        
+        override func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+            expectation.fulfill()
+            return .validCertificate([])
+        }
+        
+        override func getDate() -> Date {
+            return Date(timeIntervalSince1970: TimeInterval(currentDate))
+        }
     }
 }
