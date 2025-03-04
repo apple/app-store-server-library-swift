@@ -32,7 +32,7 @@ public class AppStoreServerAPIClient {
     ///- Parameter issuerId: Your issuer ID from the Keys page in App Store Connect
     ///- Parameter bundleId: Your app’s bundle ID
     ///- Parameter environment: The environment to target
-    public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: Environment) throws {
+    public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: AppStoreEnvironment) throws {
         self.signingKey = try P256.Signing.PrivateKey(pemRepresentation: signingKey)
         self.keyId = keyId
         self.issuerId = issuerId

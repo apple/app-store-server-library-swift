@@ -5,7 +5,7 @@
 ///[StatusResponse](https://developer.apple.com/documentation/appstoreserverapi/statusresponse)
 public struct StatusResponse: Decodable, Encodable, Hashable, Sendable {
     
-    public init(environment: Environment? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
+    public init(environment: AppStoreEnvironment? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
         self.environment = environment
         self.bundleId = bundleId
         self.appAppleId = appAppleId
@@ -22,9 +22,9 @@ public struct StatusResponse: Decodable, Encodable, Hashable, Sendable {
     ///The server environment, sandbox or production, in which the App Store generated the response.
     ///
     ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
-    public var environment: Environment? {
+    public var environment: AppStoreEnvironment? {
         get {
-            return rawEnvironment.flatMap { Environment(rawValue: $0) }
+            return rawEnvironment.flatMap { AppStoreEnvironment(rawValue: $0) }
         }
         set {
             self.rawEnvironment = newValue.map { $0.rawValue }

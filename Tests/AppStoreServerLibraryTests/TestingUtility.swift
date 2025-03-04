@@ -19,11 +19,11 @@ public class TestingUtility {
         return try! Data(contentsOf: absolutePath)
     }
     
-    public static func getSignedDataVerifier(_ environment: Environment, _ bundleId: String, _ appAppleId: Int64) -> SignedDataVerifier {
+    public static func getSignedDataVerifier(_ environment: AppStoreEnvironment, _ bundleId: String, _ appAppleId: Int64) -> SignedDataVerifier {
         return try! SignedDataVerifier(rootCertificates: [readBytes("resources/certs/testCA.der")], bundleId: bundleId, appAppleId: appAppleId, environment: environment, enableOnlineChecks: false)
     }
     
-    public static func getSignedDataVerifier(_ environment: Environment, _ bundleId: String) -> SignedDataVerifier {
+    public static func getSignedDataVerifier(_ environment: AppStoreEnvironment, _ bundleId: String) -> SignedDataVerifier {
         return getSignedDataVerifier(environment, bundleId, 1234)
     }
     

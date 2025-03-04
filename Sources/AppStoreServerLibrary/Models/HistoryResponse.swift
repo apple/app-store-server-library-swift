@@ -5,7 +5,7 @@
 ///[HistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/historyresponse)
 public struct HistoryResponse: Decodable, Encodable, Hashable, Sendable {
     
-    public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: Environment? = nil, signedTransactions: [String]? = nil) {
+    public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: AppStoreEnvironment? = nil, signedTransactions: [String]? = nil) {
         self.revision = revision
         self.hasMore = hasMore
         self.bundleId = bundleId
@@ -46,9 +46,9 @@ public struct HistoryResponse: Decodable, Encodable, Hashable, Sendable {
     ///The server environment in which you’re making the request, whether sandbox or production.
     ///
     ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
-    public var environment: Environment? {
+    public var environment: AppStoreEnvironment? {
         get {
-            return rawEnvironment.flatMap { Environment(rawValue: $0) }
+            return rawEnvironment.flatMap { AppStoreEnvironment(rawValue: $0) }
         }
         set {
             self.rawEnvironment = newValue.map { $0.rawValue }

@@ -11,7 +11,7 @@ public struct SignedDataVerifier {
 
     private var bundleId: String
     private var appAppleId: Int64?
-    private var environment: Environment
+    private var environment: AppStoreEnvironment
     private var chainVerifier: ChainVerifier
     private var enableOnlineChecks: Bool
      
@@ -21,7 +21,7 @@ public struct SignedDataVerifier {
     /// - Parameter environment: The server environment, either sandbox or production.
     /// - Parameter enableOnlineChecks: Whether to enable revocation checking and check expiration using the current date
     /// - Throws: When the root certificates are malformed
-    public init(rootCertificates: [Data], bundleId: String, appAppleId: Int64?, environment: Environment, enableOnlineChecks: Bool) throws {
+    public init(rootCertificates: [Data], bundleId: String, appAppleId: Int64?, environment: AppStoreEnvironment, enableOnlineChecks: Bool) throws {
 
         guard !(environment == .production && appAppleId == nil) else {
             throw ConfigurationError.INVALID_APP_APPLE_ID
@@ -79,13 +79,13 @@ public struct SignedDataVerifier {
         return await verifyAndDecodeNotification(signedPayload: signedPayload, validateNotification: self.verifyNotificationAppIdentifierAndEnvironment)
     }
         
-    internal func verifyAndDecodeNotification(signedPayload: String, validateNotification: (_ appBundleID: String?, _ appAppleID: Int64?, _ environment: Environment?) -> VerificationError?) async -> VerificationResult<ResponseBodyV2DecodedPayload> {
+    internal func verifyAndDecodeNotification(signedPayload: String, validateNotification: (_ appBundleID: String?, _ appAppleID: Int64?, _ environment: AppStoreEnvironment?) -> VerificationError?) async -> VerificationResult<ResponseBodyV2DecodedPayload> {
         let notificationResult = await decodeSignedData(signedData: signedPayload, type: ResponseBodyV2DecodedPayload.self)
         switch notificationResult {
         case .valid(let notification):
             let appAppleId: Int64?
             let bundleId : String?
-            let environment: Environment?
+            let environment: AppStoreEnvironment?
             if let data = notification.data {
                 appAppleId = data.appAppleId
                 bundleId = data.bundleId
@@ -116,7 +116,7 @@ public struct SignedDataVerifier {
         return notificationResult
     }
 
-    internal func verifyNotificationAppIdentifierAndEnvironment(bundleId: String?, appAppleId: Int64?, environment: Environment?) -> VerificationError? {
+    internal func verifyNotificationAppIdentifierAndEnvironment(bundleId: String?, appAppleId: Int64?, environment: AppStoreEnvironment?) -> VerificationError? {
         if self.bundleId != bundleId || (self.environment == .production && self.appAppleId != appAppleId) {
             return .INVALID_APP_IDENTIFIER
         }
