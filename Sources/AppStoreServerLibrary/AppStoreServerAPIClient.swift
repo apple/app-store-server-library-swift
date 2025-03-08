@@ -332,7 +332,6 @@ public class AppStoreServerAPIClient {
         var bid: String
         var aud: AudienceClaim
         var iat: IssuedAtClaim
-
         func verify(using algorithm: some JWTAlgorithm) async throws {
             fatalError("Do not attempt to locally verify a JWT")
         }
@@ -547,6 +546,11 @@ public enum APIError: Int64 {
     ///
     ///[InvalidTransactionTypeNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/invalidtransactiontypenotsupportederror)
     case invalidTransactionTypeNotSupported = 4000047
+
+    ///An error that indicates the endpoint doesn't support an app transaction ID.
+    ///
+    ///[AppTransactionIdNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/apptransactionidnotsupportederror)
+    case appTransactionIdNotSupported = 4000048
 
     ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
     ///

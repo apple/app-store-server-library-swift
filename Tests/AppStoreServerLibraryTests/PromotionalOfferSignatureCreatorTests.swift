@@ -11,7 +11,7 @@ final class PromotionalOfferSignatureCreatorTests: XCTestCase {
         let key = TestingUtility.readFile("resources/certs/testSigningKey.p8")
         
         let signatureCreator = try PromotionalOfferSignatureCreator(privateKey: key, keyId: "keyId", bundleId: "bundleId")
-        let signature = try signatureCreator.createSignature(productIdentifier: "productId", subscriptionOfferID: "offerId", applicationUsername: "applicationUsername", nonce: UUID(uuidString: "20fba8a0-2b80-4a7d-a17f-85c1854727f8")!, timestamp: 1698148900000)
+        let signature = try signatureCreator.createSignature(productIdentifier: "productId", subscriptionOfferID: "offerId", appAccountToken: "appAccountToken", nonce: UUID(uuidString: "20fba8a0-2b80-4a7d-a17f-85c1854727f8")!, timestamp: 1698148900000)
         XCTAssertNotNil(signature)
     }
 }

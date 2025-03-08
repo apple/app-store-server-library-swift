@@ -139,14 +139,14 @@ let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDE
 
 let productId = "<product_id>"
 let subscriptionOfferId = "<subscription_offer_id>"
-let applicationUsername = "<application_username>"
+let appAccountToken = "<app_account_token>"
 
 // try! used for example purposes only
 let signatureCreator = try! PromotionalOfferSignatureCreator(privateKey: encodedKey, keyId: keyId, bundleId: bundleId)
 
 let nonce = UUID()
 let timestamp = Int64(Date().timeIntervalSince1970) * 1000
-let signature = signatureCreator.createSignature(productIdentifier: productIdentifier, subscriptionOfferID: subscriptionOfferID, applicationUsername: applicationUsername, nonce: nonce, timestamp: timestamp)
+let signature = signatureCreator.createSignature(productIdentifier: productIdentifier, subscriptionOfferID: subscriptionOfferID, appAccountToken: appAccountToken, nonce: nonce, timestamp: timestamp)
 print(signature)
 ```
 

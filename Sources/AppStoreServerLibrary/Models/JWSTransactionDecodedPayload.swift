@@ -6,7 +6,7 @@ import Foundation
 ///[JWSTransactionDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload)
 public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
-    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, type: ProductType? = nil, appAccountToken: UUID? = nil, inAppOwnershipType: InAppOwnershipType? = nil, signedDate: Date? = nil, revocationReason: RevocationReason? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, environment: AppStoreEnvironment? = nil, storefront: String? = nil, storefrontId: String? = nil, transactionReason: TransactionReason? = nil, currency: String? = nil, price: Int64? = nil, offerDiscountType: OfferDiscountType? = nil) {
+    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, type: ProductType? = nil, appAccountToken: UUID? = nil, inAppOwnershipType: InAppOwnershipType? = nil, signedDate: Date? = nil, revocationReason: RevocationReason? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, environment: AppStoreEnvironment? = nil, storefront: String? = nil, storefrontId: String? = nil, transactionReason: TransactionReason? = nil, currency: String? = nil, price: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
         self.originalTransactionId = originalTransactionId
         self.transactionId = transactionId
         self.webOrderLineItemId = webOrderLineItemId
@@ -33,9 +33,11 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.currency = currency
         self.price = price
         self.offerDiscountType = offerDiscountType
+        self.appTransactionId = appTransactionId
+        self.offerPeriod = offerPeriod
     }
     
-    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, rawType: String? = nil, appAccountToken: UUID? = nil, rawInAppOwnershipType: String? = nil, signedDate: Date? = nil, rawRevocationReason: Int32? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, rawEnvironment: String? = nil, storefront: String? = nil, storefrontId: String? = nil, rawTransactionReason: String? = nil, currency: String? = nil, price: Int64? = nil, rawOfferDiscountType: String? = nil) {
+    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, rawType: String? = nil, appAccountToken: UUID? = nil, rawInAppOwnershipType: String? = nil, signedDate: Date? = nil, rawRevocationReason: Int32? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, rawEnvironment: String? = nil, storefront: String? = nil, storefrontId: String? = nil, rawTransactionReason: String? = nil, currency: String? = nil, price: Int64? = nil, rawOfferDiscountType: String? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
         self.originalTransactionId = originalTransactionId
         self.transactionId = transactionId
         self.webOrderLineItemId = webOrderLineItemId
@@ -62,6 +64,8 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.currency = currency
         self.price = price
         self.rawOfferDiscountType = rawOfferDiscountType
+        self.appTransactionId = appTransactionId
+        self.offerPeriod = offerPeriod
     }
     
     ///The original transaction identifier of a purchase.
@@ -263,6 +267,16 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     
     ///See ``offerDiscountType``
     public var rawOfferDiscountType: String?
+
+    ///The unique identifier of the app download transaction.
+    ///
+    ///[appTransactionId](https://developer.apple.com/documentation/appstoreserverapi/appTransactionId)
+    public var appTransactionId: String?
+
+    ///The duration of the offer.
+    ///
+    ///[offerPeriod](https://developer.apple.com/documentation/appstoreserverapi/offerPeriod)
+    public var offerPeriod: String?
     
     public enum CodingKeys: CodingKey {
         case originalTransactionId
@@ -291,6 +305,8 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         case currency
         case price
         case offerDiscountType
+        case appTransactionId
+        case offerPeriod
     }
     
     public init(from decoder: any Decoder) throws {
@@ -321,6 +337,8 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.currency = try container.decodeIfPresent(String.self, forKey: .currency)
         self.price = try container.decodeIfPresent(Int64.self, forKey: .price)
         self.rawOfferDiscountType = try container.decodeIfPresent(String.self, forKey: .offerDiscountType)
+        self.appTransactionId = try container.decodeIfPresent(String.self, forKey: .appTransactionId)
+        self.offerPeriod = try container.decodeIfPresent(String.self, forKey: .offerPeriod)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -351,5 +369,7 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.currency, forKey: .currency)
         try container.encodeIfPresent(self.price, forKey: .price)
         try container.encodeIfPresent(self.rawOfferDiscountType, forKey: .offerDiscountType)
+        try container.encodeIfPresent(self.appTransactionId, forKey: .appTransactionId)
+        try container.encodeIfPresent(self.offerPeriod, forKey: .offerPeriod)
     }
 }

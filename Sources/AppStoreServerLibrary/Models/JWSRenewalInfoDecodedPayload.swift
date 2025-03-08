@@ -6,7 +6,7 @@ import Foundation
 ///[JWSRenewalInfoDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfodecodedpayload)
 public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
-    public init(expirationIntent: ExpirationIntent? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, autoRenewStatus: AutoRenewStatus? = nil, isInBillingRetryPeriod: Bool? = nil, priceIncreaseStatus: PriceIncreaseStatus? = nil, gracePeriodExpiresDate: Date? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, environment: AppStoreEnvironment? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil) {
+    public init(expirationIntent: ExpirationIntent? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, autoRenewStatus: AutoRenewStatus? = nil, isInBillingRetryPeriod: Bool? = nil, priceIncreaseStatus: PriceIncreaseStatus? = nil, gracePeriodExpiresDate: Date? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, environment: AppStoreEnvironment? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil, appAccountToken: UUID? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
         self.expirationIntent = expirationIntent
         self.originalTransactionId = originalTransactionId
         self.autoRenewProductId = autoRenewProductId
@@ -25,9 +25,12 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.renewalPrice = renewalPrice
         self.offerDiscountType = offerDiscountType
         self.eligibleWinBackOfferIds = eligibleWinBackOfferIds
+        self.appAccountToken = appAccountToken
+        self.appTransactionId = appTransactionId
+        self.offerPeriod = offerPeriod
     }
     
-    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil) {
+    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil, appAccountToken: UUID? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
         self.rawExpirationIntent = rawExpirationIntent
         self.originalTransactionId = originalTransactionId
         self.autoRenewProductId = autoRenewProductId
@@ -46,6 +49,9 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.renewalPrice = renewalPrice
         self.offerDiscountType = offerDiscountType
         self.eligibleWinBackOfferIds = eligibleWinBackOfferIds
+        self.appAccountToken = appAccountToken
+        self.appTransactionId = appTransactionId
+        self.offerPeriod = offerPeriod
     }
     
     ///The reason the subscription expired.
@@ -197,6 +203,21 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[eligibleWinBackOfferIds](https://developer.apple.com/documentation/appstoreserverapi/eligiblewinbackofferids)
     public var eligibleWinBackOfferIds: [String]?
+
+    ///The UUID that an app optionally generates to map a customer’s in-app purchase with its resulting App Store transaction.
+    ///
+    ///[appAccountToken](https://developer.apple.com/documentation/appstoreserverapi/appaccounttoken)
+    public var appAccountToken: UUID?
+
+    ///The unique identifier of the app download transaction.
+    ///
+    ///[appTransactionId](https://developer.apple.com/documentation/appstoreserverapi/appTransactionId)
+    public var appTransactionId: String?
+
+    ///The duration of the offer.
+    ///
+    ///[offerPeriod](https://developer.apple.com/documentation/appstoreserverapi/offerPeriod)
+    public var offerPeriod: String?
     
     public enum CodingKeys: CodingKey {
         case expirationIntent
@@ -217,6 +238,9 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         case renewalPrice
         case offerDiscountType
         case eligibleWinBackOfferIds
+        case appAccountToken
+        case appTransactionId
+        case offerPeriod
     }
     
     public init(from decoder: any Decoder) throws {
@@ -239,6 +263,9 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.renewalPrice = try container.decodeIfPresent(Int64.self, forKey: .renewalPrice)
         self.rawOfferDiscountType = try container.decodeIfPresent(String.self, forKey: .offerDiscountType)
         self.eligibleWinBackOfferIds = try container.decodeIfPresent([String].self, forKey: .eligibleWinBackOfferIds)
+        self.appAccountToken = try container.decodeIfPresent(UUID.self, forKey: .appAccountToken)
+        self.appTransactionId = try container.decodeIfPresent(String.self, forKey: .appTransactionId)
+        self.offerPeriod = try container.decodeIfPresent(String.self, forKey: .offerPeriod)
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -261,5 +288,8 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.renewalPrice, forKey: .renewalPrice)
         try container.encodeIfPresent(self.rawOfferDiscountType, forKey: .offerDiscountType)
         try container.encodeIfPresent(self.eligibleWinBackOfferIds, forKey: .eligibleWinBackOfferIds)
+        try container.encodeIfPresent(self.appAccountToken, forKey: .appAccountToken)
+        try container.encodeIfPresent(self.appTransactionId, forKey: .appTransactionId)
+        try container.encodeIfPresent(self.offerPeriod, forKey: .offerPeriod)
     }
 }

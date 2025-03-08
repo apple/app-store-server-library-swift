@@ -19,13 +19,13 @@ public struct PromotionalOfferSignatureCreator {
     ///
     /// - Parameter productIdentifier: The subscription product identifier
     /// - Parameter subscriptionOfferID: The subscription discount identifier
-    /// - Parameter applicationUsername: An optional string value that you define; may be an empty string
+    /// - Parameter appAccountToken: An optional string value that you define; may be an empty string
     /// - Parameter nonce: A one-time UUID value that your server generates. Generate a new nonce for every signature.
     /// - Parameter timestamp: A timestamp your server generates in UNIX time format, in milliseconds. The timestamp keeps the offer active for 24 hours.
     /// - Returns: The Base64 encoded signature
     /// - Throws: If there was an error creating the signature
-    public func createSignature(productIdentifier: String, subscriptionOfferID: String, applicationUsername: String, nonce: UUID, timestamp: Int64) throws -> String {
-        let payload = "\(self.bundleId)\u{2063}\(self.keyId)\u{2063}\(productIdentifier)\u{2063}\(subscriptionOfferID)\u{2063}\(applicationUsername.lowercased())\u{2063}\(nonce.uuidString.lowercased())\u{2063}\(timestamp)"
+    public func createSignature(productIdentifier: String, subscriptionOfferID: String, appAccountToken: String, nonce: UUID, timestamp: Int64) throws -> String {
+        let payload = "\(self.bundleId)\u{2063}\(self.keyId)\u{2063}\(productIdentifier)\u{2063}\(subscriptionOfferID)\u{2063}\(appAccountToken.lowercased())\u{2063}\(nonce.uuidString.lowercased())\u{2063}\(timestamp)"
         let dataBytes = Data(payload.utf8)
         let signature = try ecPrivateKey.signature(for: SHA256.hash(data: dataBytes))
         return signature.derRepresentation.base64EncodedString()

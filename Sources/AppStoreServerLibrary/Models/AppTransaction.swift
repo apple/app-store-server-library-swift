@@ -8,7 +8,7 @@ import Foundation
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
-    public init(receiptType: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+    public init(receiptType: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, originalPlatform: PurchasePlatform? = nil) {
         self.receiptType = receiptType
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -20,9 +20,11 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         self.deviceVerification = deviceVerification
         self.deviceVerificationNonce = deviceVerificationNonce
         self.preorderDate = preorderDate
+        self.appTransactionId = appTransactionId
+        self.originalPlatform = originalPlatform
     }
     
-    public init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil) {
+    public init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, rawOriginalPlatform: String? = nil) {
         self.rawReceiptType = rawReceiptType
         self.appAppleId = appAppleId
         self.bundleId = bundleId
@@ -34,6 +36,8 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         self.deviceVerification = deviceVerification
         self.deviceVerificationNonce = deviceVerificationNonce
         self.preorderDate = preorderDate
+        self.appTransactionId = appTransactionId
+        self.rawOriginalPlatform = rawOriginalPlatform
     }
     
     ///The server environment that signs the app transaction.
@@ -108,6 +112,26 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     public var signedDate: Date? {
         receiptCreationDate
     }
+
+    ///The unique identifier of the app download transaction.
+    ///
+    ///[appTransactionId](https://developer.apple.com/documentation/storekit/apptransaction/apptransactionid)
+    public var appTransactionId: String?
+
+    ///The platform on which the customer originally purchased the app.
+    ///
+    ///[originalPlatform](https://developer.apple.com/documentation/storekit/apptransaction/originalplatform-4mogz)
+    public var originalPlatform: PurchasePlatform?  {
+        get {
+            return rawOriginalPlatform.flatMap { PurchasePlatform(rawValue: $0) }
+        }
+        set {
+            self.rawOriginalPlatform = newValue.map { $0.rawValue }
+        }
+    }
+
+    ///See ``originalPlatform``
+    public var rawOriginalPlatform: String?
     
     
     public enum CodingKeys: CodingKey {
@@ -122,6 +146,8 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         case deviceVerification
         case deviceVerificationNonce
         case preorderDate
+        case appTransactionId
+        case originalPlatform
     }
     
     public init(from decoder: any Decoder) throws {
@@ -137,6 +163,8 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         self.deviceVerification = try container.decodeIfPresent(String.self, forKey: .deviceVerification)
         self.deviceVerificationNonce = try container.decodeIfPresent(UUID.self, forKey: .deviceVerificationNonce)
         self.preorderDate = try container.decodeIfPresent(Date.self, forKey: .preorderDate)
+        self.appTransactionId = try container.decodeIfPresent(String.self, forKey: .appTransactionId)
+        self.rawOriginalPlatform = try container.decodeIfPresent(String.self, forKey: .originalPlatform)
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -152,5 +180,7 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         try container.encodeIfPresent(self.deviceVerification, forKey: .deviceVerification)
         try container.encodeIfPresent(self.deviceVerificationNonce, forKey: .deviceVerificationNonce)
         try container.encodeIfPresent(self.preorderDate, forKey: .preorderDate)
+        try container.encodeIfPresent(self.appTransactionId, forKey: .appTransactionId)
+        try container.encodeIfPresent(self.rawOriginalPlatform, forKey: .originalPlatform)
     }
 }
