@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 3.0.0
+- Incorporate changes for App Store Server API v1.15 and App Store Server Notifications v2.15 [https://github.com/apple/app-store-server-library-swift/pull/82]
+- Add verified chain caching to improve performance [https://github.com/apple/app-store-server-library-swift/pull/80]
+- Rename Environment -> AppStoreEnvironment [https://github.com/apple/app-store-server-library-swift/pull/81]
+  - This change is a breaking change
+- Rename Data -> NotificationData to deconflict with Foundation.Data [https://github.com/apple/app-store-server-library-swift/pull/79]
+  - This change is a breaking change
+- Move to Swift and Swift Tools Version 6 [https://github.com/apple/app-store-server-library-swift/pull/78]
+  - This change is a breaking change
+- Update to JWTKit5 [https://github.com/apple/app-store-server-library-swift/pull/68] from @dimitribouniol
+- Make data models conform to Sendable [https://github.com/apple/app-store-server-library-swift/pull/64] from @shimastripe
+
 ## Version 2.3.0
 - Incorporate changes for App Store Server API v1.13 and App Store Server Notifications v2.13 [https://github.com/apple/app-store-server-library-swift/pull/61]
 - Resolve issue where a Date passed as an input that contained a microsecond portiion would cause an API exception [https://github.com/apple/app-store-server-library-swift/pull/62]
