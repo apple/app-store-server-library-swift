@@ -8,8 +8,7 @@ import Crypto
 import AsyncHTTPClient
 import NIOFoundationCompat
 
-class ChainVerifier {
-    
+actor ChainVerifier {
     private static let EXPECTED_CHAIN_LENGTH = 3
     private static let EXPECTED_JWT_SEGMENTS = 3
     private static let EXPECTED_ALGORITHM = "ES256"
@@ -28,7 +27,7 @@ class ChainVerifier {
         self.verifiedPublicKeyCache = [:]
     }
     
-    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable {
+    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable & Sendable {
         let header: JWTHeader
         let decodedBody: T
         do {
@@ -116,7 +115,7 @@ class ChainVerifier {
         return verificationResult
     }
     
-    func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+    nonisolated func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
         var verifier = Verifier(rootCertificates: self.store) {
             RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
@@ -128,7 +127,7 @@ class ChainVerifier {
         return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
     }
     
-    func getDate() -> Date {
+    nonisolated func getDate() -> Date {
         return Date()
     }
 }

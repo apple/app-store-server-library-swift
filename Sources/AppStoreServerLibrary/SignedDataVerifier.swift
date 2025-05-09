@@ -3,7 +3,7 @@
 import Foundation
 
 ///A verifier and decoder class designed to decode signed data from the App Store.
-public struct SignedDataVerifier {
+public struct SignedDataVerifier: Sendable {
 
     public enum ConfigurationError: Error, Hashable, Sendable {
         case INVALID_APP_APPLE_ID
@@ -168,7 +168,7 @@ public struct SignedDataVerifier {
         return realtimeRequestResult
     }
 
-    private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
+    private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable & Sendable {
         return await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks, environment: self.environment)
     }
 }
