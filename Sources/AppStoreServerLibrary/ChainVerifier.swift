@@ -79,14 +79,10 @@ class ChainVerifier {
                 // Verify using Vapor
                 let keys = JWTKeyCollection()
                 await keys.add(ecdsa: try ECDSA.PublicKey<P256>(backing: publicKey))
-                let verifiedBody: VerificationResult<VaporBody> = try await VerificationResult<VaporBody>.valid(keys.verify(signedData))
-                switch verifiedBody {
-                    case .invalid(_):
-                        return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
-                    case .valid(_): break
-                }
+                let _ = try await keys.verify(signedData) as VaporBody
+                
                 return VerificationResult.valid(decodedBody)
-            case .couldNotValidate(_):
+            case .couldNotValidate:
                 return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
             }
         } catch {
@@ -105,7 +101,7 @@ class ChainVerifier {
         let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime)
         
         if online {
-            if case let .validCertificate(verifiedChain) = verificationResult {
+            if case .validCertificate = verificationResult {
                 verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(expirationTime: getDate().addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), publicKey: verificationResult)
                 if verifiedPublicKeyCache.count > ChainVerifier.MAXIMUM_CACHE_SIZE {
                     for kv in verifiedPublicKeyCache {
