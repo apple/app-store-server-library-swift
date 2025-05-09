@@ -217,7 +217,7 @@ final class Requester: OCSPRequester {
     private struct OCSPFetchError: Error {}
 }
 
-public enum VerificationResult<T> {
+public enum VerificationResult<T: Hashable & Sendable>: Hashable, Sendable {
     case valid(T)
     case invalid(VerificationError)
 }

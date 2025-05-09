@@ -5,7 +5,7 @@ import Foundation
 ///A verifier and decoder class designed to decode signed data from the App Store.
 public struct SignedDataVerifier {
 
-    public enum ConfigurationError: Error {
+    public enum ConfigurationError: Error, Hashable, Sendable {
         case INVALID_APP_APPLE_ID
     }
 
