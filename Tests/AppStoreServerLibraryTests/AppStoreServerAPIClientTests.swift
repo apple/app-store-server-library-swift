@@ -652,7 +652,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             let bufferedBody = HTTPClientResponse.Body.bytes(.init(string: body))
             return HTTPClientResponse(version: .http1_1, status: status, headers: HTTPHeaders(headers), body: bufferedBody)
         }
-        return client;
+        return client
     }
     
     private func getSigningKey() -> String {
