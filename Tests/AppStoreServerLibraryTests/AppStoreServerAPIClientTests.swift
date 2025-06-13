@@ -634,6 +634,82 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(AppStoreServerAPIClient.ConfigurationError.invalidEnvironment, e as! AppStoreServerAPIClient.ConfigurationError)
         }
     }
+
+    public func testSetAppAccountToken() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/49571273/appAccountToken", request.url)
+            XCTAssertEqual(["application/json"], request.headers["Content-Type"])
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("7389A31A-FB6D-4569-A2A6-DB7D85D84813", decodedJson["appAccountToken"] as! String)
+        }
+        
+        let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
+            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
+        )
+        TestingUtility.confirmCodableInternallyConsistent(updateAppAccountTokenRequest)
+        
+        let response = await client.setAppAccountToken(originalTransactionId: "49571273", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
+        guard case .success(_) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+
+    public func testInvalidAppAccountTokenUUIDError() async throws {
+        let body = TestingUtility.readFile("resources/models/invalidAppAccountTokenUUIDError.json")
+        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
+            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
+        )
+        let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, statusCode)
+        XCTAssertNotNil(apiError)
+        XCTAssertEqual(4000183, rawApiError)
+        XCTAssertEqual("Invalid request. The app account token field must be a valid UUID.", errorMessage)
+        XCTAssertNil(causedBy)
+    }
+
+    public func testFamilySharedTransactionNotSupportedError() async throws {
+        let body = TestingUtility.readFile("resources/models/familyTransactionNotSupportedError.json")
+        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
+            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
+        )
+        let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, statusCode)
+        XCTAssertNotNil(apiError)
+        XCTAssertEqual(4000185, rawApiError)
+        XCTAssertEqual("Invalid request. Family Sharing transactions aren't supported by this endpoint.", errorMessage)
+        XCTAssertNil(causedBy)
+    }
+
+    public func testTransactionIdNotOriginalTransactionIdError() async throws {
+        let body = TestingUtility.readFile("resources/models/transactionIdNotOriginalTransactionId.json")
+        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
+            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
+        )
+        let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
+        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, statusCode)
+        XCTAssertNotNil(apiError)
+        XCTAssertEqual(4000187, rawApiError)
+        XCTAssertEqual("Invalid request. The transaction ID provided is not an original transaction ID.", errorMessage)
+        XCTAssertNil(causedBy)
+    }
     
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)

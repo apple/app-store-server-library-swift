@@ -325,6 +325,16 @@ public class AppStoreServerAPIClient {
     public func sendConsumptionData(transactionId: String, consumptionRequest: ConsumptionRequest) async -> APIResult<Void> {
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/consumption/" + transactionId, method: .PUT, queryParameters: [:], body: consumptionRequest)
     }
+
+    ///Sets the app account token value for a purchase the customer makes outside your app, or updates its value in an existing transaction.
+    ///
+    ///- Parameter originalTransactionId: The original transaction identifier of the transaction to receive the app account token update.
+    ///- Parameter updateAppAccountTokenRequest :  The request body that contains a valid app account token value.
+    ///- Returns: Success, or information about the failure
+    ///[Set App Account Token](https://developer.apple.com/documentation/appstoreserverapi/set-app-account-token)
+    public func setAppAccountToken(originalTransactionId: String, updateAppAccountTokenRequest: UpdateAppAccountTokenRequest) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/" + originalTransactionId + "/appAccountToken", method: .PUT, queryParameters: [:], body: updateAppAccountTokenRequest)
+    }
     
     internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
         var exp: ExpirationClaim
@@ -551,6 +561,21 @@ public enum APIError: Int64 {
     ///
     ///[AppTransactionIdNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/apptransactionidnotsupportederror)
     case appTransactionIdNotSupported = 4000048
+
+    ///An error that indicates the app account token value is not a valid UUID.
+    ///
+    ///[InvalidAppAccountTokenUUIDError](https://developer.apple.com/documentation/appstoreserverapi/invalidappaccounttokenuuiderror)
+    case invalidAppAccountTokenUUID = 4000183
+
+    ///An error that indicates the transaction is for a product the customer obtains through Family Sharing, which the endpoint doesn’t support.
+    ///
+    ///[FamilyTransactionNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/familytransactionnotsupportederror)
+    case familyTransactionNotSupported = 4000185
+
+    ///An error that indicates the endpoint expects an original transaction identifier.
+    ///
+    ///[TransactionIdIsNotOriginalTransactionIdError](https://developer.apple.com/documentation/appstoreserverapi/transactionidisnotoriginaltransactioniderror)
+    case transactionIdNotOriginalTransactionId = 4000187
 
     ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
     ///
