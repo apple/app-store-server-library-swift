@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 3.1.0
+- Incorporate changes for App Store Server API v1.16 [https://github.com/apple/app-store-server-library-swift/pull/89]
+- Update Swift docs to v6 [https://github.com/apple/app-store-server-library-swift/pull/85]
+
 ## Version 3.0.0
 - Incorporate changes for App Store Server API v1.15 and App Store Server Notifications v2.15 [https://github.com/apple/app-store-server-library-swift/pull/82]
 - Add verified chain caching to improve performance [https://github.com/apple/app-store-server-library-swift/pull/80]
