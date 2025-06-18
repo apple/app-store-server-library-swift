@@ -7,54 +7,47 @@ import AsyncHTTPClient
 import NIOHTTP1
 import NIOFoundationCompat
 
-public class AppStoreServerAPIClient {
+// MARK: - HTTP Client Protocol
 
-    public enum ConfigurationError: Error {
-        /// Xcode is not a supported environment for an AppStoreServerAPIClient
-        case invalidEnvironment
+/// Protocol for HTTP clients that work with App Store Server API
+public protocol AppStoreHTTPClient: Sendable {
+    /// Execute an HTTP request
+    func execute(
+        _ request: HTTPClientRequest,
+        timeout: Duration
+    ) async throws -> HTTPClientResponse
+}
+
+extension HTTPClient: AppStoreHTTPClient {
+    /// Execute HTTP request
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - timeout: If execution is idle for longer than timeout then throw error
+    /// - Returns: HTTP response
+    public func execute(
+        _ request: HTTPClientRequest,
+        timeout: Duration
+    ) async throws -> HTTPClientResponse {
+        return try await self.execute(request, timeout: .init(timeout))
     }
-    
-    private static let userAgent = "app-store-server-library/swift/3.1.0"
-    private static let productionUrl = "https://api.storekit.itunes.apple.com"
-    private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
-    private static let localTestingUrl = "https://local-testing-base-url"
-    private static let appStoreConnectAudience = "appstoreconnect-v1"
-    
-    private let signingKey: P256.Signing.PrivateKey
-    private let keyId: String
-    private let issuerId: String
-    private let bundleId: String
-    private let url: String
-    private let client: HTTPClient
+}
+
+public final class AppStoreServerAPIClient: Sendable {
+
+    public static let userAgent = "app-store-server-library/swift/3.1.0"
+    public static let appStoreConnectAudience = "appstoreconnect-v1"
+    private let config: AppStoreServerAPIConfiguration
+    private let client: AppStoreHTTPClient
     ///Create an App Store Server API client
     ///
-    ///- Parameter signingKey: Your private key downloaded from App Store Connect
-    ///- Parameter issuerId: Your issuer ID from the Keys page in App Store Connect
-    ///- Parameter bundleId: Your app’s bundle ID
-    ///- Parameter environment: The environment to target
-    public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: AppStoreEnvironment) throws {
-        self.signingKey = try P256.Signing.PrivateKey(pemRepresentation: signingKey)
-        self.keyId = keyId
-        self.issuerId = issuerId
-        self.bundleId = bundleId
-        switch(environment) {
-        case .xcode:
-            throw ConfigurationError.invalidEnvironment
-        case .production:
-            self.url = AppStoreServerAPIClient.productionUrl
-            break
-        case .localTesting:
-            self.url = AppStoreServerAPIClient.localTestingUrl
-            break
-        case .sandbox:
-            self.url = AppStoreServerAPIClient.sandboxUrl
-            break
-        }
-        self.client = .init()
-    }
-    
-    deinit {
-        try? self.client.syncShutdown()
+    ///- Parameter config: The configuration for the client
+    ///- Parameter httpClient: The HTTP client to use for the client
+    public init(
+        config: AppStoreServerAPIConfiguration,
+        httpClient: AppStoreHTTPClient = HTTPClient.shared
+    ) {
+        self.config = config
+        self.client = httpClient
     }
     
     private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Data> {
@@ -65,7 +58,7 @@ public class AppStoreServerAPIClient {
                     queryItems.append(URLQueryItem(name: parameter, value: val))
                 }
             }
-            var urlComponents = URLComponents(string: self.url)
+            var urlComponents = URLComponents(string: config.url)
             urlComponents?.path = path
             if !queryItems.isEmpty {
                 urlComponents?.queryItems = queryItems
@@ -142,16 +135,17 @@ public class AppStoreServerAPIClient {
     }
         
     private func generateToken() async throws -> String {
-        let keys = JWTKeyCollection()
+        let keys: JWTKeyCollection = .init()
         let payload = AppStoreServerAPIJWT(
-            exp: .init(value: Date().addingTimeInterval(5 * 60)), // 5 minutes
-            iss: .init(value: self.issuerId),
-            bid: self.bundleId,
+            exp: .init(value: Date().addingTimeInterval(5 * 60)),  // 5 minutes
+            iss: .init(value: config.issuerId),
+            bid: config.bundleId,
             aud: .init(value: AppStoreServerAPIClient.appStoreConnectAudience),
             iat: .init(value: Date())
         )
-        try await keys.add(ecdsa: ECDSA.PrivateKey<P256>(backing: signingKey))
-        return try await keys.sign(payload, header: ["typ": "JWT", "kid": .string(self.keyId)])
+        try await keys.add(ecdsa: ECDSA.PrivateKey<P256>(backing: config.signingKey))
+        return try await keys.sign(
+            payload, header: ["typ": "JWT", "kid": .string(config.keyId)])
     }
     
     ///Uses a subscription’s product identifier to extend the renewal date for all of its eligible active subscribers.
@@ -662,4 +656,77 @@ public enum GetTransactionHistoryVersion: String {
     @available(*, deprecated)
     case v1 = "v1"
     case v2 = "v2"
+}
+
+public struct AppStoreServerAPIConfiguration: Sendable {
+
+    public enum ConfigurationError: Error, Sendable {
+        /// Xcode is not a supported environment for an AppStoreServerAPIClient
+        case invalidEnvironment
+        case invalidSigningKey
+    }
+
+    public enum Environment: String, CaseIterable, Sendable {
+        case production
+        case sandbox
+        case localTesting
+
+        var baseUrl: String {
+            switch self {
+            case .production:
+                return "https://api.storekit.itunes.apple.com"
+            case .sandbox:
+                return "https://api.storekit-sandbox.itunes.apple.com"
+            case .localTesting:
+                return "https://local-testing-base-url"
+            }
+        }
+    }
+
+    public let url: String
+    public let keyId: String
+    public let issuerId: String
+    public let bundleId: String
+    public let signingKey: P256.Signing.PrivateKey
+
+    public init(
+        signingKey: P256.Signing.PrivateKey,
+        keyId: String,
+        issuerId: String,
+        bundleId: String,
+        environment: AppStoreEnvironment
+    ) throws {
+        let url =
+            switch environment {
+            case .xcode:
+                throw ConfigurationError.invalidEnvironment
+            case .production:
+                Environment.production.baseUrl
+            case .localTesting:
+                Environment.localTesting.baseUrl
+            case .sandbox:
+                Environment.sandbox.baseUrl
+            }
+        self.url = url
+        self.keyId = keyId
+        self.issuerId = issuerId
+        self.bundleId = bundleId
+        self.signingKey = signingKey
+    }
+
+    public init(
+        signingKeyPem: String,
+        keyId: String,
+        issuerId: String,
+        bundleId: String,
+        environment: AppStoreEnvironment,
+    ) throws {
+        try self.init(
+            signingKey: try P256.Signing.PrivateKey(pemRepresentation: signingKeyPem),
+            keyId: keyId,
+            issuerId: issuerId,
+            bundleId: bundleId,
+            environment: environment,
+        )
+    }
 }
