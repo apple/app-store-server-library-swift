@@ -7,15 +7,35 @@ import AsyncHTTPClient
 import NIOHTTP1
 import NIOFoundationCompat
 import JWTKit
+import Crypto
+
+// MARK: - Mock HTTP Client
+
+final class MockHTTPClient: AppStoreHTTPClient, Sendable {
+    typealias Handler = @Sendable (HTTPClientRequest, Duration) async throws -> HTTPClientResponse
+
+    let handler: Handler
+
+    public init(handler: @escaping Handler) {
+        self.handler = handler
+    }
+
+    func execute(
+        _ request: HTTPClientRequest,
+        timeout: Duration
+    ) async throws -> HTTPClientResponse {
+        return try await self.handler(request, timeout)
+    }
+}
 
 final class AppStoreServerAPIClientTests: XCTestCase {
-    
-    typealias RequestVerifier = (HTTPClientRequest, Data?) throws -> ()
+    typealias RequestVerifier = @Sendable (HTTPClientRequest, Data?) throws -> ()
     
     public func testExtendRenewalDateForAllActiveSubscribers() async throws {
         let client = try getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", request.url)
+            
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(45, decodedJson["extendByDays"] as! Int)
             XCTAssertEqual(1, decodedJson["extendReasonCode"] as! Int)
@@ -34,8 +54,10 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         
         TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateRequest)
         
+        // Make the actual API call
         let response = await client.extendRenewalDateForAllActiveSubscribers(massExtendRenewalDateRequest: extendRenewalDateRequest)
         
+        // Verify the response
         guard case .success(let massExtendRenewalDateResponse) = response else {
             XCTAssertTrue(false)
             return
@@ -627,11 +649,18 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
         let key = getSigningKey()
         do {
-            let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.xcode)
+            let config = try AppStoreServerAPIConfiguration(
+                signingKeyPem: key,
+                keyId: "keyId",
+                issuerId: "issuerId",
+                bundleId: "com.example",
+                environment: AppStoreEnvironment.xcode
+            )
+            let _ = AppStoreServerAPIClient(config: config)
             XCTAssertTrue(false)
             return
         } catch (let e) {
-            XCTAssertEqual(AppStoreServerAPIClient.ConfigurationError.invalidEnvironment, e as! AppStoreServerAPIClient.ConfigurationError)
+            XCTAssertEqual(AppStoreServerAPIConfiguration.ConfigurationError.invalidEnvironment, e as! AppStoreServerAPIConfiguration.ConfigurationError)
         }
     }
 
@@ -722,30 +751,41 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) throws -> AppStoreServerAPIClient {
         let key = getSigningKey()
-        let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.localTesting) { request, requestBody in
-            try requestVerifier.map { try $0(request, requestBody) }
+        let config = try AppStoreServerAPIConfiguration(
+            signingKey: try P256.Signing.PrivateKey(pemRepresentation: key),
+            keyId: "keyId",
+            issuerId: "issuerId",
+            bundleId: "com.example",
+            environment: AppStoreEnvironment.localTesting
+        )
+
+        // Create a mock HTTP client for testing
+        let mockHTTPClient = MockHTTPClient(handler: { [requestVerifier] request, timeout in
+            // If a request verifier is provided, call it
+            if let verifier = requestVerifier {
+                if let requestBody = request.body {
+                    var collectedBody = try await requestBody.collect(upTo: 1024 * 1024)
+                    let bodyData = collectedBody.readData(length: collectedBody.readableBytes)
+                    try verifier(request, bodyData)
+                } else {
+                    try verifier(request, nil)
+                }
+            }
+
+            // Return the mock response
             let headers = [("Content-Type", "application/json")]
-            let bufferedBody = HTTPClientResponse.Body.bytes(.init(string: body))
-            return HTTPClientResponse(version: .http1_1, status: status, headers: HTTPHeaders(headers), body: bufferedBody)
-        }
-        return client;
+            return HTTPClientResponse(
+                version: .http1_1,
+                status: status,
+                headers: HTTPHeaders(headers),
+                body: .bytes(.init(string: body))
+            )
+        })
+
+        return AppStoreServerAPIClient(config: config, httpClient: mockHTTPClient)
     }
     
     private func getSigningKey() -> String {
         return TestingUtility.readFile("resources/certs/testSigningKey.p8")
-    }
-    
-    class AppStoreServerAPIClientTest: AppStoreServerAPIClient {
-        
-        private var requestOverride: ((HTTPClientRequest, Data?) throws -> HTTPClientResponse)?
-        
-        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: AppStoreEnvironment, requestOverride: @escaping (HTTPClientRequest, Data?) throws -> HTTPClientResponse) throws {
-            try super.init(signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
-            self.requestOverride = requestOverride
-        }
-        
-        internal override func executeRequest(_ urlRequest: HTTPClientRequest, _ body: Data?) async throws -> HTTPClientResponse {
-            return try requestOverride!(urlRequest, body)
-        }
     }
 }
