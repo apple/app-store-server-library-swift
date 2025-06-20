@@ -47,7 +47,8 @@ let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDE
 let environment = AppStoreEnvironment.sandbox
 
 // try! used for example purposes only
-let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
+let config = try! AppStoreServerAPIConfiguration(signingKeyPem: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
+let client = AppStoreServerAPIClient(config: config)
 
 let response = await client.requestTestNotification()
 switch response {
@@ -98,15 +99,17 @@ let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDE
 let environment = AppStoreEnvironment.sandbox
 
 // try! used for example purposes only
-let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
+let config = try! AppStoreServerAPIConfiguration(signingKeyPem: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
+let client = AppStoreServerAPIClient(config: config)
 
 let appReceipt = "MI..."
 let transactionIdOptional = ReceiptUtility.extractTransactionId(appReceipt: appReceipt)
 if let transactionId = transactionIdOptional {
-    var transactionHistoryRequest = TransactionHistoryRequest()
-    transactionHistoryRequest.sort = TransactionHistoryRequest.Order.ascending
-    transactionHistoryRequest.revoked = false
-    transactionHistoryRequest.productTypes = [TransactionHistoryRequest.ProductType.autoRenewable]
+    let transactionHistoryRequest = TransactionHistoryRequest(
+        sort: .ascending,
+        revoked: false,
+        productTypes: [.autoRenewable]
+    )
 
     var response: HistoryResponse?
     var transactions: [String] = []
@@ -137,8 +140,8 @@ let keyId = "ABCDEFGHIJ"
 let bundleId = "com.example"
 let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDEFGHIJ.p8")
 
-let productId = "<product_id>"
-let subscriptionOfferId = "<subscription_offer_id>"
+let productIdentifier = "<product_id>"
+let subscriptionOfferID = "<subscription_offer_id>"
 let appAccountToken = "<app_account_token>"
 
 // try! used for example purposes only
