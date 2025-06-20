@@ -49,6 +49,25 @@ public final class AppStoreServerAPIClient: Sendable {
         self.config = config
         self.client = httpClient
     }
+
+    @available(*, deprecated, message: "Use `init(config: httpClient:)` instead")
+    public init(
+        signingKey: String,
+        keyId: String,
+        issuerId: String,
+        bundleId: String,
+        environment: AppStoreEnvironment,
+        httpClient: AppStoreHTTPClient = HTTPClient.shared
+    ) throws {
+        self.config = try AppStoreServerAPIConfiguration(
+            signingKeyPem: signingKey,
+            keyId: keyId,
+            issuerId: issuerId,
+            bundleId: bundleId,
+            environment: environment
+        )
+        self.client = httpClient
+    }
     
     private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Data> {
         do {
