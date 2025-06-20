@@ -140,8 +140,8 @@ let keyId = "ABCDEFGHIJ"
 let bundleId = "com.example"
 let encodedKey = try! String(contentsOfFile: "/path/to/key/SubscriptionKey_ABCDEFGHIJ.p8")
 
-let productId = "<product_id>"
-let subscriptionOfferId = "<subscription_offer_id>"
+let productIdentifier = "<product_id>"
+let subscriptionOfferID = "<subscription_offer_id>"
 let appAccountToken = "<app_account_token>"
 
 // try! used for example purposes only
