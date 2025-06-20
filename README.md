@@ -105,10 +105,11 @@ let client = AppStoreServerAPIClient(config: config)
 let appReceipt = "MI..."
 let transactionIdOptional = ReceiptUtility.extractTransactionId(appReceipt: appReceipt)
 if let transactionId = transactionIdOptional {
-    var transactionHistoryRequest = TransactionHistoryRequest()
-    transactionHistoryRequest.sort = TransactionHistoryRequest.Order.ascending
-    transactionHistoryRequest.revoked = false
-    transactionHistoryRequest.productTypes = [TransactionHistoryRequest.ProductType.autoRenewable]
+    let transactionHistoryRequest = TransactionHistoryRequest(
+        sort: .ascending,
+        revoked: false,
+        productTypes: [.autoRenewable]
+    )
 
     var response: HistoryResponse?
     var transactions: [String] = []
