@@ -8,24 +8,55 @@ import Crypto
 import AsyncHTTPClient
 import NIOFoundationCompat
 
-class ChainVerifier {
+actor CacheManager: Sendable {
+    private var verifiedPublicKeyCache: [CacheKey: CacheValue] = [:]
+    private static let MAXIMUM_CACHE_SIZE = 32 // There are unlikely to be more than a couple keys at once
+    private static let CACHE_TIME_LIMIT: Int64 = 15 * 60 // 15 minutes in seconds
+
+    func getCachedResult(for key: CacheKey) -> X509.VerificationResult? {
+        if let cachedResult = verifiedPublicKeyCache[key] {
+            if cachedResult.expirationTime > Date() {
+                return cachedResult.publicKey
+            } else {
+                verifiedPublicKeyCache.removeValue(forKey: key)
+            }
+        }
+        return nil
+    }
+
+    func cacheResult(_ result: X509.VerificationResult, for key: CacheKey) {
+        verifiedPublicKeyCache[key] = CacheValue(
+            expirationTime: Date().addingTimeInterval(TimeInterval(integerLiteral: CacheManager.CACHE_TIME_LIMIT)),
+            publicKey: result
+        )
+
+        // Clean up expired entries if cache is too large.
+        if verifiedPublicKeyCache.count > CacheManager.MAXIMUM_CACHE_SIZE {
+            let currentTime = Date()
+            for kv in verifiedPublicKeyCache {
+                if kv.value.expirationTime < currentTime {
+                    verifiedPublicKeyCache.removeValue(forKey: kv.key)
+                }
+            }
+        }
+    }
+}
+
+final class ChainVerifier: Sendable {
     
     private static let EXPECTED_CHAIN_LENGTH = 3
     private static let EXPECTED_JWT_SEGMENTS = 3
     private static let EXPECTED_ALGORITHM = "ES256"
     
-    private static let MAXIMUM_CACHE_SIZE = 32 // There are unlikely to be more than a couple keys at once
-    private static let CACHE_TIME_LIMIT: Int64 = 15 * 60 // 15 minutes in seconds
-    
     private let store: CertificateStore
     private let requester: Requester
-    private var verifiedPublicKeyCache: [CacheKey: CacheValue]
+    private let cacheManager: CacheManager
     
     init(rootCertificates: [Data]) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
         self.store = CertificateStore(parsedCertificates)
         self.requester = Requester()
-        self.verifiedPublicKeyCache = [:]
+        self.cacheManager = CacheManager()
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable {
@@ -96,24 +127,15 @@ class ChainVerifier {
     
     func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
         if online {
-            if let cachedResult = verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] {
-                if cachedResult.expirationTime > getDate() {
-                    return cachedResult.publicKey
-                }
+            if let cachedResult = await cacheManager.getCachedResult(for: CacheKey(leaf: leaf, intermediate: intermediate)) {
+                return cachedResult
             }
         }
         let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime)
         
         if online {
             if case let .validCertificate(verifiedChain) = verificationResult {
-                verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(expirationTime: getDate().addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), publicKey: verificationResult)
-                if verifiedPublicKeyCache.count > ChainVerifier.MAXIMUM_CACHE_SIZE {
-                    for kv in verifiedPublicKeyCache {
-                        if kv.value.expirationTime < getDate() {
-                            verifiedPublicKeyCache.removeValue(forKey: kv.key)
-                        }
-                    }
-                }
+                await cacheManager.cacheResult(verificationResult, for: CacheKey(leaf: leaf, intermediate: intermediate))
             }
         }
         
@@ -137,12 +159,12 @@ class ChainVerifier {
     }
 }
 
-struct CacheKey: Hashable {
+struct CacheKey: Hashable, Sendable {
     let leaf: Certificate
     let intermediate: Certificate
 }
 
-struct CacheValue {
+struct CacheValue: Sendable {
     let expirationTime: Date
     let publicKey: X509.VerificationResult
 }
