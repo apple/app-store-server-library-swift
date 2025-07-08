@@ -28,8 +28,8 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
         XCTAssertEqual("cYUsXc53EbYc0pOeXG5d6/31LGHeVGf84sqSN0OrJi5u/j2H89WWKgS8N0hMsMlf", appTransaction.deviceVerification)
         XCTAssertEqual(UUID(uuidString: "48c8b92d-ce0d-4229-bedf-e61b4f9cfc92"), appTransaction.deviceVerificationNonce)
         XCTAssertNil(appTransaction.preorderDate)
-        XCTAssertEqual(.xcode, appTransaction.receiptType)
-        XCTAssertEqual("Xcode", appTransaction.rawReceiptType)
+        XCTAssertEqual(.xcode, appTransaction.environment)
+        XCTAssertEqual("Xcode", appTransaction.rawEnvironment)
         confirmCodableInternallyConsistentForXcode(appTransaction)
     }
 

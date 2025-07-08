@@ -8,8 +8,8 @@ import Foundation
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
-    public init(receiptType: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, originalPlatform: PurchasePlatform? = nil) {
-        self.receiptType = receiptType
+    public init(environment: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, originalPlatform: PurchasePlatform? = nil) {
+        self.environment = environment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
         self.applicationVersion = applicationVersion
@@ -24,8 +24,8 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         self.originalPlatform = originalPlatform
     }
     
-    public init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, rawOriginalPlatform: String? = nil) {
-        self.rawReceiptType = rawReceiptType
+    public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, rawOriginalPlatform: String? = nil) {
+        self.rawEnvironment = rawEnvironment
         self.appAppleId = appAppleId
         self.bundleId = bundleId
         self.applicationVersion = applicationVersion
@@ -43,17 +43,17 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     ///The server environment that signs the app transaction.
     ///
     ///[environment](https://developer.apple.com/documentation/storekit/apptransaction/3963901-environment)
-    public var receiptType: AppStoreEnvironment?  {
+    public var environment: AppStoreEnvironment?  {
         get {
-            return rawReceiptType.flatMap { AppStoreEnvironment(rawValue: $0) }
+            return rawEnvironment.flatMap { AppStoreEnvironment(rawValue: $0) }
         }
         set {
-            self.rawReceiptType = newValue.map { $0.rawValue }
+            self.rawEnvironment = newValue.map { $0.rawValue }
         }
     }
     
-    ///See ``receiptType``
-    public var rawReceiptType: String?
+    ///See ``environment``
+    public var rawEnvironment: String?
     
     ///The unique identifier the App Store uses to identify the app.
     ///
@@ -135,7 +135,8 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     
     
     public enum CodingKeys: CodingKey {
-        case receiptType
+        case environment
+        case receiptType // For backward compatibility
         case appAppleId
         case bundleId
         case applicationVersion
@@ -152,7 +153,14 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.rawReceiptType = try container.decodeIfPresent(String.self, forKey: .receiptType)
+        // Try environment first, then fall back to receiptType for backward compatibility
+        if let environmentValue = try container.decodeIfPresent(String.self, forKey: .environment) {
+            self.rawEnvironment = environmentValue
+        } else if let receiptTypeValue = try container.decodeIfPresent(String.self, forKey: .receiptType) {
+            self.rawEnvironment = receiptTypeValue
+        } else {
+            self.rawEnvironment = nil
+        }
         self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
         self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
         self.applicationVersion = try container.decodeIfPresent(String.self, forKey: .applicationVersion)
@@ -169,7 +177,7 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.rawReceiptType, forKey: .receiptType)
+        try container.encodeIfPresent(self.rawEnvironment, forKey: .environment)
         try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
         try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
         try container.encodeIfPresent(self.applicationVersion, forKey: .applicationVersion)

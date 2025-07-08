@@ -267,8 +267,8 @@ final class SignedModelTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(AppStoreEnvironment.localTesting, appTransaction.receiptType)
-        XCTAssertEqual("LocalTesting", appTransaction.rawReceiptType)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, appTransaction.environment)
+        XCTAssertEqual("LocalTesting", appTransaction.rawEnvironment)
         XCTAssertEqual(531412, appTransaction.appAppleId)
         XCTAssertEqual("com.example", appTransaction.bundleId)
         XCTAssertEqual("1.2.3", appTransaction.applicationVersion)

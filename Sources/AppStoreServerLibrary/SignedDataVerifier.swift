@@ -135,7 +135,7 @@ public struct SignedDataVerifier {
         let appTransactionResult = await decodeSignedData(signedData: signedAppTransaction, type: AppTransaction.self)
         switch appTransactionResult {
         case .valid(let appTransaction):
-            let environment = appTransaction.receiptType
+            let environment = appTransaction.environment
             if self.bundleId != appTransaction.bundleId || (self.environment == .production && self.appAppleId != appTransaction.appAppleId) {
                 return VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER)
             }

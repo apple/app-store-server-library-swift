@@ -1,5 +1,5 @@
 {
-  "receiptType": "LocalTesting",
+  "environment": "LocalTesting",
   "appAppleId": 531412,
   "bundleId": "com.example",
   "applicationVersion": "1.2.3",
