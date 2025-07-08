@@ -50,7 +50,7 @@ public class TestingUtility {
 
         var signingInput = "\(encodedHeader).\(encodedPayload)"
         let signature = try! signingInput.withUTF8 { try signingKey.signature(for: $0) }
-        return "\(signingInput).\(base64ToBase64URL(signature.rawRepresentation.base64EncodedString()))";
+        return "\(signingInput).\(base64ToBase64URL(signature.rawRepresentation.base64EncodedString()))"
     }
     
     private static func base64ToBase64URL(_ encodedString: String) -> String {

@@ -29,8 +29,8 @@ class ChainVerifier {
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable {
-        let header: JWTHeader;
-        let decodedBody: T;
+        let header: JWTHeader
+        let decodedBody: T
         do {
             let bodySegments = signedData.components(separatedBy: ".")
             if (bodySegments.count != ChainVerifier.EXPECTED_JWT_SEGMENTS) {
