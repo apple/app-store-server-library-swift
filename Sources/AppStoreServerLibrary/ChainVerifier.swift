@@ -9,87 +9,67 @@ import AsyncHTTPClient
 import NIOFoundationCompat
 
 class ChainVerifier {
-    
     private static let EXPECTED_CHAIN_LENGTH = 3
-    private static let EXPECTED_JWT_SEGMENTS = 3
-    private static let EXPECTED_ALGORITHM = "ES256"
-    
+
     private static let MAXIMUM_CACHE_SIZE = 32 // There are unlikely to be more than a couple keys at once
     private static let CACHE_TIME_LIMIT: Int64 = 15 * 60 // 15 minutes in seconds
-    
-    private let store: CertificateStore
+
+    private let x5cVerifier: X5CVerifier
     private let requester: Requester
     private var verifiedPublicKeyCache: [CacheKey: CacheValue]
     
     init(rootCertificates: [Data]) throws {
-        let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
-        self.store = CertificateStore(parsedCertificates)
+        self.x5cVerifier = try X5CVerifier(rootCertificates: rootCertificates)
         self.requester = Requester()
         self.verifiedPublicKeyCache = [:]
     }
     
-    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable {
-        let header: JWTHeader
-        let decodedBody: T
+    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: JWTPayload {
+        let jsonDecoder = getJsonDecoder()
+        let parser = DefaultJWTParser(jsonDecoder: jsonDecoder)
+        let payload: T
+        let header: JWTKit.JWTHeader
+        let dataToken = Data(signedData.utf8)
+
         do {
-            let bodySegments = signedData.components(separatedBy: ".")
-            if (bodySegments.count != ChainVerifier.EXPECTED_JWT_SEGMENTS) {
-                return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
-            }
-            let jsonDecoder = getJsonDecoder()
-            guard let headerData = Data(base64Encoded: base64URLToBase64(bodySegments[0])), let bodyData = Data(base64Encoded: base64URLToBase64(bodySegments[1])) else {
-                return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
-            }
-            header = try jsonDecoder.decode(JWTHeader.self, from: headerData)
-            decodedBody = try jsonDecoder.decode(type, from: bodyData)
+            (header, payload, _) = try parser.parse(dataToken, as: type)
         } catch {
             return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
         }
-        
+
         if (environment == AppStoreEnvironment.xcode || environment == AppStoreEnvironment.localTesting) {
-            // Data is not signed by the App Store, and verification should be skipped
+            // Data is not signed by the App Store, and verification should be skipped.
             // The environment MUST be checked in the public method calling this
-            return VerificationResult.valid(decodedBody)
+            return VerificationResult.valid(payload)   
         }
 
-        guard let x5c_header = header.x5c else {
-            return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
+        guard let x5c = header.x5c, x5c.count == ChainVerifier.EXPECTED_CHAIN_LENGTH else {
+            return .invalid(VerificationError.INVALID_JWT_FORMAT)
         }
-        if ChainVerifier.EXPECTED_ALGORITHM != header.alg || x5c_header.count != ChainVerifier.EXPECTED_CHAIN_LENGTH {
-            return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
-        }
-        
 
-        guard let leaf_der_enocded = Data(base64Encoded: x5c_header[0]),
-              let intermeidate_der_encoded = Data(base64Encoded: x5c_header[1]) else {
-            return VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE)
-        }
+        let validationTime = !onlineVerification && payload.signedDate != nil ? payload.signedDate! : getDate()
+
         do {
-            let leafCertificate = try Certificate(derEncoded: Array(leaf_der_enocded))
-            let intermediateCertificate = try Certificate(derEncoded: Array(intermeidate_der_encoded))
-            let validationTime = !onlineVerification && decodedBody.signedDate != nil ? decodedBody.signedDate! : getDate()
-            
-            let verificationResult = await verifyChain(leaf: leafCertificate, intermediate: intermediateCertificate, online: onlineVerification, validationTime: validationTime)
-            switch verificationResult {
-            case .validCertificate(let chain):
-                let leafCertificate = chain.first!
-                guard let publicKey = P256.Signing.PublicKey(leafCertificate.publicKey) else {
-                    return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
+            let body = try await x5cVerifier.verifyJWS(dataToken, as: type, jsonDecoder: jsonDecoder, policy: {
+                RFC5280Policy(validationTime: validationTime)
+                AppStoreOIDPolicy()
+                if onlineVerification {
+                    OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: getDate())
                 }
-                // Verify using Vapor
-                let keys = JWTKeyCollection()
-                await keys.add(ecdsa: try ECDSA.PublicKey<P256>(backing: publicKey))
-                let _ = try await keys.verify(signedData) as VaporBody
-                
-                return VerificationResult.valid(decodedBody)
-            case .couldNotValidate:
-                return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
-            }
+            })
+            return VerificationResult.valid(body)
         } catch {
-            return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
+            if
+                let jwtError = error as? JWTError,
+                jwtError.errorType == .missingX5CHeader || jwtError.errorType == .malformedToken
+            {
+                return .invalid(VerificationError.INVALID_JWT_FORMAT)
+            } else {
+                return .invalid(VerificationError.VERIFICATION_FAILURE)
+            }
         }
     }
-    
+
     func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
         if online {
             if let cachedResult = verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] {
@@ -98,11 +78,16 @@ class ChainVerifier {
                 }
             }
         }
+
         let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime)
-        
+
         if online {
-            if case .validCertificate = verificationResult {
-                verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(expirationTime: getDate().addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), publicKey: verificationResult)
+            if case .validCertificate(_) = verificationResult {
+                verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(
+                    expirationTime: getDate().addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), 
+                    publicKey: verificationResult
+                )
+
                 if verifiedPublicKeyCache.count > ChainVerifier.MAXIMUM_CACHE_SIZE {
                     for kv in verifiedPublicKeyCache {
                         if kv.value.expirationTime < getDate() {
@@ -112,22 +97,24 @@ class ChainVerifier {
                 }
             }
         }
-        
+
         return verificationResult
     }
-    
+
     func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
-        var verifier = Verifier(rootCertificates: self.store) {
-            RFC5280Policy(validationTime: validationTime)
-            AppStoreOIDPolicy()
-            if online {
-                OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: getDate())
-            }
+        do {
+            return try await x5cVerifier.verifyChain(certificates: [leaf, intermediate], policy: {
+                RFC5280Policy(validationTime: validationTime)
+                AppStoreOIDPolicy()
+                if online {
+                    OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: getDate())
+                }
+            })
+        } catch {
+            return .couldNotValidate([])
         }
-        let intermediateStore = CertificateStore([intermediate])
-        return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
     }
-    
+
     func getDate() -> Date {
         return Date()
     }
@@ -141,17 +128,6 @@ struct CacheKey: Hashable {
 struct CacheValue {
     let expirationTime: Date
     let publicKey: X509.VerificationResult
-}
-
-struct VaporBody : JWTPayload {
-    func verify(using algorithm: some JWTAlgorithm) async throws {
-        // No-op
-    }
-}
-
-struct JWTHeader: Decodable, Encodable {
-    public var alg: String?
-    public var x5c: [String]?
 }
 
 final class AppStoreOIDPolicy: VerifierPolicy {

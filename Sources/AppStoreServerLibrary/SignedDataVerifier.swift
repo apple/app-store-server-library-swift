@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
 
 ///A verifier and decoder class designed to decode signed data from the App Store.
 public struct SignedDataVerifier {
@@ -148,7 +149,23 @@ public struct SignedDataVerifier {
         return appTransactionResult
     }
     
-    private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
-        return await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks, environment: self.environment)
+    private func decodeSignedData<T: DecodedSignedData & JWTPayload>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
+        await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks, environment: self.environment)
     }
+}
+
+extension AppTransaction: JWTPayload {
+    public func verify(using algorithm: some JWTAlgorithm) async throws {}
+}
+
+extension ResponseBodyV2DecodedPayload: JWTPayload {
+    public func verify(using algorithm: some JWTAlgorithm) async throws {}
+}
+
+extension JWSTransactionDecodedPayload: JWTPayload {
+    public func verify(using algorithm: some JWTAlgorithm) async throws {}
+}
+
+extension JWSRenewalInfoDecodedPayload: JWTPayload {
+    public func verify(using algorithm: some JWTAlgorithm) async throws {}
 }

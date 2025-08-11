@@ -6,7 +6,7 @@ import XCTest
 final class SignedModelTests: XCTestCase {
     
     public func testNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
         
@@ -40,7 +40,7 @@ final class SignedModelTests: XCTestCase {
     }
 
     public func testConsumptionRequestNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedConsumptionRequestNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
         
@@ -74,7 +74,7 @@ final class SignedModelTests: XCTestCase {
     }
 
     public func testSummaryNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedSummaryNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedSummaryNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
         
@@ -106,7 +106,7 @@ final class SignedModelTests: XCTestCase {
     }
     
     public func testExternalPurchaseTokenNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
             XCTAssertEqual("com.example", bundleId)
@@ -138,7 +138,7 @@ final class SignedModelTests: XCTestCase {
     }
     
     public func testExternalPurchaseTokenSandboxNotificationDecoding() async throws {
-        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenSandboxNotification.json")
+        let signedNotification = try await TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenSandboxNotification.json", as: ResponseBodyV2DecodedPayload.self)
 
         let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
             XCTAssertEqual("com.example", bundleId)
@@ -170,7 +170,7 @@ final class SignedModelTests: XCTestCase {
     }
     
     public func testTransactionDecoding() async throws {
-        let signedTransaction = TestingUtility.createSignedDataFromJson("resources/models/signedTransaction.json")
+        let signedTransaction = try await TestingUtility.createSignedDataFromJson("resources/models/signedTransaction.json", as: JWSTransactionDecodedPayload.self)
 
         let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
         
@@ -218,7 +218,7 @@ final class SignedModelTests: XCTestCase {
     }
     
     public func testRenewalInfoDecoding() async throws {
-        let signedRenewalInfo = TestingUtility.createSignedDataFromJson("resources/models/signedRenewalInfo.json")
+        let signedRenewalInfo = try await TestingUtility.createSignedDataFromJson("resources/models/signedRenewalInfo.json", as: JWSRenewalInfoDecodedPayload.self)
 
         let verifiedRenewalInfo = await TestingUtility.getSignedDataVerifier().verifyAndDecodeRenewalInfo(signedRenewalInfo: signedRenewalInfo)
         
@@ -258,7 +258,7 @@ final class SignedModelTests: XCTestCase {
     }
     
     public func testAppTransactionDecoding() async throws {
-        let signedAppTransaction = TestingUtility.createSignedDataFromJson("resources/models/appTransaction.json")
+        let signedAppTransaction = try await TestingUtility.createSignedDataFromJson("resources/models/appTransaction.json", as: AppTransaction.self)
 
         let verifiedAppTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
     
