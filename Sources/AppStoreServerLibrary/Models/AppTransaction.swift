@@ -109,7 +109,7 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     ///The date that the App Store signed the JWS app transaction.
     ///
     ///[signedDate](https://developer.apple.com/documentation/storekit/apptransaction/3954449-signeddate)
-    public var signedDate: Date? {
+    public var signedDateOptional: Date? {
         receiptCreationDate
     }
 

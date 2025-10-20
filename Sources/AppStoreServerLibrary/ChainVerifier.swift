@@ -67,7 +67,7 @@ class ChainVerifier {
         do {
             let leafCertificate = try Certificate(derEncoded: Array(leaf_der_enocded))
             let intermediateCertificate = try Certificate(derEncoded: Array(intermeidate_der_encoded))
-            let validationTime = !onlineVerification && decodedBody.signedDate != nil ? decodedBody.signedDate! : getDate()
+            let validationTime = !onlineVerification && decodedBody.signedDateOptional != nil ? decodedBody.signedDateOptional! : getDate()
             
             let verificationResult = await verifyChain(leaf: leafCertificate, intermediate: intermediateCertificate, online: onlineVerification, validationTime: validationTime)
             switch verificationResult {

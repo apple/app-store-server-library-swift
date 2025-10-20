@@ -57,7 +57,24 @@ public class AppStoreServerAPIClient {
         try? self.client.syncShutdown()
     }
     
+    private enum RequestBody {
+        case encodable(any Encodable)
+        case raw(Data, contentType: String)
+    }
+
     private func makeRequest<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Data> {
+        if let b = body {
+            return await makeRequest(path: path, method: method, queryParameters: queryParameters, body: .encodable(b))
+        } else {
+            return await makeRequest(path: path, method: method, queryParameters: queryParameters, body: nil)
+        }
+    }
+
+    private func makeRequest(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: Data, contentType: String) async -> APIResult<Data> {
+        return await makeRequest(path: path, method: method, queryParameters: queryParameters, body: .raw(body, contentType: contentType))
+    }
+
+    private func makeRequest(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: RequestBody?) async -> APIResult<Data> {
         do {
             var queryItems: [URLQueryItem] = []
             for (parameter, values) in queryParameters {
@@ -84,11 +101,20 @@ public class AppStoreServerAPIClient {
             
             let requestBody: Data?
             if let b = body {
-                let jsonEncoder = getJsonEncoder()
-                let encodedBody = try jsonEncoder.encode(b)
-                requestBody = encodedBody
-                urlRequest.body = .bytes(.init(data: encodedBody))
-                urlRequest.headers.add(name: "Content-Type", value: "application/json")
+                let data: Data
+                let contentType: String
+                switch b {
+                case .encodable(let encodable):
+                    let jsonEncoder = getJsonEncoder()
+                    data = try jsonEncoder.encode(encodable)
+                    contentType = "application/json"
+                case .raw(let rawData, let ct):
+                    data = rawData
+                    contentType = ct
+                }
+                requestBody = data
+                urlRequest.body = .bytes(.init(data: data))
+                urlRequest.headers.add(name: "Content-Type", value: contentType)
             } else {
                 requestBody = nil
             }
@@ -140,7 +166,17 @@ public class AppStoreServerAPIClient {
                 return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: causedBy)
         }
     }
-        
+
+    private func makeRequestWithoutResponseBody(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: Data, contentType: String) async -> APIResult<Void> {
+        let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body, contentType: contentType)
+        switch response {
+            case .success:
+                return APIResult.success(response: ())
+            case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy):
+                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: causedBy)
+        }
+    }
+
     private func generateToken() async throws -> String {
         let keys = JWTKeyCollection()
         let payload = AppStoreServerAPIJWT(
@@ -335,7 +371,87 @@ public class AppStoreServerAPIClient {
     public func setAppAccountToken(originalTransactionId: String, updateAppAccountTokenRequest: UpdateAppAccountTokenRequest) async -> APIResult<Void> {
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/" + originalTransactionId + "/appAccountToken", method: .PUT, queryParameters: [:], body: updateAppAccountTokenRequest)
     }
-    
+
+    ///Upload an image to use for retention messaging.
+    ///
+    ///- Parameter imageIdentifier: A UUID you provide to uniquely identify the image you upload.
+    ///- Parameter image: The image file to upload.
+    ///- Returns: Success, or information about the failure
+    ///[Upload Image](https://developer.apple.com/documentation/retentionmessaging/upload-image)
+    public func uploadImage(imageIdentifier: UUID, image: Data) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/image/" + imageIdentifier.uuidString, method: .PUT, queryParameters: [:], body: image, contentType: "image/png")
+    }
+
+    ///Delete a previously uploaded image.
+    ///
+    ///- Parameter imageIdentifier: The identifier of the image to delete.
+    ///- Returns: Success, or information about the failure
+    ///[Delete Image](https://developer.apple.com/documentation/retentionmessaging/delete-image)
+    public func deleteImage(imageIdentifier: UUID) async -> APIResult<Void> {
+        let request: String? = nil
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/image/" + imageIdentifier.uuidString, method: .DELETE, queryParameters: [:], body: request)
+    }
+
+    ///Get the image identifier and state for all uploaded images.
+    ///
+    ///- Returns: A response that contains status information for all images.
+    ///[Get Image List](https://developer.apple.com/documentation/retentionmessaging/get-image-list)
+    public func getImageList() async -> APIResult<GetImageListResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/image/list", method: .GET, queryParameters: [:], body: request)
+    }
+
+    ///Upload a message to use for retention messaging.
+    ///
+    ///- Parameter messageIdentifier: A UUID you provide to uniquely identify the message you upload.
+    ///- Parameter uploadMessageRequestBody: The message text to upload.
+    ///- Returns: Success, or information about the failure
+    ///[Upload Message](https://developer.apple.com/documentation/retentionmessaging/upload-message)
+    public func uploadMessage(messageIdentifier: UUID, uploadMessageRequestBody: UploadMessageRequestBody) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/message/" + messageIdentifier.uuidString, method: .PUT, queryParameters: [:], body: uploadMessageRequestBody)
+    }
+
+    ///Delete a previously uploaded message.
+    ///
+    ///- Parameter messageIdentifier: The identifier of the message to delete.
+    ///- Returns: Success, or information about the failure
+    ///[Delete Message](https://developer.apple.com/documentation/retentionmessaging/delete-message)
+    public func deleteMessage(messageIdentifier: UUID) async -> APIResult<Void> {
+        let request: String? = nil
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/message/" + messageIdentifier.uuidString, method: .DELETE, queryParameters: [:], body: request)
+    }
+
+    ///Get the message identifier and state of all uploaded messages.
+    ///
+    ///- Returns: A response that contains status information for all messages, or information about the failure
+    ///[Get Message List](https://developer.apple.com/documentation/retentionmessaging/get-message-list)
+    public func getMessageList() async -> APIResult<GetMessageListResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/message/list", method: .GET, queryParameters: [:], body: request)
+    }
+
+    ///Configure a default message for a specific product in a specific locale.
+    ///
+    ///- Parameter productId: The product identifier for the default configuration.
+    ///- Parameter locale: The locale for the default configuration.
+    ///- Parameter defaultConfigurationRequest: The request body that includes the message identifier to configure as the default message.
+    ///- Returns: Success, or information about the failure
+    ///[Configure Default Message](https://developer.apple.com/documentation/retentionmessaging/configure-default-message)
+    public func configureDefaultMessage(productId: String, locale: String, defaultConfigurationRequest: DefaultConfigurationRequest) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/default/" + productId + "/" + locale, method: .PUT, queryParameters: [:], body: defaultConfigurationRequest)
+    }
+
+    ///Delete a default message for a product in a locale.
+    ///
+    ///- Parameter productId: The product ID of the default message configuration.
+    ///- Parameter locale: The locale of the default message configuration.
+    ///- Returns: Success, or information about the failure
+    ///[Delete Default Message](https://developer.apple.com/documentation/retentionmessaging/delete-default-message)
+    public func deleteDefaultMessage(productId: String, locale: String) async -> APIResult<Void> {
+        let request: String? = nil
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/default/" + productId + "/" + locale, method: .DELETE, queryParameters: [:], body: request)
+    }
+
     internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
         var exp: ExpirationClaim
         var iss: IssuerClaim
@@ -562,6 +678,31 @@ public enum APIError: Int64 {
     ///[AppTransactionIdNotSupportedError](https://developer.apple.com/documentation/appstoreserverapi/apptransactionidnotsupportederror)
     case appTransactionIdNotSupported = 4000048
 
+    ///An error that indicates the image that's uploading is invalid.
+    ///
+    ///[InvalidImageError](https://developer.apple.com/documentation/retentionmessaging/invalidimageerror)
+    case invalidImage = 4000161
+
+    ///An error that indicates the header text is too long.
+    ///
+    ///[HeaderTooLongError](https://developer.apple.com/documentation/retentionmessaging/headertoolongerror)
+    case headerTooLong = 4000162
+
+    ///An error that indicates the body text is too long.
+    ///
+    ///[BodyTooLongError](https://developer.apple.com/documentation/retentionmessaging/bodytoolongerror)
+    case bodyTooLong = 4000163
+
+    ///An error that indicates the locale is invalid.
+    ///
+    ///[InvalidLocaleError](https://developer.apple.com/documentation/retentionmessaging/invalidlocaleerror)
+    case invalidLocale = 4000164
+
+    ///An error that indicates the alternative text for an image is too long.
+    ///
+    ///[AltTextTooLongError](https://developer.apple.com/documentation/retentionmessaging/alttexttoolongerror)
+    case altTextTooLong = 4000175
+
     ///An error that indicates the app account token value is not a valid UUID.
     ///
     ///[InvalidAppAccountTokenUUIDError](https://developer.apple.com/documentation/appstoreserverapi/invalidappaccounttokenuuiderror)
@@ -592,7 +733,32 @@ public enum APIError: Int64 {
     ///[FamilySharedSubscriptionExtensionIneligibleError](https://developer.apple.com/documentation/appstoreserverapi/familysharedsubscriptionextensionineligibleerror)
     case familySharedSubscriptionExtensionIneligible = 4030007
 
-    ///An error that indicates the App Store account wasn’t found.
+    ///An error that indicates when you reach the maximum number of uploaded images.
+    ///
+    ///[MaximumNumberOfImagesReachedError](https://developer.apple.com/documentation/retentionmessaging/maximumnumberofimagesreachederror)
+    case maximumNumberOfImagesReached = 4030014
+
+    ///An error that indicates when you reach the maximum number of uploaded messages.
+    ///
+    ///[MaximumNumberOfMessagesReachedError](https://developer.apple.com/documentation/retentionmessaging/maximumnumberofmessagesreachederror)
+    case maximumNumberOfMessagesReached = 4030016
+
+    ///An error that indicates the message isn't in the approved state, so you can't configure it as a default message.
+    ///
+    ///[MessageNotApprovedError](https://developer.apple.com/documentation/retentionmessaging/messagenotapprovederror)
+    case messageNotApproved = 4030017
+
+    ///An error that indicates the image isn't in the approved state, so you can't configure it as part of a default message.
+    ///
+    ///[ImageNotApprovedError](https://developer.apple.com/documentation/retentionmessaging/imagenotapprovederror)
+    case imageNotApproved = 4030018
+
+    ///An error that indicates the image is currently in use as part of a message, so you can't delete it.
+    ///
+    ///[ImageInUseError](https://developer.apple.com/documentation/retentionmessaging/imageinuseerror)
+    case imageInUse = 4030019
+
+    ///An error that indicates the App Store account wasn't found.
     ///
     ///[AccountNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/accountnotfounderror)
     case accountNotFound = 4040001
@@ -641,6 +807,26 @@ public enum APIError: Int64 {
     ///
     ///[TransactionIdNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/transactionidnotfounderror)
     case transactionIdNotFound = 4040010
+
+    ///An error that indicates the system can't find the image identifier.
+    ///
+    ///[ImageNotFoundError](https://developer.apple.com/documentation/retentionmessaging/imagenotfounderror)
+    case imageNotFound = 4040014
+
+    ///An error that indicates the system can't find the message identifier.
+    ///
+    ///[MessageNotFoundError](https://developer.apple.com/documentation/retentionmessaging/messagenotfounderror)
+    case messageNotFound = 4040015
+
+    ///An error that indicates the image identifier already exists.
+    ///
+    ///[ImageAlreadyExistsError](https://developer.apple.com/documentation/retentionmessaging/imagealreadyexistserror)
+    case imageAlreadyExists = 4090000
+
+    ///An error that indicates the message identifier already exists.
+    ///
+    ///[MessageAlreadyExistsError](https://developer.apple.com/documentation/retentionmessaging/messagealreadyexistserror)
+    case messageAlreadyExists = 4090001
 
     ///An error that indicates that the request exceeded the rate limit.
     ///

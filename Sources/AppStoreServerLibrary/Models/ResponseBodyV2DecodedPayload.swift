@@ -79,6 +79,10 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[signedDate](https://developer.apple.com/documentation/appstoreserverapi/signeddate)
     public var signedDate: Date?
 
+    public var signedDateOptional: Date? {
+        signedDate
+    }
+
     ///The summary data that appears when the App Store server completes your request to extend a subscription renewal date for eligible subscribers.
     ///The data, summary, and externalPurchaseToken fields are mutually exclusive. The payload contains only one of these fields.
     ///

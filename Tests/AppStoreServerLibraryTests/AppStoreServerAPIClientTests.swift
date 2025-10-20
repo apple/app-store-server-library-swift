@@ -710,7 +710,148 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual("Invalid request. The transaction ID provided is not an original transaction ID.", errorMessage)
         XCTAssertNil(causedBy)
     }
-    
+
+    public func testUploadImage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("image/png", request.headers.first(name: "Content-Type"))
+            XCTAssertNotNil(body)
+            XCTAssertEqual(Data([1, 2, 3]), body)
+        }
+
+        let result = await client.uploadImage(imageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, image: Data([1, 2, 3]))
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testDeleteImage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.DELETE, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+        }
+
+        let result = await client.deleteImage(imageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testGetImageList() async throws {
+        let client = try getClientWithBody("resources/models/getImageListResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/list", request.url)
+        }
+
+        let result = await client.getImageList()
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(1, response.imageIdentifiers?.count)
+        XCTAssertEqual(UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, response.imageIdentifiers?[0].imageIdentifier)
+        XCTAssertEqual(ImageState.approved, response.imageIdentifiers?[0].imageState)
+    }
+
+    public func testUploadMessage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("Header text", decodedJson["header"] as! String)
+            XCTAssertEqual("Body text", decodedJson["body"] as! String)
+        }
+
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: nil)
+        let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testUploadMessageWithImage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("Header text", decodedJson["header"] as! String)
+            XCTAssertEqual("Body text", decodedJson["body"] as! String)
+            let image = decodedJson["image"] as! [String: Any]
+            XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", image["imageIdentifier"] as! String)
+            XCTAssertEqual("Alt text", image["altText"] as! String)
+        }
+
+        let image = try UploadMessageImage(imageIdentifier: UUID(uuidString: "b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901")!, altText: "Alt text")
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image)
+        let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testDeleteMessage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.DELETE, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+        }
+
+        let result = await client.deleteMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testGetMessageList() async throws {
+        let client = try getClientWithBody("resources/models/getMessageListResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/list", request.url)
+        }
+
+        let result = await client.getMessageList()
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(1, response.messageIdentifiers?.count)
+        XCTAssertEqual(UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, response.messageIdentifiers?[0].messageIdentifier)
+        XCTAssertEqual(MessageState.approved, response.messageIdentifiers?[0].messageState)
+    }
+
+    public func testConfigureDefaultMessage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", decodedJson["messageIdentifier"] as! String)
+        }
+
+        let defaultConfigurationRequest = DefaultConfigurationRequest(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
+        let result = await client.configureDefaultMessage(productId: "com.example.product", locale: "en-US", defaultConfigurationRequest: defaultConfigurationRequest)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testDeleteDefaultMessage() async throws {
+        let client = try getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.DELETE, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
+        }
+
+        let result = await client.deleteDefaultMessage(productId: "com.example.product", locale: "en-US")
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
         return try getAppStoreServerAPIClient(body, requestVerifier)

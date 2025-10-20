@@ -148,6 +148,10 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[signedDate](https://developer.apple.com/documentation/appstoreserverapi/signeddate)
     public var signedDate: Date?
+
+    public var signedDateOptional: Date? {
+        signedDate
+    }
                  
     ///The server environment, either sandbox or production.
     ///
