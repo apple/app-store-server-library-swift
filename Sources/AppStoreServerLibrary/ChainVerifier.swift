@@ -27,7 +27,7 @@ actor ChainVerifier {
         self.verifiedPublicKeyCache = [:]
     }
     
-    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> VerificationResult<T> where T: Decodable & Sendable {
+    func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment, currentTime: Date = .now) async -> VerificationResult<T> where T: Decodable & Sendable {
         let header: JWTHeader
         let decodedBody: T
         do {
@@ -66,9 +66,9 @@ actor ChainVerifier {
         do {
             let leafCertificate = try Certificate(derEncoded: Array(leaf_der_enocded))
             let intermediateCertificate = try Certificate(derEncoded: Array(intermeidate_der_encoded))
-            let validationTime = !onlineVerification && decodedBody.signedDateOptional != nil ? decodedBody.signedDateOptional! : getDate()
+            let validationTime = !onlineVerification && decodedBody.signedDateOptional != nil ? decodedBody.signedDateOptional! : currentTime
             
-            let verificationResult = await verifyChain(leaf: leafCertificate, intermediate: intermediateCertificate, online: onlineVerification, validationTime: validationTime)
+            let verificationResult = await verifyChain(leaf: leafCertificate, intermediate: intermediateCertificate, online: onlineVerification, validationTime: validationTime, currentTime: currentTime)
             switch verificationResult {
             case .validCertificate(let chain):
                 let leafCertificate = chain.first!
@@ -89,22 +89,22 @@ actor ChainVerifier {
         }
     }
     
-    func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+    func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date, currentTime: Date = .now) async -> X509.VerificationResult {
         if online {
             if let cachedResult = verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] {
-                if cachedResult.expirationTime > getDate() {
+                if cachedResult.expirationTime > currentTime {
                     return cachedResult.publicKey
                 }
             }
         }
-        let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime)
+        let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime, currentTime: currentTime)
         
         if online {
             if case .validCertificate = verificationResult {
-                verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(expirationTime: getDate().addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), publicKey: verificationResult)
+                verifiedPublicKeyCache[CacheKey(leaf: leaf, intermediate: intermediate)] = CacheValue(expirationTime: currentTime.addingTimeInterval(TimeInterval(integerLiteral: ChainVerifier.CACHE_TIME_LIMIT)), publicKey: verificationResult)
                 if verifiedPublicKeyCache.count > ChainVerifier.MAXIMUM_CACHE_SIZE {
                     for kv in verifiedPublicKeyCache {
-                        if kv.value.expirationTime < getDate() {
+                        if kv.value.expirationTime < currentTime {
                             verifiedPublicKeyCache.removeValue(forKey: kv.key)
                         }
                     }
@@ -115,20 +115,16 @@ actor ChainVerifier {
         return verificationResult
     }
     
-    nonisolated func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+    nonisolated func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date, currentTime: Date = .now) async -> X509.VerificationResult {
         var verifier = Verifier(rootCertificates: self.store) {
             RFC5280Policy(validationTime: validationTime)
             AppStoreOIDPolicy()
             if online {
-                OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: getDate())
+                OCSPVerifierPolicy(failureMode: .hard, requester: requester, validationTime: currentTime)
             }
         }
         let intermediateStore = CertificateStore([intermediate])
         return await verifier.validate(leafCertificate: leaf, intermediates: intermediateStore)
-    }
-    
-    nonisolated func getDate() -> Date {
-        return Date()
     }
 }
 
