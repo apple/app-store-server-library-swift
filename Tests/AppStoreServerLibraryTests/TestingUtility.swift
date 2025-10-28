@@ -29,7 +29,7 @@ public class TestingUtility {
     
     public static func getSignedDataVerifier() -> SignedDataVerifier {
         return getSignedDataVerifier(.localTesting, "com.example")
-}
+    }
     
     public static func confirmCodableInternallyConsistent<T>(_ codable: T) where T : Codable, T : Equatable {
         let type = type(of: codable)
@@ -37,20 +37,14 @@ public class TestingUtility {
         XCTAssertEqual(parsedValue, codable)
     }
     
-    public static func createSignedDataFromJson(_ path: String) -> String {
-        let payload = readFile(path)
-        let signingKey = Crypto.P256.Signing.PrivateKey()
+    public static func createSignedDataFromJson<Payload: JWTPayload>(_ path: String, as: Payload.Type) async throws -> String {
+        let payloadString = readFile(path)
+        let serializer = DefaultJWTSerializer(jsonEncoder: getJsonEncoder())
+        let key = await JWTKeyCollection().add(ecdsa: ES256PrivateKey(), serializer: serializer)
 
-        let header = JWTHeader(alg: "ES256")
+        let payload = try getJsonDecoder().decode(Payload.self, from: .init(payloadString.utf8))
 
-        let encoder = JSONEncoder()
-        let headerData = try! encoder.encode(header)
-        let encodedHeader = headerData.base64EncodedString()
-        let encodedPayload = base64ToBase64URL(payload.data(using: .utf8)!.base64EncodedString())
-
-        var signingInput = "\(encodedHeader).\(encodedPayload)"
-        let signature = try! signingInput.withUTF8 { try signingKey.signature(for: $0) }
-        return "\(signingInput).\(base64ToBase64URL(signature.rawRepresentation.base64EncodedString()))"
+        return try await key.sign(payload)
     }
     
     private static func base64ToBase64URL(_ encodedString: String) -> String {
