@@ -3,5 +3,5 @@
 import Foundation
 
 protocol DecodedSignedData {
-    var signedDate: Date? { get }
+    var signedDateOptional: Date? { get }
 }

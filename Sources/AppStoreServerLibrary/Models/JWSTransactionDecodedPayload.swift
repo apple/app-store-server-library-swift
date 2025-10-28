@@ -158,6 +158,10 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[signedDate](https://developer.apple.com/documentation/appstoreserverapi/signeddate)
     public var signedDate: Date?
 
+    public var signedDateOptional: Date? {
+        signedDate
+    }
+
     ///The reason that the App Store refunded the transaction or revoked it from family sharing.
     ///
     ///[revocationReason](https://developer.apple.com/documentation/appstoreserverapi/revocationreason)

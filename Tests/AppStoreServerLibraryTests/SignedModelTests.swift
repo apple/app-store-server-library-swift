@@ -284,7 +284,28 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("iOS", appTransaction.rawOriginalPlatform)
         TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
-    
+
+    public func testRealtimeRequestDecoding() async throws {
+        let signedRealtimeRequest = TestingUtility.createSignedDataFromJson("resources/models/decodedRealtimeRequest.json")
+
+        let verifiedRequest = await TestingUtility.getSignedDataVerifier().verifyAndDecodeRealtimeRequest(signedPayload: signedRealtimeRequest)
+
+        guard case .valid(let request) = verifiedRequest else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual("99371282", request.originalTransactionId)
+        XCTAssertEqual(531412, request.appAppleId)
+        XCTAssertEqual("com.example.product", request.productId)
+        XCTAssertEqual("en-US", request.userLocale)
+        XCTAssertEqual(UUID(uuidString: "3db5c98d-8acf-4e29-831e-8e1f82f9f6e9"), request.requestIdentifier)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, request.environment)
+        XCTAssertEqual("LocalTesting", request.rawEnvironment)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), request.signedDate)
+        TestingUtility.confirmCodableInternallyConsistent(request)
+    }
+
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision
     private func compareXcodeDates(_ first: Date, _ second: Date?) {
         XCTAssertEqual(floor((first.timeIntervalSince1970 * 1000)), floor(((second?.timeIntervalSince1970 ?? 0.0) * 1000)))

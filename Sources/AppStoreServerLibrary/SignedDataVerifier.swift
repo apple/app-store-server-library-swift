@@ -147,7 +147,27 @@ public struct SignedDataVerifier {
         }
         return appTransactionResult
     }
-    
+
+    ///Verifies and decodes a realtime request the App Store sends to your Get Retention Message endpoint.
+    ///
+    ///- Parameter signedPayload: The payload the App Store server sends to your server.
+    ///- Returns: If success, the decoded payload after verification, else the reason for verification failure
+    public func verifyAndDecodeRealtimeRequest(signedPayload: String) async -> VerificationResult<DecodedRealtimeRequestBody> {
+        let realtimeRequestResult = await decodeSignedData(signedData: signedPayload, type: DecodedRealtimeRequestBody.self)
+        switch realtimeRequestResult {
+        case .valid(let realtimeRequest):
+            if (self.environment == .production && self.appAppleId != realtimeRequest.appAppleId) {
+                return VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER)
+            }
+            if self.environment != realtimeRequest.environment {
+                return VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT)
+            }
+        case .invalid(_):
+            break
+        }
+        return realtimeRequestResult
+    }
+
     private func decodeSignedData<T: DecodedSignedData>(signedData: String, type: T.Type) async -> VerificationResult<T> where T : Decodable {
         return await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: self.enableOnlineChecks, environment: self.environment)
     }
