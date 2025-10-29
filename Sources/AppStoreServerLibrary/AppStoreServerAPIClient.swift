@@ -310,6 +310,7 @@ public class AppStoreServerAPIClient {
         }
         return await makeRequestWithResponseBody(path: "/inApps/" + version.rawValue + "/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
     }
+
     ///Get information about a single transaction for your app.
     ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
     ///- Returns: A response that contains signed transaction information for a single transaction.
@@ -450,6 +451,15 @@ public class AppStoreServerAPIClient {
     public func deleteDefaultMessage(productId: String, locale: String) async -> APIResult<Void> {
         let request: String? = nil
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/default/" + productId + "/" + locale, method: .DELETE, queryParameters: [:], body: request)
+    }
+
+    ///Get a customer's app transaction information for your app.
+    ///- Parameter transactionId: Any originalTransactionId, transactionId or appTransactionId that belongs to the customer for your app.
+    ///- Returns: A response that contains signed app transaction information for a customer.
+    ///[Get App Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get-app-transaction-info)
+    public func getAppTransactionInfo(transactionId: String) async -> APIResult<AppTransactionInfoResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/transactions/appTransactions/" + transactionId, method: .GET, queryParameters: [:], body: request)
     }
 
     internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
@@ -807,6 +817,11 @@ public enum APIError: Int64 {
     ///
     ///[TransactionIdNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/transactionidnotfounderror)
     case transactionIdNotFound = 4040010
+
+    ///An error response that indicates an app transaction doesn't exist for the specified customer.
+    ///
+    ///[AppTransactionDoesNotExistError](https://developer.apple.com/documentation/appstoreserverapi/apptransactiondoesnotexisterror)
+    case AppTransactionDoesNotExistError = 4040019
 
     ///An error that indicates the system can't find the image identifier.
     ///
