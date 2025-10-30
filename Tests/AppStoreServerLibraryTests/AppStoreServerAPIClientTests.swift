@@ -852,6 +852,68 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
     }
 
+    public func testGetAppTransactionInfo() async throws {
+         let client = try getClientWithBody("resources/models/appTransactionInfoResponse.json") { request, body in
+             XCTAssertEqual(.GET, request.method)
+             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/appTransactions/1234", request.url)
+             XCTAssertNil(request.body)
+         }
+
+         let response = await client.getAppTransactionInfo(transactionId: "1234")
+
+         guard case .success(let appTransactionInfoResponse) = response else {
+             XCTAssertTrue(false)
+             return
+         }
+         XCTAssertEqual("signed_app_transaction_info_value", appTransactionInfoResponse.signedAppTransactionInfo)
+         TestingUtility.confirmCodableInternallyConsistent(appTransactionInfoResponse)
+     }
+
+     public func testGetAppTransactionInfoInvalidTransactionId() async throws {
+         let body = TestingUtility.readFile("resources/models/invalidTransactionIdError.json")
+         let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+         let result = await client.getAppTransactionInfo(transactionId: "invalid_id")
+         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+             XCTAssertTrue(false)
+             return
+         }
+         XCTAssertEqual(400, statusCode)
+         XCTAssertEqual(APIError.invalidTransactionId, apiError)
+         XCTAssertEqual(4000006, rawApiError)
+         XCTAssertEqual("Invalid transaction id.", errorMessage)
+         XCTAssertNil(causedBy)
+     }
+
+     public func testGetAppTransactionInfoTransactionIdNotFound() async throws {
+         let body = TestingUtility.readFile("resources/models/transactionIdNotFoundError.json")
+         let client = try getAppStoreServerAPIClient(body, .notFound, nil)
+         let result = await client.getAppTransactionInfo(transactionId: "not_found_id")
+         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+             XCTAssertTrue(false)
+             return
+         }
+         XCTAssertEqual(404, statusCode)
+         XCTAssertEqual(APIError.transactionIdNotFound, apiError)
+         XCTAssertEqual(4040010, rawApiError)
+         XCTAssertEqual("Transaction id not found.", errorMessage)
+         XCTAssertNil(causedBy)
+     }
+
+     public func testGetAppTransactionInfoAppTransactionDoesNotExist() async throws {
+         let body = TestingUtility.readFile("resources/models/appTransactionDoesNotExistError.json")
+         let client = try getAppStoreServerAPIClient(body, .notFound, nil)
+         let result = await client.getAppTransactionInfo(transactionId: "no_app_transaction")
+         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+             XCTAssertTrue(false)
+             return
+         }
+         XCTAssertEqual(404, statusCode)
+         XCTAssertEqual(APIError.AppTransactionDoesNotExistError, apiError)
+         XCTAssertEqual(4040019, rawApiError)
+         XCTAssertEqual("No AppTransaction exists for the customer.", errorMessage)
+         XCTAssertNil(causedBy)
+     }
+
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
         return try getAppStoreServerAPIClient(body, requestVerifier)
