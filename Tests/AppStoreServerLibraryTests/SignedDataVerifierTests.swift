@@ -87,7 +87,7 @@ final class SignedDataVerifierTests: XCTestCase {
     }
     
     func testOcspResponseCaching() async throws {
-        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 1, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        var verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 1, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
@@ -96,7 +96,7 @@ final class SignedDataVerifierTests: XCTestCase {
     }
     
     func testOcspResponseCachingHasExpiration() async throws {
-        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        var verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
@@ -125,7 +125,7 @@ final class SignedDataVerifierTests: XCTestCase {
     
     // The following test will communicate with Apple's OCSP servers, disable this test for offline testing
     func testAppleChainIsValidWithOCSP() async throws {
-        let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED)
+        var verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED)
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
         let root = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_ROOT_BASE64_ENCODED)!))
@@ -255,7 +255,8 @@ final class SignedDataVerifierTests: XCTestCase {
         return try! ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
     }
     
-    class DateOverrideChainVerifier: ChainVerifier {
+    struct DateOverrideChainVerifier {
+        let chainVerifier: ChainVerifier
         var currentDate: Int64
         var expectation : XCTestExpectation
         
@@ -264,19 +265,30 @@ final class SignedDataVerifierTests: XCTestCase {
             self.expectation = XCTestExpectation()
             self.expectation.assertForOverFulfill = true
             self.expectation.expectedFulfillmentCount = expectedCalls
-            try? super.init(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
+            guard let chainVerifier = try? ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
+            else { return nil }
+            
+            self.chainVerifier = chainVerifier
         }
         
-        func setDate(newDate: Int64) {
+        mutating func setDate(newDate: Int64) {
             self.currentDate = newDate
         }
         
-        override func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+        func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment) async -> AppStoreServerLibrary.VerificationResult<T> where T: Decodable & Sendable {
+            await chainVerifier.verify(signedData: signedData, type: type, onlineVerification: onlineVerification, environment: environment, currentTime: getDate())
+        }
+        
+        func verifyChain(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
+            await chainVerifier.verifyChain(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime, currentTime: getDate())
+        }
+        
+        func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
             expectation.fulfill()
             return .validCertificate([])
         }
         
-        override func getDate() -> Date {
+        func getDate() -> Date {
             return Date(timeIntervalSince1970: TimeInterval(currentDate))
         }
     }

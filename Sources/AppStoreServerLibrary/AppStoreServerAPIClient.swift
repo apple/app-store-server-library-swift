@@ -9,7 +9,7 @@ import NIOFoundationCompat
 
 public class AppStoreServerAPIClient {
 
-    public enum ConfigurationError: Error {
+    public enum ConfigurationError: Error, Hashable, Sendable {
         /// Xcode is not a supported environment for an AppStoreServerAPIClient
         case invalidEnvironment
     }
@@ -476,12 +476,12 @@ public class AppStoreServerAPIClient {
     private struct APIFetchError: Error {}
 }
 
-public enum APIResult<T> {
+public enum APIResult<T: Sendable>: Sendable {
     case success(response: T)
     case failure(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, errorMessage: String?, causedBy: Error?)
 }
 
-public enum APIError: Int64 {
+public enum APIError: Int64, Hashable, Sendable {
     ///An error that indicates an invalid request.
     ///
     ///[GeneralBadRequestError](https://developer.apple.com/documentation/appstoreserverapi/generalbadrequesterror)
@@ -859,7 +859,7 @@ public enum APIError: Int64 {
     case generalInternalRetryable = 5000001
 }
 
-public enum GetTransactionHistoryVersion: String {
+public enum GetTransactionHistoryVersion: String, Hashable, Sendable {
     @available(*, deprecated)
     case v1 = "v1"
     case v2 = "v2"
