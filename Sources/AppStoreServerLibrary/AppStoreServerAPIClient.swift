@@ -7,7 +7,7 @@ import AsyncHTTPClient
 import NIOHTTP1
 import NIOFoundationCompat
 
-public class AppStoreServerAPIClient {
+public actor AppStoreServerAPIClient: Sendable {
 
     public enum ConfigurationError: Error, Hashable, Sendable {
         /// Xcode is not a supported environment for an AppStoreServerAPIClient
@@ -26,6 +26,9 @@ public class AppStoreServerAPIClient {
     private let bundleId: String
     private let url: String
     private let client: HTTPClient
+    // For testing purposes
+    private var executeRequestOverride: (@Sendable (HTTPClientRequest, Data?) async throws -> HTTPClientResponse)?
+
     ///Create an App Store Server API client
     ///
     ///- Parameter signingKey: Your private key downloaded from App Store Connect
@@ -37,6 +40,7 @@ public class AppStoreServerAPIClient {
         self.keyId = keyId
         self.issuerId = issuerId
         self.bundleId = bundleId
+        self.executeRequestOverride = nil
         switch(environment) {
         case .xcode:
             throw ConfigurationError.invalidEnvironment
@@ -55,6 +59,11 @@ public class AppStoreServerAPIClient {
     
     deinit {
         try? self.client.syncShutdown()
+    }
+
+    // Test helper method to set request override
+    internal func setExecuteRequestOverride(_ override: @escaping @Sendable (HTTPClientRequest, Data?) async throws -> HTTPClientResponse) {
+        self.executeRequestOverride = override
     }
     
     private enum RequestBody {
@@ -138,6 +147,9 @@ public class AppStoreServerAPIClient {
     
     // requestBody passed for testing purposes
     internal func executeRequest(_ urlRequest: HTTPClientRequest, _ requestBody: Data?) async throws -> HTTPClientResponse {
+        if let override = executeRequestOverride {
+            return try await override(urlRequest, requestBody)
+        }
         return try await self.client.execute(urlRequest, timeout: .seconds(30))
     }
     
