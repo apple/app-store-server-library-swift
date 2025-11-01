@@ -79,9 +79,16 @@ actor ChainVerifier {
                 let keys = JWTKeyCollection()
                 await keys.add(ecdsa: try ECDSA.PublicKey<P256>(backing: publicKey))
                 let _ = try await keys.verify(signedData) as VaporBody
-                
+
                 return VerificationResult.valid(decodedBody)
-            case .couldNotValidate:
+            case .couldNotValidate(let terminalErrors):
+                for failure in terminalErrors {
+                    let failureReasonString = failure.policyFailureReason.description
+                    if failureReasonString.contains(Requester.OCSP_NETWORK_REQUEST_FAILED) {
+                        // OCSP validation failed due to network failures
+                        return VerificationResult.invalid(VerificationError.RETRYABLE_VERIFICATION_FAILURE)
+                    }
+                }
                 return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
             }
         } catch {
@@ -181,9 +188,11 @@ final class AppStoreOIDPolicy: VerifierPolicy {
 }
 
 final class Requester: OCSPRequester {
-    
+
+    static let OCSP_NETWORK_REQUEST_FAILED = "OCSP_NETWORK_REQUEST_FAILED"
+
     private let client: HTTPClient
-    
+
     init() {
         self.client = .init()
     }
@@ -195,21 +204,44 @@ final class Requester: OCSPRequester {
             urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
             urlRequest.body = .bytes(request)
             let response = try await client.execute(urlRequest, timeout: .seconds(30))
+
+            // Check status code
+            guard response.status.code == 200 else {
+                throw OCSPValidationError.httpError(statusCode: response.status.code)
+            }
+
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
-                throw OCSPFetchError()
+                throw OCSPValidationError.fetchFailed
             }
             return .response([UInt8](data))
-        } catch {
+        } catch let error as OCSPValidationError {
             return .terminalError(error)
+        } catch {
+            return .terminalError(OCSPValidationError.networkError(underlyingError: error))
         }
     }
-    
+
     deinit {
         try? self.client.syncShutdown()
     }
-    
-    private struct OCSPFetchError: Error {}
+
+    enum OCSPValidationError: Error, CustomStringConvertible {
+        case fetchFailed
+        case httpError(statusCode: UInt)
+        case networkError(underlyingError: Error)
+
+        var description: String {
+            switch self {
+            case .fetchFailed:
+                return "\(Requester.OCSP_NETWORK_REQUEST_FAILED): Could not read response body"
+            case .httpError(let statusCode):
+                return "\(Requester.OCSP_NETWORK_REQUEST_FAILED): HTTP error \(statusCode)"
+            case .networkError(let underlyingError):
+                return "\(Requester.OCSP_NETWORK_REQUEST_FAILED): Network error - \(underlyingError.localizedDescription)"
+            }
+        }
+    }
 }
 
 public enum VerificationResult<T: Hashable & Sendable>: Hashable, Sendable {
@@ -221,6 +253,7 @@ public enum VerificationError: Hashable, Sendable {
     case INVALID_JWT_FORMAT
     case INVALID_CERTIFICATE
     case VERIFICATION_FAILURE
+    case RETRYABLE_VERIFICATION_FAILURE
     case INVALID_APP_IDENTIFIER
     case INVALID_ENVIRONMENT
 }
