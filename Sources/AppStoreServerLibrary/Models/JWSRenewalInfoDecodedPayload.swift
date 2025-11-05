@@ -124,7 +124,7 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[gracePeriodExpiresDate](https://developer.apple.com/documentation/appstoreserverapi/graceperiodexpiresdate)
     public var gracePeriodExpiresDate: Date?
                              
-    ///The type of the subscription offer.
+    ///The type of subscription offer.
     ///
     ///[offerType](https://developer.apple.com/documentation/appstoreserverapi/offertype)
     public var offerType: OfferType? {
@@ -139,7 +139,7 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///See ``offerType``
     public var rawOfferType: Int32?
                 
-    ///The identifier that contains the promo code or the promotional offer identifier.
+    ///The offer code or the promotional offer identifier.
     ///
     ///[offerIdentifier](https://developer.apple.com/documentation/appstoreserverapi/offeridentifier)
     public var offerIdentifier: String?
@@ -188,7 +188,7 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[renewalPrice](https://developer.apple.com/documentation/appstoreserverapi/renewalprice)
     public var renewalPrice: Int64?
 
-    ///The payment mode of the discount offer.
+    ///The payment mode you configure for the offer.
     ///
     ///[offerDiscountType](https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype)
     public var offerDiscountType: OfferDiscountType? {

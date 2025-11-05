@@ -162,7 +162,7 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         signedDate
     }
 
-    ///The reason that the App Store refunded the transaction or revoked it from family sharing.
+    ///The reason that the App Store refunded the transaction or revoked it from Family Sharing.
     ///
     ///[revocationReason](https://developer.apple.com/documentation/appstoreserverapi/revocationreason)
     public var revocationReason: RevocationReason? {
@@ -202,7 +202,7 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///See ``offerType``
     public var rawOfferType: Int32?
 
-    ///The identifier that contains the promo code or the promotional offer identifier.
+    ///The identifier that contains the offer code or the promotional offer identifier.
     ///
     ///[offerIdentifier](https://developer.apple.com/documentation/appstoreserverapi/offeridentifier)
     public var offerIdentifier: String?
@@ -257,7 +257,7 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///[price](https://developer.apple.com/documentation/appstoreserverapi/price)
     public var price: Int64?
 
-    ///The payment mode you configure for an introductory offer, promotional offer, or offer code on an auto-renewable subscription.
+    ///The payment mode you configure for the offer.
     ///
     ///[offerDiscountType](https://developer.apple.com/documentation/appstoreserverapi/offerdiscounttype)
     public var offerDiscountType: OfferDiscountType? {
