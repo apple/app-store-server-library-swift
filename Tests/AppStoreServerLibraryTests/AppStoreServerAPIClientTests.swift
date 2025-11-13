@@ -9,11 +9,11 @@ import NIOFoundationCompat
 import JWTKit
 
 final class AppStoreServerAPIClientTests: XCTestCase {
-    
-    typealias RequestVerifier = (HTTPClientRequest, Data?) throws -> ()
+
+    typealias RequestVerifier = @Sendable (HTTPClientRequest, Data?) throws -> ()
     
     public func testExtendRenewalDateForAllActiveSubscribers() async throws {
-        let client = try getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/extendRenewalDateForAllActiveSubscribersResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
@@ -45,7 +45,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testExtendSubscriptionRenewalDate() async throws {
-        let client = try getClientWithBody("resources/models/extendSubscriptionRenewalDateResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/extendSubscriptionRenewalDateResponse.json") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/4124214", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
@@ -75,7 +75,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetAllSubscriptionStatuses() async throws {
-        let client = try getClientWithBody("resources/models/getAllSubscriptionStatusesResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getAllSubscriptionStatusesResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/4321?status=2&status=1", request.url)
             XCTAssertNil(request.body)
@@ -121,7 +121,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetRefundHistory() async throws {
-        let client = try getClientWithBody("resources/models/getRefundHistoryResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getRefundHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v2/refund/lookup/555555?revision=revision_input", request.url)
             XCTAssertNil(request.body)
@@ -140,7 +140,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetStatusOfSubscriptionRenewalDateExtensions() async throws {
-        let client = try getClientWithBody("resources/models/getStatusOfSubscriptionRenewalDateExtensionsResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getStatusOfSubscriptionRenewalDateExtensionsResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/subscriptions/extend/mass/20fba8a0-2b80-4a7d-a17f-85c1854727f8/com.example.product", request.url)
             XCTAssertNil(request.body)
@@ -161,7 +161,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetTestNotificationStatus() async throws {
-        let client = try getClientWithBody("resources/models/getTestNotificationStatusResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getTestNotificationStatusResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test/8cd2974c-f905-492a-bf9a-b2f47c791d19", request.url)
             XCTAssertNil(request.body)
@@ -188,7 +188,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetNotificationHistory() async throws {
-        let client = try getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/history?paginationToken=a036bc0e-52b8-4bee-82fc-8c24cb6715d6", request.url)
             
@@ -247,7 +247,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetNotificationHistoryWithMicrosecondValues() async throws {
-        let client = try getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual(1698148900000, decodedJson["startDate"] as! Int)
             XCTAssertEqual(1698148950000, decodedJson["endDate"] as! Int)
@@ -266,7 +266,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetTransactionHistoryV1() async throws {
-        let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             let url = request.url
             let urlComponents = URLComponents(string: url)
@@ -314,7 +314,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetTransactionHistoryV2() async throws {
-        let client = try getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionHistoryResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             let url = request.url
             let urlComponents = URLComponents(string: url)
@@ -362,7 +362,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testGetTransactionInfo() async throws {
-        let client = try getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/1234", request.url)
             XCTAssertNil(request.body)
@@ -379,7 +379,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testLookUpOrderId() async throws {
-        let client = try getClientWithBody("resources/models/lookupOrderIdResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/lookupOrderIdResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/lookup/W002182", request.url)
             XCTAssertNil(request.body)
@@ -398,7 +398,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testRequestTestNotification() async throws {
-        let client = try getClientWithBody("resources/models/requestTestNotificationResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/requestTestNotificationResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/notifications/test", request.url)
             XCTAssertNil(request.body)
@@ -415,7 +415,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testSendConsumptionData() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/consumption/49571273", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
@@ -458,7 +458,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testSendConsumptionDataWithNullAppAccountToken() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/consumption/49571273", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
@@ -500,7 +500,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testHeaders() async throws {
-        let client = try getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
             let headers = request.headers
             XCTAssertTrue(headers.first(name: "User-Agent")!.starts(with: "app-store-server-library/swift"))
             XCTAssertEqual("application/json", headers.first(name: "Accept"))
@@ -528,7 +528,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     public func testAPIError() async throws {
         let body = TestingUtility.readFile("resources/models/apiException.json")
-        let client = try getAppStoreServerAPIClient(body, .internalServerError, nil)
+        let client = try await getAppStoreServerAPIClient(body, .internalServerError, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
@@ -543,7 +543,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     public func testAPITooManyRequests() async throws {
         let body = TestingUtility.readFile("resources/models/apiTooManyRequestsException.json")
-        let client = try getAppStoreServerAPIClient(body, .tooManyRequests, nil)
+        let client = try await getAppStoreServerAPIClient(body, .tooManyRequests, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
@@ -558,7 +558,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     
     public func testAPIUnknownError() async throws {
         let body = TestingUtility.readFile("resources/models/apiUnknownError.json")
-        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
             XCTAssertTrue(false)
@@ -572,7 +572,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testDecodingWithUnknownEnumValue() async throws {
-        let client = try getClientWithBody("resources/models/transactionHistoryResponseWithMalformedEnvironment.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionHistoryResponseWithMalformedEnvironment.json") { request, body in
         }
         
         let request = TransactionHistoryRequest(
@@ -597,7 +597,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
     
     public func testDecodingWithMalformedJson() async throws {
-        let client = try getClientWithBody("resources/models/transactionHistoryResponseWithMalformedAppAppleId.json") { request, body in
+        let client = try await getClientWithBody("resources/models/transactionHistoryResponseWithMalformedAppAppleId.json") { request, body in
         }
         
         let request = TransactionHistoryRequest(
@@ -636,7 +636,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testSetAppAccountToken() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/49571273/appAccountToken", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
@@ -659,7 +659,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
     public func testInvalidAppAccountTokenUUIDError() async throws {
         let body = TestingUtility.readFile("resources/models/invalidAppAccountTokenUUIDError.json")
-        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
         let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
@@ -677,7 +677,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
     public func testFamilySharedTransactionNotSupportedError() async throws {
         let body = TestingUtility.readFile("resources/models/familyTransactionNotSupportedError.json")
-        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
         let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
@@ -695,7 +695,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
     public func testTransactionIdNotOriginalTransactionIdError() async throws {
         let body = TestingUtility.readFile("resources/models/transactionIdNotOriginalTransactionId.json")
-        let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
         let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
@@ -712,7 +712,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testUploadImage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
             XCTAssertEqual("image/png", request.headers.first(name: "Content-Type"))
@@ -728,7 +728,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testDeleteImage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.DELETE, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
         }
@@ -741,7 +741,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testGetImageList() async throws {
-        let client = try getClientWithBody("resources/models/getImageListResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getImageListResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/list", request.url)
         }
@@ -757,7 +757,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testUploadMessage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
@@ -774,7 +774,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testUploadMessageWithImage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
@@ -795,7 +795,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testDeleteMessage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.DELETE, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
         }
@@ -808,7 +808,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testGetMessageList() async throws {
-        let client = try getClientWithBody("resources/models/getMessageListResponse.json") { request, body in
+        let client = try await getClientWithBody("resources/models/getMessageListResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/list", request.url)
         }
@@ -824,7 +824,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testConfigureDefaultMessage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
@@ -840,7 +840,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testDeleteDefaultMessage() async throws {
-        let client = try getAppStoreServerAPIClient("") { request, body in
+        let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.DELETE, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
         }
@@ -853,7 +853,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     public func testGetAppTransactionInfo() async throws {
-         let client = try getClientWithBody("resources/models/appTransactionInfoResponse.json") { request, body in
+         let client = try await getClientWithBody("resources/models/appTransactionInfoResponse.json") { request, body in
              XCTAssertEqual(.GET, request.method)
              XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/appTransactions/1234", request.url)
              XCTAssertNil(request.body)
@@ -871,7 +871,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
      public func testGetAppTransactionInfoInvalidTransactionId() async throws {
          let body = TestingUtility.readFile("resources/models/invalidTransactionIdError.json")
-         let client = try getAppStoreServerAPIClient(body, .badRequest, nil)
+         let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
          let result = await client.getAppTransactionInfo(transactionId: "invalid_id")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
@@ -886,7 +886,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
      public func testGetAppTransactionInfoTransactionIdNotFound() async throws {
          let body = TestingUtility.readFile("resources/models/transactionIdNotFoundError.json")
-         let client = try getAppStoreServerAPIClient(body, .notFound, nil)
+         let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
          let result = await client.getAppTransactionInfo(transactionId: "not_found_id")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
@@ -901,7 +901,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
 
      public func testGetAppTransactionInfoAppTransactionDoesNotExist() async throws {
          let body = TestingUtility.readFile("resources/models/appTransactionDoesNotExistError.json")
-         let client = try getAppStoreServerAPIClient(body, .notFound, nil)
+         let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
          let result = await client.getAppTransactionInfo(transactionId: "no_app_transaction")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
@@ -914,18 +914,19 @@ final class AppStoreServerAPIClientTests: XCTestCase {
          XCTAssertNil(causedBy)
      }
 
-    public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
+    public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) async throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
-        return try getAppStoreServerAPIClient(body, requestVerifier)
+        return try await getAppStoreServerAPIClient(body, requestVerifier)
     }
-    
-    private func getAppStoreServerAPIClient(_ body: String, _ requestVerifier: @escaping RequestVerifier) throws -> AppStoreServerAPIClient {
-        return try getAppStoreServerAPIClient(body, .ok, requestVerifier)
+
+    private func getAppStoreServerAPIClient(_ body: String, _ requestVerifier: @escaping RequestVerifier) async throws -> AppStoreServerAPIClient {
+        return try await getAppStoreServerAPIClient(body, .ok, requestVerifier)
     }
-    
-    private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) throws -> AppStoreServerAPIClient {
+
+    private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) async throws -> AppStoreServerAPIClient {
         let key = getSigningKey()
-        let client = try AppStoreServerAPIClientTest(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.localTesting) { request, requestBody in
+        let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.localTesting)
+        await client.setExecuteRequestOverride { request, requestBody in
             try requestVerifier.map { try $0(request, requestBody) }
             let headers = [("Content-Type", "application/json")]
             let bufferedBody = HTTPClientResponse.Body.bytes(.init(string: body))
@@ -933,22 +934,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
         return client
     }
-    
+
     private func getSigningKey() -> String {
         return TestingUtility.readFile("resources/certs/testSigningKey.p8")
-    }
-    
-    class AppStoreServerAPIClientTest: AppStoreServerAPIClient {
-        
-        private var requestOverride: ((HTTPClientRequest, Data?) throws -> HTTPClientResponse)?
-        
-        public init(signingKey: String, keyId: String, issuerId: String, bundleId: String, environment: AppStoreEnvironment, requestOverride: @escaping (HTTPClientRequest, Data?) throws -> HTTPClientResponse) throws {
-            try super.init(signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
-            self.requestOverride = requestOverride
-        }
-        
-        internal override func executeRequest(_ urlRequest: HTTPClientRequest, _ body: Data?) async throws -> HTTPClientResponse {
-            return try requestOverride!(urlRequest, body)
-        }
     }
 }
