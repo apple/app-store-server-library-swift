@@ -55,8 +55,8 @@ public class TestingUtility {
     
     private static func base64ToBase64URL(_ encodedString: String) -> String {
         return encodedString
-            .replacingOccurrences(of: "+", with: "/")
-            .replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
     }
 }
