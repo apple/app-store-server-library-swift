@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 4.0.0
+- Support Retention Messaging API [https://github.com/apple/app-store-server-library-swift/pull/101]
+  - This changes internal details of AppStoreServerAPIClient, which is a breaking change for subclassing clients
+- Incorporate changes for App Store Server API v1.17 [https://github.com/apple/app-store-server-library-swift/pull/102] from @riyazpanjwani
+- Add a new VerificationError case for retryable OCSP network failures [https://github.com/apple/app-store-server-library-swift/pull/104]
+- Incorporate changes for App Store Server API v1.18 [https://github.com/apple/app-store-server-library-swift/pull/106] from @izanger
+  - This changes OfferType's case subscriptionOfferCode to offerCode, which is a breaking change
+- Fix Base64URL decoding [https://github.com/apple/app-store-server-library-swift/pull/107] from @shimastripe
+
 ## Version 3.1.0
 - Incorporate changes for App Store Server API v1.16 [https://github.com/apple/app-store-server-library-swift/pull/89]
 - Update Swift docs to v6 [https://github.com/apple/app-store-server-library-swift/pull/85]

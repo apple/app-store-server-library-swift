@@ -14,7 +14,7 @@ public actor AppStoreServerAPIClient: Sendable {
         case invalidEnvironment
     }
     
-    private static let userAgent = "app-store-server-library/swift/3.1.0"
+    private static let userAgent = "app-store-server-library/swift/4.0.0"
     private static let productionUrl = "https://api.storekit.itunes.apple.com"
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
     private static let localTestingUrl = "https://local-testing-base-url"
