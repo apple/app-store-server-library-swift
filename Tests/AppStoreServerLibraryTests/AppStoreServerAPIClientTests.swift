@@ -433,23 +433,23 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(4, decodedJson["userStatus"] as! Int)
             XCTAssertEqual(3, decodedJson["refundPreference"] as! Int)
         }
-        
-        let consumptionRequest = ConsumptionRequest(
+
+        let consumptionRequest = ConsumptionRequestV1(
             customerConsented: true,
             consumptionStatus: ConsumptionStatus.notConsumed,
             platform: Platform.nonApple,
             sampleContentProvided: false,
-            deliveryStatus: DeliveryStatus.didNotDeliverDueToServerOutage,
+            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813"),
             accountTenure: AccountTenure.thirtyDaysToNinetyDays,
             playTime: PlayTime.oneDayToFourDays,
             lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
             userStatus: UserStatus.limitedAccess,
-            refundPreference: RefundPreference.noPreference
+            refundPreference: RefundPreferenceV1.noPreference
         )
         TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
-        
+
         let response = await client.sendConsumptionData(transactionId: "49571273", consumptionRequest: consumptionRequest)
         guard case .success(_) = response else {
             XCTAssertTrue(false)
@@ -475,13 +475,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(7, decodedJson["lifetimeDollarsPurchased"] as! Int)
             XCTAssertEqual(4, decodedJson["userStatus"] as! Int)
         }
-        
-        let consumptionRequest = ConsumptionRequest(
+
+        let consumptionRequest = ConsumptionRequestV1(
             customerConsented: true,
             consumptionStatus: ConsumptionStatus.notConsumed,
             platform: Platform.nonApple,
             sampleContentProvided: false,
-            deliveryStatus: DeliveryStatus.didNotDeliverDueToServerOutage,
+            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
             appAccountToken: nil,
             accountTenure: AccountTenure.thirtyDaysToNinetyDays,
             playTime: PlayTime.oneDayToFourDays,
@@ -489,15 +489,72 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
             userStatus: UserStatus.limitedAccess
         )
-        
+
         TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
-        
+
         let response = await client.sendConsumptionData(transactionId: "49571273", consumptionRequest: consumptionRequest)
         guard case .success(_) = response else {
             XCTAssertTrue(false)
             return
         }
     }
+
+    public func testSendConsumptionInformation() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v2/transactions/consumption/49571273", request.url)
+            XCTAssertEqual(["application/json"], request.headers["Content-Type"])
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual(true, decodedJson["customerConsented"] as! Bool)
+            XCTAssertEqual(false, decodedJson["sampleContentProvided"] as! Bool)
+            XCTAssertEqual("DELIVERED", decodedJson["deliveryStatus"] as! String)
+            XCTAssertEqual(50000, decodedJson["consumptionPercentage"] as! Int)
+            XCTAssertEqual("GRANT_FULL", decodedJson["refundPreference"] as! String)
+        }
+
+        let consumptionRequest = ConsumptionRequest(
+            customerConsented: true,
+            deliveryStatus: DeliveryStatus.delivered,
+            sampleContentProvided: false,
+            consumptionPercentage: 50000,
+            refundPreference: RefundPreference.grantFull
+        )
+        TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
+
+        let response = await client.sendConsumptionInformation(transactionId: "49571273", consumptionRequest: consumptionRequest)
+        guard case .success(_) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testSendConsumptionInformationWithMinimalFields() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v2/transactions/consumption/49571273", request.url)
+            XCTAssertEqual(["application/json"], request.headers["Content-Type"])
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual(true, decodedJson["customerConsented"] as! Bool)
+            XCTAssertEqual(false, decodedJson["sampleContentProvided"] as! Bool)
+            XCTAssertEqual("UNDELIVERED_QUALITY_ISSUE", decodedJson["deliveryStatus"] as! String)
+            XCTAssertNil(decodedJson["consumptionPercentage"])
+            XCTAssertNil(decodedJson["refundPreference"])
+        }
+
+        let consumptionRequest = ConsumptionRequest(
+            customerConsented: true,
+            deliveryStatus: DeliveryStatus.undeliveredQualityIssue,
+            sampleContentProvided: false
+        )
+        TestingUtility.confirmCodableInternallyConsistent(consumptionRequest)
+
+        let response = await client.sendConsumptionInformation(transactionId: "49571273", consumptionRequest: consumptionRequest)
+        guard case .success(_) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
     
     public func testHeaders() async throws {
         let client = try await getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
