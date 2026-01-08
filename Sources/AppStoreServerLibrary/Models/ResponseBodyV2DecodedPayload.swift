@@ -6,7 +6,7 @@ import Foundation
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
 
-    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
+    public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil, appData: AppData? = nil) {
         self.notificationType = notificationType
         self.subtype = subtype
         self.notificationUUID = notificationUUID
@@ -15,9 +15,10 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.signedDate = signedDate
         self.summary = summary
         self.externalPurchaseToken = externalPurchaseToken
+        self.appData = appData
     }
-    
-    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil) {
+
+    public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil, appData: AppData? = nil) {
         self.rawNotificationType = rawNotificationType
         self.rawSubtype = rawSubtype
         self.notificationUUID = notificationUUID
@@ -26,6 +27,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.signedDate = signedDate
         self.summary = summary
         self.externalPurchaseToken = externalPurchaseToken
+        self.appData = appData
     }
     
     ///The in-app purchase event for which the App Store sends this version 2 notification.
@@ -94,6 +96,11 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[externalPurchaseToken](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken)
     public var externalPurchaseToken: ExternalPurchaseToken?
+
+    ///This field appears when the notificationType is RESCIND_CONSENT. It contains the app metadata and signed app transaction information.
+    ///
+    ///[appData](https://developer.apple.com/documentation/appstoreservernotifications/appdata)
+    public var appData: AppData?
     
     enum CodingKeys: CodingKey {
         case notificationType
@@ -104,6 +111,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         case signedDate
         case summary
         case externalPurchaseToken
+        case appData
     }
     
     public init(from decoder: any Decoder) throws {
@@ -116,6 +124,7 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         self.signedDate = try container.decodeIfPresent(Date.self, forKey: .signedDate)
         self.summary = try container.decodeIfPresent(Summary.self, forKey: .summary)
         self.externalPurchaseToken = try container.decodeIfPresent(ExternalPurchaseToken.self, forKey: .externalPurchaseToken)
+        self.appData = try container.decodeIfPresent(AppData.self, forKey: .appData)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -128,5 +137,6 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.signedDate, forKey: .signedDate)
         try container.encodeIfPresent(self.summary, forKey: .summary)
         try container.encodeIfPresent(self.externalPurchaseToken, forKey: .externalPurchaseToken)
+        try container.encodeIfPresent(self.appData, forKey: .appData)
     }
 }

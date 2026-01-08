@@ -173,7 +173,7 @@ final class SignedModelTests: XCTestCase {
         let signedTransaction = TestingUtility.createSignedDataFromJson("resources/models/signedTransaction.json")
 
         let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
-        
+
         guard case .valid(let transaction) = verifiedTransaction else {
             XCTAssertTrue(false)
             return
@@ -216,7 +216,58 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("P1Y", transaction.offerPeriod)
         TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
-    
+
+    public func testTransactionWithRevocationDecoding() async throws {
+        let signedTransaction = TestingUtility.createSignedDataFromJson("resources/models/signedTransactionWithRevocation.json")
+
+        let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+
+        guard case .valid(let transaction) = verifiedTransaction else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual("12345", transaction.originalTransactionId)
+        XCTAssertEqual("23456", transaction.transactionId)
+        XCTAssertEqual("34343", transaction.webOrderLineItemId)
+        XCTAssertEqual("com.example", transaction.bundleId)
+        XCTAssertEqual("com.example.product", transaction.productId)
+        XCTAssertEqual("55555", transaction.subscriptionGroupIdentifier)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148800), transaction.originalPurchaseDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), transaction.purchaseDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148950), transaction.revocationDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698149000), transaction.expiresDate)
+        XCTAssertEqual(1, transaction.quantity)
+        XCTAssertEqual(ProductType.autoRenewableSubscription, transaction.type)
+        XCTAssertEqual("Auto-Renewable Subscription", transaction.rawType)
+        XCTAssertEqual(UUID(uuidString: "7e3fb20b-4cdb-47cc-936d-99d65f608138"), transaction.appAccountToken)
+        XCTAssertEqual(InAppOwnershipType.purchased, transaction.inAppOwnershipType)
+        XCTAssertEqual("PURCHASED", transaction.rawInAppOwnershipType)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), transaction.signedDate)
+        XCTAssertEqual(RevocationReason.refundedDueToIssue, transaction.revocationReason)
+        XCTAssertEqual(1, transaction.rawRevocationReason)
+        XCTAssertEqual("abc.123", transaction.offerIdentifier)
+        XCTAssertEqual(true, transaction.isUpgraded)
+        XCTAssertEqual(OfferType.introductoryOffer, transaction.offerType)
+        XCTAssertEqual(1, transaction.rawOfferType)
+        XCTAssertEqual("USA", transaction.storefront)
+        XCTAssertEqual("143441", transaction.storefrontId)
+        XCTAssertEqual(TransactionReason.purchase, transaction.transactionReason)
+        XCTAssertEqual("PURCHASE", transaction.rawTransactionReason)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, transaction.environment)
+        XCTAssertEqual("LocalTesting", transaction.rawEnvironment)
+        XCTAssertEqual(10990, transaction.price)
+        XCTAssertEqual("USD", transaction.currency)
+        XCTAssertEqual(OfferDiscountType.payAsYouGo, transaction.offerDiscountType)
+        XCTAssertEqual("PAY_AS_YOU_GO", transaction.rawOfferDiscountType)
+        XCTAssertEqual("71134", transaction.appTransactionId)
+        XCTAssertEqual("P1Y", transaction.offerPeriod)
+        XCTAssertEqual(RevocationType.refundProrated, transaction.revocationType)
+        XCTAssertEqual("REFUND_PRORATED", transaction.rawRevocationType)
+        XCTAssertEqual(50000, transaction.revocationPercentage)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
+    }
+
     public func testRenewalInfoDecoding() async throws {
         let signedRenewalInfo = TestingUtility.createSignedDataFromJson("resources/models/signedRenewalInfo.json")
 
@@ -304,6 +355,48 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("LocalTesting", request.rawEnvironment)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), request.signedDate)
         TestingUtility.confirmCodableInternallyConsistent(request)
+    }
+
+    public func testRescindConsentNotificationDecoding() async throws {
+        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedRescindConsentNotification.json")
+
+        let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification)
+
+        guard case .valid(let notification) = verifiedNotification else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual(NotificationTypeV2.rescindConsent, notification.notificationType)
+        XCTAssertEqual("RESCIND_CONSENT", notification.rawNotificationType)
+        XCTAssertNil(notification.subtype)
+        XCTAssertNil(notification.rawSubtype)
+        XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
+        XCTAssertEqual("2.0", notification.version)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertNil(notification.data)
+        XCTAssertNil(notification.summary)
+        XCTAssertNil(notification.externalPurchaseToken)
+        XCTAssertNotNil(notification.appData)
+        XCTAssertEqual(AppStoreEnvironment.localTesting, notification.appData!.environment)
+        XCTAssertEqual("LocalTesting", notification.appData!.rawEnvironment)
+        XCTAssertEqual(41234, notification.appData!.appAppleId)
+        XCTAssertEqual("com.example", notification.appData!.bundleId)
+        XCTAssertEqual("signed_app_transaction_info_value", notification.appData!.signedAppTransactionInfo)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
+    }
+
+    public func testAppData() throws {
+        let json = TestingUtility.readFile("resources/models/appData.json")
+        let jsonDecoder = getJsonDecoder()
+
+        let appData = try jsonDecoder.decode(AppData.self, from: json.data(using: .utf8)!)
+
+        XCTAssertEqual(987654321, appData.appAppleId)
+        XCTAssertEqual("com.example", appData.bundleId)
+        XCTAssertEqual(AppStoreEnvironment.sandbox, appData.environment)
+        XCTAssertEqual("Sandbox", appData.rawEnvironment)
+        XCTAssertEqual("signed-app-transaction-info", appData.signedAppTransactionInfo)
     }
 
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision
