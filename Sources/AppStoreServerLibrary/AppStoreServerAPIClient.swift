@@ -25,7 +25,7 @@ public actor AppStoreServerAPIClient: Sendable {
     private let issuerId: String
     private let bundleId: String
     private let url: String
-    private let client: HTTPClient
+    private let client: HTTPClient = .shared
     // For testing purposes
     private var executeRequestOverride: (@Sendable (HTTPClientRequest, Data?) async throws -> HTTPClientResponse)?
 
@@ -54,11 +54,6 @@ public actor AppStoreServerAPIClient: Sendable {
             self.url = AppStoreServerAPIClient.sandboxUrl
             break
         }
-        self.client = .init()
-    }
-    
-    deinit {
-        try? self.client.syncShutdown()
     }
 
     // Test helper method to set request override
