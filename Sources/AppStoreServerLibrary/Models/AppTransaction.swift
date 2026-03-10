@@ -3,9 +3,10 @@
 import Foundation
 
 
-///Information that represents the customer’s purchase of the app, cryptographically signed by the App Store.
+///A decoded payload that contains app transaction information.
 ///
 ///[AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
+///[JWSAppTransactionDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwsapptransactiondecodedpayload)
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
     public init(receiptType: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, originalPlatform: PurchasePlatform? = nil) {
@@ -40,9 +41,9 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         self.rawOriginalPlatform = rawOriginalPlatform
     }
     
-    ///The server environment that signs the app transaction.
+    ///The date that the App Store signed the JWS app transaction.
     ///
-    ///[environment](https://developer.apple.com/documentation/storekit/apptransaction/3963901-environment)
+    ///[environment](https://developer.apple.com/documentation/appstoreserverapi/environment)
     public var receiptType: AppStoreEnvironment?  {
         get {
             return rawReceiptType.flatMap { AppStoreEnvironment(rawValue: $0) }
@@ -57,70 +58,70 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
     
     ///The unique identifier the App Store uses to identify the app.
     ///
-    ///[appId](https://developer.apple.com/documentation/storekit/apptransaction/3954436-appid)
+    ///[appId](https://developer.apple.com/documentation/appstoreserverapi/appappleid)
     public var appAppleId: Int64?
     
     ///The bundle identifier that the app transaction applies to.
     ///
-    ///[bundleId](https://developer.apple.com/documentation/storekit/apptransaction/3954439-bundleid)
+    ///[bundleId](https://developer.apple.com/documentation/appstoreserverapi/bundleid)
     public var bundleId: String?
     
     ///The app version that the app transaction applies to.
     ///
-    ///[appVersion](https://developer.apple.com/documentation/storekit/apptransaction/3954437-appversion)
-     public var applicationVersion: String?
+    ///[appVersion](https://developer.apple.com/documentation/storekit/apptransaction/appversion)
+    public var applicationVersion: String?
     
     ///The version external identifier of the app
     ///
-    ///[appVersionID](https://developer.apple.com/documentation/storekit/apptransaction/3954438-appversionid)
-     public var versionExternalIdentifier: Int64?
+    ///[appVersionID](https://developer.apple.com/documentation/storekit/apptransaction/appversionid)
+    public var versionExternalIdentifier: Int64?
     
     ///The date that the App Store signed the JWS app transaction.
     ///
-    ///[signedDate](https://developer.apple.com/documentation/storekit/apptransaction/3954449-signeddate)
-     public var receiptCreationDate: Date?
+    ///[receiptCreationDate](https://developer.apple.com/documentation/appstoreserverapi/receiptcreationdate)
+    public var receiptCreationDate: Date?
     
-    ///The date the user originally purchased the app from the App Store.
+    ///The date the customer originally purchased the app from the App Store.
     ///
-    ///[originalPurchaseDate](https://developer.apple.com/documentation/storekit/apptransaction/3954448-originalpurchasedate)
-     public var originalPurchaseDate: Date?
+    ///[originalPurchaseDate](https://developer.apple.com/documentation/appstoreserverapi/originalpurchasedate)
+    public var originalPurchaseDate: Date?
     
     ///The app version that the user originally purchased from the App Store.
     ///
-    ///[originalAppVersion](https://developer.apple.com/documentation/storekit/apptransaction/3954447-originalappversion)
-     public var originalApplicationVersion: String?
+    ///[originalAppVersion](https://developer.apple.com/documentation/appstoreserverapi/originalapplicationversion)
+    public var originalApplicationVersion: String?
     
     ///The Base64 device verification value to use to verify whether the app transaction belongs to the device.
     ///
-    ///[deviceVerification](https://developer.apple.com/documentation/storekit/apptransaction/3954441-deviceverification)
+    ///[deviceVerification](https://developer.apple.com/documentation/storekit/apptransaction/deviceverification)
     public var deviceVerification: String?
     
     ///The UUID used to compute the device verification value.
     ///
-    ///[deviceVerificationNonce](https://developer.apple.com/documentation/storekit/apptransaction/3954442-deviceverificationnonce)
+    ///[deviceVerificationNonce](https://developer.apple.com/documentation/storekit/apptransaction/deviceverificationnonce)
     public var deviceVerificationNonce: UUID?
     
     ///The date the customer placed an order for the app before it’s available in the App Store.
     ///
-    ///[preorderDate](https://developer.apple.com/documentation/storekit/apptransaction/4013175-preorderdate)
+    ///[preorderDate](https://developer.apple.com/documentation/appstoreserverapi/preorderdate)
     public var preorderDate: Date?
     
 
     ///The date that the App Store signed the JWS app transaction.
     ///
-    ///[signedDate](https://developer.apple.com/documentation/storekit/apptransaction/3954449-signeddate)
+    ///[receiptCreationDate](https://developer.apple.com/documentation/appstoreserverapi/receiptcreationdate)
     public var signedDateOptional: Date? {
         receiptCreationDate
     }
 
     ///The unique identifier of the app download transaction.
     ///
-    ///[appTransactionId](https://developer.apple.com/documentation/storekit/apptransaction/apptransactionid)
+    ///[appTransactionId](https://developer.apple.com/documentation/appstoreserverapi/apptransactionid)
     public var appTransactionId: String?
 
     ///The platform on which the customer originally purchased the app.
     ///
-    ///[originalPlatform](https://developer.apple.com/documentation/storekit/apptransaction/originalplatform-4mogz)
+    ///[originalPlatform](https://developer.apple.com/documentation/appstoreserverapi/originalplatform)
     public var originalPlatform: PurchasePlatform?  {
         get {
             return rawOriginalPlatform.flatMap { PurchasePlatform(rawValue: $0) }
