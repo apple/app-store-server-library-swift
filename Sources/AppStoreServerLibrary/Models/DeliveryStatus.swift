@@ -1,13 +1,12 @@
-// Copyright (c) 2023 Apple Inc. Licensed under MIT License.
+// Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
-///A value that indicates whether the app successfully delivered an in-app purchase that works properly.
+///A value that indicates whether the app successfully delivered an In-App Purchase that works properly.
 ///
 ///[deliveryStatus](https://developer.apple.com/documentation/appstoreserverapi/deliverystatus)
-public enum DeliveryStatus: Int32, Decodable, Encodable, Hashable, Sendable {
-    case deliveredAndWorkingProperly = 0
-    case didNotDeliverDueToQualityIssue = 1
-    case deliveredWrongItem = 2
-    case didNotDeliverDueToServerOutage = 3
-    case didNotDeliverDueToIngameCurrencyChange = 4
-    case didNotDeliverForOtherReason = 5
+public enum DeliveryStatus: String, Decodable, Encodable, Hashable, Sendable {
+    case delivered = "DELIVERED"
+    case undeliveredQualityIssue = "UNDELIVERED_QUALITY_ISSUE"
+    case undeliveredWrongItem = "UNDELIVERED_WRONG_ITEM"
+    case undeliveredServerOutage = "UNDELIVERED_SERVER_OUTAGE"
+    case undeliveredOther = "UNDELIVERED_OTHER"
 }

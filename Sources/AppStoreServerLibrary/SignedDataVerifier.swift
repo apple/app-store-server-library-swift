@@ -102,6 +102,10 @@ public struct SignedDataVerifier: Sendable {
                 } else {
                     environment = .production
                 }
+            } else if let appData = notification.appData {
+                appAppleId = appData.appAppleId
+                bundleId = appData.bundleId
+                environment = appData.environment
             } else {
                 appAppleId = nil
                 bundleId = nil

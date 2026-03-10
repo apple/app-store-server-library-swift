@@ -191,11 +191,7 @@ final class Requester: OCSPRequester {
 
     static let OCSP_NETWORK_REQUEST_FAILED = "OCSP_NETWORK_REQUEST_FAILED"
 
-    private let client: HTTPClient
-
-    init() {
-        self.client = .init()
-    }
+    private let client: HTTPClient = .shared
 
     func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
         do {
@@ -220,10 +216,6 @@ final class Requester: OCSPRequester {
         } catch {
             return .terminalError(OCSPValidationError.networkError(underlyingError: error))
         }
-    }
-
-    deinit {
-        try? self.client.syncShutdown()
     }
 
     enum OCSPValidationError: Error, CustomStringConvertible {

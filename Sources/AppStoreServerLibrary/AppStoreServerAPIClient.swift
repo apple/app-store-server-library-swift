@@ -25,7 +25,7 @@ public actor AppStoreServerAPIClient: Sendable {
     private let issuerId: String
     private let bundleId: String
     private let url: String
-    private let client: HTTPClient
+    private let client: HTTPClient = .shared
     // For testing purposes
     private var executeRequestOverride: (@Sendable (HTTPClientRequest, Data?) async throws -> HTTPClientResponse)?
 
@@ -54,11 +54,6 @@ public actor AppStoreServerAPIClient: Sendable {
             self.url = AppStoreServerAPIClient.sandboxUrl
             break
         }
-        self.client = .init()
-    }
-    
-    deinit {
-        try? self.client.syncShutdown()
     }
 
     // Test helper method to set request override
@@ -274,7 +269,7 @@ public actor AppStoreServerAPIClient: Sendable {
         let request: String? = nil
         return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: .GET, queryParameters: [:], body: request)
     }
-
+    
     ///See `getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion)`
     @available(*, deprecated)
     public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
@@ -367,12 +362,23 @@ public actor AppStoreServerAPIClient: Sendable {
 
     ///Send consumption information about a consumable in-app purchase to the App Store after your server receives a consumption request notification.
     ///
-    ///- Parameter transactionId: The transaction identifier for which you’re providing consumption information. You receive this identifier in the CONSUMPTION_REQUEST notification the App Store sends to your server.
+    ///- Parameter transactionId: The transaction identifier for which you're providing consumption information. You receive this identifier in the CONSUMPTION_REQUEST notification the App Store sends to your server.
     ///- Parameter consumptionRequest :   The request body containing consumption information.
     ///- Returns: Success, or information about the failure
-    ///[Send Consumption Information](https://developer.apple.com/documentation/appstoreserverapi/send_consumption_information)
-    public func sendConsumptionData(transactionId: String, consumptionRequest: ConsumptionRequest) async -> APIResult<Void> {
+    ///[Send Consumption Information](https://developer.apple.com/documentation/appstoreserverapi/send-consumption-information-v1)
+    @available(*, deprecated, message: "Use sendConsumptionInformation(_:consumptionRequest:) instead")
+    public func sendConsumptionData(transactionId: String, consumptionRequest: ConsumptionRequestV1) async -> APIResult<Void> {
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/consumption/" + transactionId, method: .PUT, queryParameters: [:], body: consumptionRequest)
+    }
+
+    ///Send consumption information about an In-App Purchase to the App Store after your server receives a consumption request notification.
+    ///
+    ///- Parameter transactionId: The transaction identifier for which you're providing consumption information. You receive this identifier in the CONSUMPTION_REQUEST notification the App Store sends to your server's App Store Server Notifications V2 endpoint.
+    ///- Parameter consumptionRequest: The request body containing consumption information.
+    ///- Returns: Success, or information about the failure
+    ///[Send Consumption Information](https://developer.apple.com/documentation/appstoreserverapi/send-consumption-information)
+    public func sendConsumptionInformation(transactionId: String, consumptionRequest: ConsumptionRequest) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v2/transactions/consumption/" + transactionId, method: .PUT, queryParameters: [:], body: consumptionRequest)
     }
 
     ///Sets the app account token value for a purchase the customer makes outside your app, or updates its value in an existing transaction.
