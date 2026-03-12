@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 5.0.0
+- Incorporate changes for App Store Server API v1.19 [https://github.com/apple/app-store-server-library-swift/pull/112] from @riyazpanjwani
+  - This changes ConsumptionRequest and several dependent types to the V2 variant, while the V1 version was created as a new type, to align with documentation, which is a breaking change
+- Update chain verification to use .shared HTTPClient [https://github.com/apple/app-store-server-library-swift/pull/114] from @ptoffy
+- JWS Signature Creators were updated to be Sendable [https://github.com/apple/app-store-server-library-swift/pull/111] from @sebastianmarr
+
 ## Version 4.0.0
 - Support Retention Messaging API [https://github.com/apple/app-store-server-library-swift/pull/101]
   - This changes internal details of AppStoreServerAPIClient, which is a breaking change for subclassing clients
