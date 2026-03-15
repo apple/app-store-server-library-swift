@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
 
 ///The decoded request body the App Store sends to your server to request a real-time retention message.
 ///
@@ -102,4 +103,6 @@ public struct DecodedRealtimeRequestBody: DecodedSignedData, Decodable, Encodabl
         try container.encode(self.signedDate, forKey: .signedDate)
         try container.encode(self.rawEnvironment, forKey: .environment)
     }
+
+    public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
 }

@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
 
 
 ///A decoded payload that contains app transaction information.
@@ -184,4 +185,6 @@ public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable,
         try container.encodeIfPresent(self.appTransactionId, forKey: .appTransactionId)
         try container.encodeIfPresent(self.rawOriginalPlatform, forKey: .originalPlatform)
     }
+
+    public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
 }

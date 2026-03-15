@@ -1,6 +1,8 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
+
 ///A decoded payload containing the version 2 notification data.
 ///
 ///[responseBodyV2DecodedPayload](https://developer.apple.com/documentation/appstoreservernotifications/responsebodyv2decodedpayload)
@@ -139,4 +141,6 @@ public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.externalPurchaseToken, forKey: .externalPurchaseToken)
         try container.encodeIfPresent(self.appData, forKey: .appData)
     }
+
+    public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
 }
