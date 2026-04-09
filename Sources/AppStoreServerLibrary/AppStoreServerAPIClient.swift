@@ -395,10 +395,15 @@ public actor AppStoreServerAPIClient: Sendable {
     ///
     ///- Parameter imageIdentifier: A UUID you provide to uniquely identify the image you upload.
     ///- Parameter image: The image file to upload.
+    ///- Parameter imageSize: The size of the image you upload.
     ///- Returns: Success, or information about the failure
     ///[Upload Image](https://developer.apple.com/documentation/retentionmessaging/upload-image)
-    public func uploadImage(imageIdentifier: UUID, image: Data) async -> APIResult<Void> {
-        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/image/" + imageIdentifier.uuidString, method: .PUT, queryParameters: [:], body: image, contentType: "image/png")
+    public func uploadImage(imageIdentifier: UUID, image: Data, imageSize: ImageSize? = nil) async -> APIResult<Void> {
+        var queryParams: [String: [String]] = [:]
+        if let imageSize = imageSize {
+            queryParams["imageSize"] = [imageSize.rawValue]
+        }
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/image/" + imageIdentifier.uuidString, method: .PUT, queryParameters: queryParams, body: image, contentType: "image/png")
     }
 
     ///Delete a previously uploaded image.
@@ -469,6 +474,63 @@ public actor AppStoreServerAPIClient: Sendable {
     public func deleteDefaultMessage(productId: String, locale: String) async -> APIResult<Void> {
         let request: String? = nil
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/default/" + productId + "/" + locale, method: .DELETE, queryParameters: [:], body: request)
+    }
+
+    ///Gets the default message for a specific product in a specific locale, if it’s configured.
+    ///
+    ///- Parameter productId: The product identifier of the message.
+    ///- Parameter locale: The locale of the message.
+    ///- Returns: The response body that contains the default configuration information.
+    ///[Get Default Message](https://developer.apple.com/documentation/retentionmessaging/get-default-message)
+    public func getDefaultMessage(productId: String, locale: String) async -> APIResult<DefaultConfigurationResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/default/" + productId + "/" + locale, method: .GET, queryParameters: [:], body: request)
+    }
+
+    ///Configures the URL for your Get Retention Message endpoint in the sandbox and production environments.
+    ///
+    ///- Parameter realtimeUrlRequest: he request body that includes your endpoint’s URL.
+    ///- Returns: Success, or information about the failure
+    ///[Configure Realtime URL](https://developer.apple.com/documentation/retentionmessaging/configure-realtime-url)
+    public func configureRealtimeURL(realtimeUrlRequest: RealtimeUrlRequest) async -> APIResult<Void> {
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/realtime/url", method: .PUT, queryParameters: [:], body: realtimeUrlRequest)
+    }
+
+    ///Deletes the URL for your Get Retention Message endpoint, in the sandbox or production environments.
+    ///
+    ///- Returns: Success, or information about the failure
+    ///[Delete Realtime URL](https://developer.apple.com/documentation/retentionmessaging/delete-realtime-url)
+    public func deleteRealtimeURL() async -> APIResult<Void> {
+        let request: String? = nil
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/messaging/realtime/url", method: .DELETE, queryParameters: [:], body: request)
+    }
+
+    ///GGets the URL for real-time messages that points to your Get Retention Message endpoint, which you previously configured.
+    ///
+    ///- Returns: The response body that contains the URL for your Get Retention Message endpoint.
+    ///[Get Realtime URL](https://developer.apple.com/documentation/retentionmessaging/get-realtime-url)
+    public func getRealtimeURL() async -> APIResult<RealtimeUrlResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/realtime/url", method: .GET, queryParameters: [:], body: request)
+    }
+
+    ///Initiates a performance test of your Get Retention Message endpoint in the sandbox environment.
+    ///
+    ///- Parameter performanceTestRequest: The request body which specifies a transaction identifier of an In-App Purchase to use for this test.
+    ///- Returns: The performance test response object.
+    ///[Initiate Performance Test](https://developer.apple.com/documentation/retentionmessaging/initiate-performance-test)
+    public func initiatePerformanceTest(performanceTestRequest: PerformanceTestRequest) async -> APIResult<PerformanceTestResponse> {
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/performanceTest", method: .POST, queryParameters: [:], body: performanceTestRequest)
+    }
+
+    ///Gets the results of the performance test for the specified identifier.
+    ///
+    ///- Parameter requestId: The ID of the performance test to return, which you receive in the PerformanceTestResponse when you call Initiate Performance Test.
+    ///- Returns: An object the API returns that describes the performance test results.
+    ///[Get Performance Test Results](https://developer.apple.com/documentation/retentionmessaging/get-performance-test-results)
+    public func getPerformanceTestResults(requestId: String) async -> APIResult<PerformanceTestResultResponse> {
+        let request: String? = nil
+        return await makeRequestWithResponseBody(path: "/inApps/v1/messaging/performanceTest/result/" + requestId, method: .GET, queryParameters: [:], body: request)
     }
 
     ///Get a customer's app transaction information for your app.
@@ -746,6 +808,46 @@ public enum APIError: Int64, Hashable, Sendable {
     ///[TransactionIdIsNotOriginalTransactionIdError](https://developer.apple.com/documentation/appstoreserverapi/transactionidisnotoriginaltransactioniderror)
     case transactionIdNotOriginalTransactionId = 4000187
 
+    ///An error the API returns that indicates the performance test request is invalid.
+    ///
+    ///[InvalidPerformanceTestRequestError](https://developer.apple.com/documentation/retentionmessaging/invalidperformancetestrequesterror)
+    case invalidPerformanceTestRequest = 4000211
+
+    ///An error that indicates the request ID is invalid.
+    ///
+    ///[InvalidRequestIdError](https://developer.apple.com/documentation/retentionmessaging/invalidrequestiderror)
+    case invalidRequestId = 4000212
+
+    ///An error that indicates an error with an existing test.
+    ///
+    ///[ExistingPerformanceTestRunError](https://developer.apple.com/documentation/retentionmessaging/existingperformancetestrunerror)
+    case existingPerformanceTestRun = 4000213
+
+    ///An error that indicates the URL is invalid.
+    ///
+    ///[BadRequestRealtimeUrlError](https://developer.apple.com/documentation/retentionmessaging/badrequestrealurltimerror)
+    case badRequestRealtimeUrl = 4000215
+
+    ///An error that indicates the image size provided is invalid.
+    ///
+    ///[BadRequestImageSizeError](https://developer.apple.com/documentation/retentionmessaging/badrequestimagesizeerror)
+    case badRequestImageSize = 4000216
+
+    ///An error that indicates there are too many bullet points.
+    ///
+    ///[BadRequestTooManyBulletPointsError](https://developer.apple.com/documentation/retentionmessaging/badrequesttoomanybulletpointserror)
+    case badRequestTooManyBulletPoints = 4000218
+
+    ///An error that indicates the text for a bullet point is too long.
+    ///
+    ///[BadRequestBulletPointTextTooLongError](https://developer.apple.com/documentation/retentionmessaging/badrequestbulletpointtexttoolongerror)
+    case badRequestBulletPointTextTooLong = 4000219
+
+    ///An error that indicates that no image object is included, but the request indicates that the header should be placed above the image.
+    ///
+    ///[BadRequestAboveImageRequiresAnImageError](https://developer.apple.com/documentation/retentionmessaging/badrequestaboveimagerequiresanimageerror)
+    case badRequestAboveImageRequiresAnImage = 4000224
+
     ///An error that indicates the subscription doesn't qualify for a renewal-date extension due to its subscription state.
     ///
     ///[SubscriptionExtensionIneligibleError](https://developer.apple.com/documentation/appstoreserverapi/subscriptionextensionineligibleerror)
@@ -785,6 +887,11 @@ public enum APIError: Int64, Hashable, Sendable {
     ///
     ///[ImageInUseError](https://developer.apple.com/documentation/retentionmessaging/imageinuseerror)
     case imageInUse = 4030019
+
+    ///An error that indicates that passing a performance test is required before you can set a URL for the production environment.
+    ///
+    ///[ForbiddenNoPassingTestError](https://developer.apple.com/documentation/retentionmessaging/forbiddennopassingtesterror)
+    case forbiddenNoPassingTest = 4030026
 
     ///An error that indicates the App Store account wasn't found.
     ///
@@ -836,11 +943,6 @@ public enum APIError: Int64, Hashable, Sendable {
     ///[TransactionIdNotFoundError](https://developer.apple.com/documentation/appstoreserverapi/transactionidnotfounderror)
     case transactionIdNotFound = 4040010
 
-    ///An error response that indicates an app transaction doesn't exist for the specified customer.
-    ///
-    ///[AppTransactionDoesNotExistError](https://developer.apple.com/documentation/appstoreserverapi/apptransactiondoesnotexisterror)
-    case AppTransactionDoesNotExistError = 4040019
-
     ///An error that indicates the system can't find the image identifier.
     ///
     ///[ImageNotFoundError](https://developer.apple.com/documentation/retentionmessaging/imagenotfounderror)
@@ -850,6 +952,26 @@ public enum APIError: Int64, Hashable, Sendable {
     ///
     ///[MessageNotFoundError](https://developer.apple.com/documentation/retentionmessaging/messagenotfounderror)
     case messageNotFound = 4040015
+
+    ///An error the API returns if the service can't find the specified test run.
+    ///
+    ///[PerformanceTestRunNotFoundError](https://developer.apple.com/documentation/retentionmessaging/performancetestrunnotfounderror)
+    case performanceTestRunNotFound = 4040018
+
+    ///An error response that indicates an app transaction doesn't exist for the specified customer.
+    ///
+    ///[AppTransactionDoesNotExistError](https://developer.apple.com/documentation/appstoreserverapi/apptransactiondoesnotexisterror)
+    case AppTransactionDoesNotExistError = 4040019
+
+    ///An error that indicates a default message isn’t configured.
+    ///
+    ///[DefaultMessageNotFoundError](https://developer.apple.com/documentation/retentionmessaging/defaultmessagenotfounderror)
+    case defaultMessageNotFound = 4040020
+
+    ///An error that indicates that the URL for your endpoint isn’t configured.
+    ///
+    ///[RealtimeUrlNotFoundError](https://developer.apple.com/documentation/retentionmessaging/realtimeurlnotfounderror)
+    case realtimeUrlNotFound = 4040021
 
     ///An error that indicates the image identifier already exists.
     ///

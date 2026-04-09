@@ -6,8 +6,7 @@
 public struct OrderLookupResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(status: OrderLookupStatus? = nil, signedTransactions: [String]? = nil) {
-        self.status = status
-        self.signedTransactions = signedTransactions
+        self.init(rawStatus: status?.rawValue, signedTransactions: signedTransactions)
     }
     
     public init(rawStatus: Int32? = nil, signedTransactions: [String]? = nil) {

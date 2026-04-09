@@ -8,8 +8,7 @@ import Foundation
 public struct GetMessageListResponseItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(messageIdentifier: UUID? = nil, messageState: MessageState? = nil) {
-        self.messageIdentifier = messageIdentifier
-        self.rawMessageState = messageState?.rawValue
+        self.init(messageIdentifier: messageIdentifier, rawMessageState: messageState?.rawValue)
     }
 
     public init(messageIdentifier: UUID? = nil, rawMessageState: String? = nil) {

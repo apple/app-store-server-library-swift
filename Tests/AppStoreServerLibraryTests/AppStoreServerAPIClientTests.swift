@@ -811,6 +811,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(1, response.imageIdentifiers?.count)
         XCTAssertEqual(UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, response.imageIdentifiers?[0].imageIdentifier)
         XCTAssertEqual(ImageState.approved, response.imageIdentifiers?[0].imageState)
+        XCTAssertEqual(ImageSize.fullSize, response.imageIdentifiers?[0].imageSize)
     }
 
     public func testUploadMessage() async throws {
@@ -822,7 +823,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("Body text", decodedJson["body"] as! String)
         }
 
-        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: nil)
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: nil, headerPosition: nil)
         let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
         guard case .success = result else {
             XCTAssertTrue(false)
@@ -843,7 +844,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let image = try UploadMessageImage(imageIdentifier: UUID(uuidString: "b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901")!, altText: "Alt text")
-        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image)
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image, headerPosition: nil)
         let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
         guard case .success = result else {
             XCTAssertTrue(false)
@@ -903,6 +904,166 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let result = await client.deleteDefaultMessage(productId: "com.example.product", locale: "en-US")
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testGetDefaultMessage() async throws {
+        let client = try await getClientWithBody("resources/models/getDefaultMessageResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
+        }
+
+        let result = await client.getDefaultMessage(productId: "com.example.product", locale: "en-US")
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, response.messageIdentifier)
+        TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testUploadImageWithImageSize() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890?imageSize=FULL_SIZE", request.url)
+            XCTAssertEqual("image/png", request.headers.first(name: "Content-Type"))
+            XCTAssertNotNil(body)
+            XCTAssertEqual(Data([1, 2, 3]), body)
+        }
+
+        let result = await client.uploadImage(imageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, image: Data([1, 2, 3]), imageSize: ImageSize.fullSize)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testConfigureRealtimeURL() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/realtime/url", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("https://example.com/realtime", decodedJson["realtimeURL"] as! String)
+        }
+
+        let realtimeUrlRequest = try RealtimeUrlRequest(realtimeURL: "https://example.com/realtime")
+        TestingUtility.confirmCodableInternallyConsistent(realtimeUrlRequest)
+        let result = await client.configureRealtimeURL(realtimeUrlRequest: realtimeUrlRequest)
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testDeleteRealtimeURL() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.DELETE, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/realtime/url", request.url)
+        }
+
+        let result = await client.deleteRealtimeURL()
+        guard case .success = result else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testGetRealtimeURL() async throws {
+        let client = try await getClientWithBody("resources/models/getRealtimeUrlResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/realtime/url", request.url)
+        }
+
+        let result = await client.getRealtimeURL()
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("https://example.com/realtime", response.realtimeURL)
+        TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testInitiatePerformanceTest() async throws {
+        let client = try await getClientWithBody("resources/models/performanceTestResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/performanceTest", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("70000500092808", decodedJson["originalTransactionId"] as! String)
+        }
+
+        let performanceTestRequest = PerformanceTestRequest(originalTransactionId: "70000500092808")
+        TestingUtility.confirmCodableInternallyConsistent(performanceTestRequest)
+        let result = await client.initiatePerformanceTest(performanceTestRequest: performanceTestRequest)
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(10, response.config.maxConcurrentRequests)
+        XCTAssertEqual(100, response.config.totalRequests)
+        XCTAssertEqual(60000, response.config.totalDuration)
+        XCTAssertEqual(500, response.config.responseTimeThreshold)
+        XCTAssertEqual(95, response.config.successRateThreshold)
+        XCTAssertEqual("c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d", response.requestId)
+        TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testGetPerformanceTestResults() async throws {
+        let client = try await getClientWithBody("resources/models/performanceTestResultResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/performanceTest/result/c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d", request.url)
+        }
+
+        let result = await client.getPerformanceTestResults(requestId: "c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d")
+        guard case .success(let response) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(10, response.config.maxConcurrentRequests)
+        XCTAssertEqual(100, response.config.totalRequests)
+        XCTAssertEqual(60000, response.config.totalDuration)
+        XCTAssertEqual(500, response.config.responseTimeThreshold)
+        XCTAssertEqual(95, response.config.successRateThreshold)
+        XCTAssertEqual("https://example.com/retention", response.target)
+        XCTAssertEqual(PerformanceTestStatus.pass, response.result)
+        XCTAssertEqual("PASS", response.rawResult)
+        XCTAssertEqual(98, response.successRate)
+        XCTAssertEqual(0, response.numPending)
+        XCTAssertEqual(120, response.responseTimes.average)
+        XCTAssertEqual(100, response.responseTimes.p50)
+        XCTAssertEqual(200, response.responseTimes.p90)
+        XCTAssertEqual(250, response.responseTimes.p95)
+        XCTAssertEqual(400, response.responseTimes.p99)
+        XCTAssertEqual([SendAttemptResult.timedOut: Int32(1), SendAttemptResult.noResponse: Int32(1)], response.failures)
+        XCTAssertEqual(["TIMED_OUT": Int32(1), "NO_RESPONSE": Int32(1)], response.rawFailures)
+        TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testUploadMessageWithBulletPoints() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.PUT, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("Header text", decodedJson["header"] as! String)
+            XCTAssertEqual("Body text", decodedJson["body"] as! String)
+            XCTAssertEqual("ABOVE_IMAGE", decodedJson["headerPosition"] as! String)
+            let image = decodedJson["image"] as! [String: Any]
+            XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", image["imageIdentifier"] as! String)
+            XCTAssertEqual("Alt text", image["altText"] as! String)
+            let bulletPoints = decodedJson["bulletPoints"] as! [[String: Any]]
+            XCTAssertEqual(1, bulletPoints.count)
+            XCTAssertEqual("Bullet text", bulletPoints[0]["text"] as! String)
+            XCTAssertEqual("C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012", bulletPoints[0]["imageIdentifier"] as! String)
+            XCTAssertEqual("Bullet alt text", bulletPoints[0]["altText"] as! String)
+        }
+
+        let image = try UploadMessageImage(imageIdentifier: UUID(uuidString: "b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901")!, altText: "Alt text")
+        let bulletPoint = try BulletPoint(text: "Bullet text", imageIdentifier: UUID(uuidString: "c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89012")!, altText: "Bullet alt text")
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image, headerPosition: HeaderPosition.aboveImage, bulletPoints: [bulletPoint])
+        TestingUtility.confirmCodableInternallyConsistent(uploadMessageRequestBody)
+        let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
         guard case .success = result else {
             XCTAssertTrue(false)
             return

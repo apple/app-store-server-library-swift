@@ -7,7 +7,12 @@ import Foundation
 ///[DefaultConfigurationRequest](https://developer.apple.com/documentation/retentionmessaging/defaultconfigurationrequest)
 public struct DefaultConfigurationRequest: Decodable, Encodable, Hashable, Sendable {
 
+    @available(*, deprecated)
     public init(messageIdentifier: UUID? = nil) {
+        self.messageIdentifier = messageIdentifier
+    }
+
+    public init(messageIdentifier: UUID) {
         self.messageIdentifier = messageIdentifier
     }
 

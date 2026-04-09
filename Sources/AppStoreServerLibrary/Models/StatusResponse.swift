@@ -6,10 +6,7 @@
 public struct StatusResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: AppStoreEnvironment? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {
-        self.environment = environment
-        self.bundleId = bundleId
-        self.appAppleId = appAppleId
-        self.data = data
+        self.init(rawEnvironment: environment?.rawValue, bundleId: bundleId, appAppleId: appAppleId, data: data)
     }
     
     public init(rawEnvironment: String? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, data: [SubscriptionGroupIdentifierItem]? = nil) {

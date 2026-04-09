@@ -8,13 +8,7 @@ import Foundation
 public struct DecodedRealtimeRequestBody: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
 
     public init(originalTransactionId: String, appAppleId: Int64, productId: String, userLocale: String, requestIdentifier: UUID, signedDate: Date, environment: AppStoreEnvironment) {
-        self.originalTransactionId = originalTransactionId
-        self.appAppleId = appAppleId
-        self.productId = productId
-        self.userLocale = userLocale
-        self.requestIdentifier = requestIdentifier
-        self.signedDate = signedDate
-        self.rawEnvironment = environment.rawValue
+        self.init(originalTransactionId: originalTransactionId, appAppleId: appAppleId, productId: productId, userLocale: userLocale, requestIdentifier: requestIdentifier, signedDate: signedDate, rawEnvironment: environment.rawValue)
     }
 
     public init(originalTransactionId: String, appAppleId: Int64, productId: String, userLocale: String, requestIdentifier: UUID, signedDate: Date, rawEnvironment: String) {

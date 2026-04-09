@@ -9,18 +9,7 @@ import Foundation
 public struct ConsumptionRequestV1: Decodable, Encodable, Hashable, Sendable {
 
     public init(customerConsented: Bool? = nil, consumptionStatus: ConsumptionStatus? = nil, platform: Platform? = nil, sampleContentProvided: Bool? = nil, deliveryStatus: DeliveryStatusV1? = nil, appAccountToken: UUID? = nil, accountTenure: AccountTenure? = nil, playTime: PlayTime? = nil, lifetimeDollarsRefunded: LifetimeDollarsRefunded? = nil, lifetimeDollarsPurchased: LifetimeDollarsPurchased? = nil, userStatus: UserStatus? = nil, refundPreference: RefundPreferenceV1? = nil) {
-        self.customerConsented = customerConsented
-        self.consumptionStatus = consumptionStatus
-        self.platform = platform
-        self.sampleContentProvided = sampleContentProvided
-        self.deliveryStatus = deliveryStatus
-        self.appAccountToken = appAccountToken
-        self.accountTenure = accountTenure
-        self.playTime = playTime
-        self.lifetimeDollarsRefunded = lifetimeDollarsRefunded
-        self.lifetimeDollarsPurchased = lifetimeDollarsPurchased
-        self.userStatus = userStatus
-        self.refundPreference = refundPreference
+        self.init(customerConsented: customerConsented, rawConsumptionStatus: consumptionStatus?.rawValue, rawPlatform: platform?.rawValue, sampleContentProvided: sampleContentProvided, rawDeliveryStatus: deliveryStatus?.rawValue, appAccountToken: appAccountToken, rawAccountTenure: accountTenure?.rawValue, rawPlayTime: playTime?.rawValue, rawLifetimeDollarsRefunded: lifetimeDollarsRefunded?.rawValue, rawLifetimeDollarsPurchased: lifetimeDollarsPurchased?.rawValue, rawUserStatus: userStatus?.rawValue, rawRefundPreference: refundPreference?.rawValue)
     }
     
     public init(customerConsented: Bool? = nil, rawConsumptionStatus: Int32? = nil, rawPlatform: Int32? = nil, sampleContentProvided: Bool? = nil, rawDeliveryStatus: Int32? = nil, appAccountToken: UUID? = nil, rawAccountTenure: Int32? = nil, rawPlayTime: Int32? = nil, rawLifetimeDollarsRefunded: Int32? = nil, rawLifetimeDollarsPurchased: Int32? = nil, rawUserStatus: Int32? = nil, rawRefundPreference: Int32? = nil) {
