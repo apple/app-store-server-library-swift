@@ -114,13 +114,12 @@ fileprivate final class AdvancedCommerceInAppPayload: BasePayload, JWTPayload {
     }
 }
 
-public class JWSSignatureCreator {
-
-    private let audience: String
-    private let signingKey: P256.Signing.PrivateKey
-    private let keyId: String
-    private let issuerId: String
-    private let bundleId: String
+fileprivate struct JWSSignatureCreator: Sendable {
+    let audience: String
+    let signingKey: P256.Signing.PrivateKey
+    let keyId: String
+    let issuerId: String
+    let bundleId: String
 
     init(audience: String, signingKey: String, keyId: String, issuerId: String, bundleId: String) throws {
         self.audience = audience
@@ -130,7 +129,7 @@ public class JWSSignatureCreator {
         self.bundleId = bundleId
     }
     
-    fileprivate func getBasePayload() -> BasePayload {
+    func getBasePayload() -> BasePayload {
         return BasePayloadObject(
             nonce: UUID().uuidString,
             iss: .init(value: self.issuerId),
@@ -140,14 +139,16 @@ public class JWSSignatureCreator {
         )
     }
 
-    fileprivate func createSignature(payload: JWTPayload) async throws -> String {
+    func createSignature(payload: JWTPayload) async throws -> String {
         let keys = JWTKeyCollection()
         try await keys.add(ecdsa: ECDSA.PrivateKey<P256>(backing: signingKey))
         return try await keys.sign(payload, header: ["typ": "JWT", "kid": .string(self.keyId)])
     }
 }
 
-public class PromotionalOfferV2SignatureCreator: JWSSignatureCreator {
+public struct PromotionalOfferV2SignatureCreator: Sendable {
+    private let creator: JWSSignatureCreator
+    
     ///Create a PromotionalOfferV2SignatureCreator
     ///
     ///- Parameter signingKey: Your private key downloaded from App Store Connect
@@ -155,7 +156,7 @@ public class PromotionalOfferV2SignatureCreator: JWSSignatureCreator {
     ///- Parameter bundleId: Your app’s bundle ID
     ///- Parameter environment: The environment to target
     public init(signingKey: String, keyId: String, issuerId: String, bundleId: String) throws {
-        try super.init(audience: "promotional-offer", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
+        self.creator = try JWSSignatureCreator(audience: "promotional-offer", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
     }
     
     ///Create a promotional offer V2 signature.
@@ -166,13 +167,15 @@ public class PromotionalOfferV2SignatureCreator: JWSSignatureCreator {
     ///- Returns: The signed JWS.
     ///[Generating JWS to sign App Store requests](https://developer.apple.com/documentation/storekit/generating-jws-to-sign-app-store-requests)
     public func createSignature(productId: String, offerIdentifier: String, transactionId: String? = nil) async throws -> String {
-        let baseClaims = super.getBasePayload()
+        let baseClaims = creator.getBasePayload()
         let claims = PromotionalOfferV2Payload(basePayload: baseClaims, productId: productId, offerIdentifier: offerIdentifier, transactionId: transactionId)
-        return try await super.createSignature(payload: claims)
+        return try await creator.createSignature(payload: claims)
     }
 }
 
-public class IntroductoryOfferEligibilitySignatureCreator: JWSSignatureCreator {
+public struct IntroductoryOfferEligibilitySignatureCreator: Sendable {
+    private let creator: JWSSignatureCreator
+    
     ///Create a IntroductoryOfferEligibilitySignatureCreator
     ///
     ///- Parameter signingKey: Your private key downloaded from App Store Connect
@@ -180,7 +183,7 @@ public class IntroductoryOfferEligibilitySignatureCreator: JWSSignatureCreator {
     ///- Parameter bundleId: Your app’s bundle ID
     ///- Parameter environment: The environment to target
     public init(signingKey: String, keyId: String, issuerId: String, bundleId: String) throws {
-        try super.init(audience: "introductory-offer-eligibility", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
+        self.creator = try JWSSignatureCreator(audience: "introductory-offer-eligibility", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
     }
     
     ///Create an introductory offer eligibility signature.
@@ -191,9 +194,9 @@ public class IntroductoryOfferEligibilitySignatureCreator: JWSSignatureCreator {
     ///- Returns: The signed JWS.
     ///[Generating JWS to sign App Store requests](https://developer.apple.com/documentation/storekit/generating-jws-to-sign-app-store-requests)
     public func createSignature(productId: String, allowIntroductoryOffer: Bool, transactionId: String) async throws -> String {
-        let baseClaims = super.getBasePayload()
+        let baseClaims = creator.getBasePayload()
         let claims = IntroductoryOfferEligibilityPayload(basePayload: baseClaims, productId: productId, allowIntroductoryOffer: allowIntroductoryOffer, transactionId: transactionId)
-        return try await super.createSignature(payload: claims)
+        return try await creator.createSignature(payload: claims)
     }
 }
 
@@ -201,7 +204,9 @@ public protocol AdvancedCommerceInAppRequest: Encodable {
     
 }
 
-public class AdvancedCommerceInAppSignatureCreator: JWSSignatureCreator {
+public struct AdvancedCommerceInAppSignatureCreator: Sendable {
+    private let creator: JWSSignatureCreator
+    
     ///Create a AdvancedCommerceInAppSignatureCreator
     ///
     ///- Parameter signingKey: Your private key downloaded from App Store Connect
@@ -209,7 +214,7 @@ public class AdvancedCommerceInAppSignatureCreator: JWSSignatureCreator {
     ///- Parameter bundleId: Your app’s bundle ID
     ///- Parameter environment: The environment to target
     public init(signingKey: String, keyId: String, issuerId: String, bundleId: String) throws {
-        try super.init(audience: "advanced-commerce-api", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
+        self.creator = try JWSSignatureCreator(audience: "advanced-commerce-api", signingKey: signingKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId)
     }
     
     ///Create an Advanced Commerce in-app signed request.
@@ -222,8 +227,8 @@ public class AdvancedCommerceInAppSignatureCreator: JWSSignatureCreator {
         let body = try jsonEncoder.encode(advancedCommerceInAppRequest)
         
         let base64EncodedBody = body.base64EncodedString()
-        let baseClaims = super.getBasePayload()
+        let baseClaims = creator.getBasePayload()
         let claims = AdvancedCommerceInAppPayload(basePayload: baseClaims, request: base64EncodedBody)
-        return try await super.createSignature(payload: claims)
+        return try await creator.createSignature(payload: claims)
     }
 }

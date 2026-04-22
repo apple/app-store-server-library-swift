@@ -14,7 +14,7 @@ public actor AppStoreServerAPIClient: Sendable {
         case invalidEnvironment
     }
     
-    private static let userAgent = "app-store-server-library/swift/4.0.0"
+    private static let userAgent = "app-store-server-library/swift/5.0.0"
     private static let productionUrl = "https://api.storekit.itunes.apple.com"
     private static let sandboxUrl = "https://api.storekit-sandbox.itunes.apple.com"
     private static let localTestingUrl = "https://local-testing-base-url"
@@ -25,7 +25,7 @@ public actor AppStoreServerAPIClient: Sendable {
     private let issuerId: String
     private let bundleId: String
     private let url: String
-    private let client: HTTPClient
+    private let client: HTTPClient = .shared
     // For testing purposes
     private var executeRequestOverride: (@Sendable (HTTPClientRequest, Data?) async throws -> HTTPClientResponse)?
 
@@ -54,11 +54,6 @@ public actor AppStoreServerAPIClient: Sendable {
             self.url = AppStoreServerAPIClient.sandboxUrl
             break
         }
-        self.client = .init()
-    }
-    
-    deinit {
-        try? self.client.syncShutdown()
     }
 
     // Test helper method to set request override

@@ -12,15 +12,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        swift: [ "6" ]
+        swift: [ "6.2" ]
         os: [ ubuntu-latest ]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set up Swift ${{ matrix.swift }}
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@v3
         with:
           swift-version: ${{ matrix.swift }}
+          skip-verify-signature: true
       - name: Swift build
         run: swift build
       - name: Swift test
