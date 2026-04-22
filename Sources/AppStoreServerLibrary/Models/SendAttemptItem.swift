@@ -7,8 +7,7 @@ import Foundation
 public struct SendAttemptItem: Decodable, Encodable, Hashable, Sendable {
     
     public init(attemptDate: Date? = nil, sendAttemptResult: SendAttemptResult? = nil) {
-        self.attemptDate = attemptDate
-        self.sendAttemptResult = sendAttemptResult
+        self.init(attemptDate: attemptDate, rawSendAttemptResult: sendAttemptResult?.rawValue)
     }
     
     public init(attemptDate: Date? = nil, rawSendAttemptResult: String? = nil) {

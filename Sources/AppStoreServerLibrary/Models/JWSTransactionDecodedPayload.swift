@@ -7,36 +7,7 @@ import Foundation
 public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
     public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, type: ProductType? = nil, appAccountToken: UUID? = nil, inAppOwnershipType: InAppOwnershipType? = nil, signedDate: Date? = nil, revocationReason: RevocationReason? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, environment: AppStoreEnvironment? = nil, storefront: String? = nil, storefrontId: String? = nil, transactionReason: TransactionReason? = nil, currency: String? = nil, price: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, revocationType: RevocationType? = nil, revocationPercentage: Int32? = nil) {
-        self.originalTransactionId = originalTransactionId
-        self.transactionId = transactionId
-        self.webOrderLineItemId = webOrderLineItemId
-        self.bundleId = bundleId
-        self.productId = productId
-        self.subscriptionGroupIdentifier = subscriptionGroupIdentifier
-        self.purchaseDate = purchaseDate
-        self.originalPurchaseDate = originalPurchaseDate
-        self.expiresDate = expiresDate
-        self.quantity = quantity
-        self.type = type
-        self.appAccountToken = appAccountToken
-        self.inAppOwnershipType = inAppOwnershipType
-        self.signedDate = signedDate
-        self.revocationReason = revocationReason
-        self.revocationDate = revocationDate
-        self.isUpgraded = isUpgraded
-        self.offerType = offerType
-        self.offerIdentifier = offerIdentifier
-        self.environment = environment
-        self.storefront = storefront
-        self.storefrontId = storefrontId
-        self.transactionReason = transactionReason
-        self.currency = currency
-        self.price = price
-        self.offerDiscountType = offerDiscountType
-        self.appTransactionId = appTransactionId
-        self.offerPeriod = offerPeriod
-        self.revocationType = revocationType
-        self.revocationPercentage = revocationPercentage
+        self.init(originalTransactionId: originalTransactionId, transactionId: transactionId, webOrderLineItemId: webOrderLineItemId, bundleId: bundleId, productId: productId, subscriptionGroupIdentifier: subscriptionGroupIdentifier, purchaseDate: purchaseDate, originalPurchaseDate: originalPurchaseDate, expiresDate: expiresDate, quantity: quantity, rawType: type?.rawValue, appAccountToken: appAccountToken, rawInAppOwnershipType: inAppOwnershipType?.rawValue, signedDate: signedDate, rawRevocationReason: revocationReason?.rawValue, revocationDate: revocationDate, isUpgraded: isUpgraded, rawOfferType: offerType?.rawValue, offerIdentifier: offerIdentifier, rawEnvironment: environment?.rawValue, storefront: storefront, storefrontId: storefrontId, rawTransactionReason: transactionReason?.rawValue, currency: currency, price: price, rawOfferDiscountType: offerDiscountType?.rawValue, appTransactionId: appTransactionId, offerPeriod: offerPeriod, rawRevocationType: revocationType?.rawValue, revocationPercentage: revocationPercentage)
     }
     
     public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, rawType: String? = nil, appAccountToken: UUID? = nil, rawInAppOwnershipType: String? = nil, signedDate: Date? = nil, rawRevocationReason: Int32? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, rawEnvironment: String? = nil, storefront: String? = nil, storefrontId: String? = nil, rawTransactionReason: String? = nil, currency: String? = nil, price: Int64? = nil, rawOfferDiscountType: String? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, rawRevocationType: String? = nil, revocationPercentage: Int32? = nil) {

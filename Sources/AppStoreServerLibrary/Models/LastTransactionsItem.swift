@@ -6,10 +6,7 @@
 public struct LastTransactionsItem: Decodable, Encodable, Hashable, Sendable {
     
     public init(status: Status? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
-        self.status = status
-        self.originalTransactionId = originalTransactionId
-        self.signedTransactionInfo = signedTransactionInfo
-        self.signedRenewalInfo = signedRenewalInfo
+        self.init(rawStatus: status?.rawValue, originalTransactionId: originalTransactionId, signedTransactionInfo: signedTransactionInfo, signedRenewalInfo: signedRenewalInfo)
     }
     
     public init(rawStatus: Int32? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {

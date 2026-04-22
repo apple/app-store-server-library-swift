@@ -8,10 +8,7 @@ import Foundation
 public struct AppData: Decodable, Encodable, Hashable, Sendable {
 
     public init(appAppleId: Int64? = nil, bundleId: String? = nil, environment: AppStoreEnvironment? = nil, signedAppTransactionInfo: String? = nil) {
-        self.appAppleId = appAppleId
-        self.bundleId = bundleId
-        self.environment = environment
-        self.signedAppTransactionInfo = signedAppTransactionInfo
+        self.init(appAppleId: appAppleId, bundleId: bundleId, rawEnvironment: environment?.rawValue, signedAppTransactionInfo: signedAppTransactionInfo)
     }
 
     public init(appAppleId: Int64? = nil, bundleId: String? = nil, rawEnvironment: String? = nil, signedAppTransactionInfo: String? = nil) {

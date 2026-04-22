@@ -7,30 +7,10 @@ import Foundation
 public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
     public init(expirationIntent: ExpirationIntent? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, autoRenewStatus: AutoRenewStatus? = nil, isInBillingRetryPeriod: Bool? = nil, priceIncreaseStatus: PriceIncreaseStatus? = nil, gracePeriodExpiresDate: Date? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, environment: AppStoreEnvironment? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil, appAccountToken: UUID? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
-        self.expirationIntent = expirationIntent
-        self.originalTransactionId = originalTransactionId
-        self.autoRenewProductId = autoRenewProductId
-        self.productId = productId
-        self.autoRenewStatus = autoRenewStatus
-        self.isInBillingRetryPeriod = isInBillingRetryPeriod
-        self.priceIncreaseStatus = priceIncreaseStatus
-        self.gracePeriodExpiresDate = gracePeriodExpiresDate
-        self.offerType = offerType
-        self.offerIdentifier = offerIdentifier
-        self.signedDate = signedDate
-        self.environment = environment
-        self.recentSubscriptionStartDate = recentSubscriptionStartDate
-        self.renewalDate = renewalDate
-        self.currency = currency
-        self.renewalPrice = renewalPrice
-        self.offerDiscountType = offerDiscountType
-        self.eligibleWinBackOfferIds = eligibleWinBackOfferIds
-        self.appAccountToken = appAccountToken
-        self.appTransactionId = appTransactionId
-        self.offerPeriod = offerPeriod
+        self.init(rawExpirationIntent: expirationIntent?.rawValue, originalTransactionId: originalTransactionId, autoRenewProductId: autoRenewProductId, productId: productId, rawAutoRenewStatus: autoRenewStatus?.rawValue, isInBillingRetryPeriod: isInBillingRetryPeriod, rawPriceIncreaseStatus: priceIncreaseStatus?.rawValue, gracePeriodExpiresDate: gracePeriodExpiresDate, rawOfferType: offerType?.rawValue, offerIdentifier: offerIdentifier, signedDate: signedDate, rawEnvironment: environment?.rawValue, recentSubscriptionStartDate: recentSubscriptionStartDate, renewalDate: renewalDate, currency: currency, renewalPrice: renewalPrice, rawOfferDiscountType: offerDiscountType?.rawValue, eligibleWinBackOfferIds: eligibleWinBackOfferIds, appAccountToken: appAccountToken, appTransactionId: appTransactionId, offerPeriod: offerPeriod)
     }
     
-    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, eligibleWinBackOfferIds: [String]? = nil, appAccountToken: UUID? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
+    public init(rawExpirationIntent: Int32? = nil, originalTransactionId: String? = nil, autoRenewProductId: String? = nil, productId: String? = nil, rawAutoRenewStatus: Int32? = nil, isInBillingRetryPeriod: Bool? = nil, rawPriceIncreaseStatus: Int32? = nil, gracePeriodExpiresDate: Date? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, signedDate: Date? = nil, rawEnvironment: String? = nil, recentSubscriptionStartDate: Date? = nil, renewalDate: Date? = nil, currency: String? = nil, renewalPrice: Int64? = nil, rawOfferDiscountType: String? = nil, eligibleWinBackOfferIds: [String]? = nil, appAccountToken: UUID? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil) {
         self.rawExpirationIntent = rawExpirationIntent
         self.originalTransactionId = originalTransactionId
         self.autoRenewProductId = autoRenewProductId
@@ -47,7 +27,7 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.renewalDate = renewalDate
         self.currency = currency
         self.renewalPrice = renewalPrice
-        self.offerDiscountType = offerDiscountType
+        self.rawOfferDiscountType = rawOfferDiscountType
         self.eligibleWinBackOfferIds = eligibleWinBackOfferIds
         self.appAccountToken = appAccountToken
         self.appTransactionId = appTransactionId

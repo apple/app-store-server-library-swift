@@ -7,15 +7,7 @@ import Foundation
 public struct ResponseBodyV2DecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
 
     public init(notificationType: NotificationTypeV2? = nil, subtype: Subtype? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil, appData: AppData? = nil) {
-        self.notificationType = notificationType
-        self.subtype = subtype
-        self.notificationUUID = notificationUUID
-        self.data = data
-        self.version = version
-        self.signedDate = signedDate
-        self.summary = summary
-        self.externalPurchaseToken = externalPurchaseToken
-        self.appData = appData
+        self.init(rawNotificationType: notificationType?.rawValue, rawSubtype: subtype?.rawValue, notificationUUID: notificationUUID, data: data, version: version, signedDate: signedDate, summary: summary, externalPurchaseToken: externalPurchaseToken, appData: appData)
     }
 
     public init(rawNotificationType: String? = nil, rawSubtype: String? = nil, notificationUUID: String? = nil, data: NotificationData? = nil, version: String? = nil, signedDate: Date? = nil, summary: Summary? = nil, externalPurchaseToken: ExternalPurchaseToken? = nil, appData: AppData? = nil) {

@@ -8,11 +8,7 @@ import Foundation
 public struct ConsumptionRequest: Decodable, Encodable, Hashable, Sendable {
 
     public init(customerConsented: Bool, deliveryStatus: DeliveryStatus, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, refundPreference: RefundPreference? = nil) {
-        self.customerConsented = customerConsented
-        self.sampleContentProvided = sampleContentProvided
-        self.consumptionPercentage = consumptionPercentage
-        self.rawDeliveryStatus = deliveryStatus.rawValue
-        self.rawRefundPreference = refundPreference?.rawValue
+        self.init(customerConsented: customerConsented, rawDeliveryStatus: deliveryStatus.rawValue, sampleContentProvided: sampleContentProvided, consumptionPercentage: consumptionPercentage, rawRefundPreference: refundPreference?.rawValue)
     }
 
     public init(customerConsented: Bool, rawDeliveryStatus: String, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, rawRefundPreference: String? = nil) {

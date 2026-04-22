@@ -10,19 +10,7 @@ import Foundation
 public struct AppTransaction: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
     public init(receiptType: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, originalPlatform: PurchasePlatform? = nil) {
-        self.receiptType = receiptType
-        self.appAppleId = appAppleId
-        self.bundleId = bundleId
-        self.applicationVersion = applicationVersion
-        self.versionExternalIdentifier = versionExternalIdentifier
-        self.receiptCreationDate = receiptCreationDate
-        self.originalPurchaseDate = originalPurchaseDate
-        self.originalApplicationVersion = originalApplicationVersion
-        self.deviceVerification = deviceVerification
-        self.deviceVerificationNonce = deviceVerificationNonce
-        self.preorderDate = preorderDate
-        self.appTransactionId = appTransactionId
-        self.originalPlatform = originalPlatform
+        self.init(rawReceiptType: receiptType?.rawValue, appAppleId: appAppleId, bundleId: bundleId, applicationVersion: applicationVersion, versionExternalIdentifier: versionExternalIdentifier, receiptCreationDate: receiptCreationDate, originalPurchaseDate: originalPurchaseDate, originalApplicationVersion: originalApplicationVersion, deviceVerification: deviceVerification, deviceVerificationNonce: deviceVerificationNonce, preorderDate: preorderDate, appTransactionId: appTransactionId, rawOriginalPlatform: originalPlatform?.rawValue)
     }
     
     public init(rawReceiptType: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, applicationVersion: String? = nil, versionExternalIdentifier: Int64? = nil, receiptCreationDate: Date? = nil, originalPurchaseDate: Date? = nil, originalApplicationVersion: String? = nil, deviceVerification: String? = nil, deviceVerificationNonce: UUID? = nil, preorderDate: Date? = nil, appTransactionId: String? = nil, rawOriginalPlatform: String? = nil) {

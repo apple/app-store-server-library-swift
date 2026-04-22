@@ -6,14 +6,7 @@
 public struct Summary: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {
-        self.environment = environment
-        self.appAppleId = appAppleId
-        self.bundleId = bundleId
-        self.productId = productId
-        self.requestIdentifier = requestIdentifier
-        self.storefrontCountryCodes = storefrontCountryCodes
-        self.succeededCount = succeededCount
-        self.failedCount = failedCount
+        self.init(rawEnvironment: environment?.rawValue, appAppleId: appAppleId, bundleId: bundleId, productId: productId, requestIdentifier: requestIdentifier, storefrontCountryCodes: storefrontCountryCodes, succeededCount: succeededCount, failedCount: failedCount)
     }
     
     public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, productId: String? = nil, requestIdentifier: String? = nil, storefrontCountryCodes: [String]? = nil, succeededCount: Int64? = nil, failedCount: Int64? = nil) {

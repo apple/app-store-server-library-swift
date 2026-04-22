@@ -6,14 +6,7 @@
 public struct NotificationData: Decodable, Encodable, Hashable, Sendable {
     
     public init(environment: AppStoreEnvironment? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, status: Status? = nil, consumptionRequestReason: ConsumptionRequestReason? = nil) {
-        self.environment = environment
-        self.appAppleId = appAppleId
-        self.bundleId = bundleId
-        self.bundleVersion = bundleVersion
-        self.signedTransactionInfo = signedTransactionInfo
-        self.signedRenewalInfo = signedRenewalInfo
-        self.status = status
-        self.consumptionRequestReason = consumptionRequestReason
+        self.init(rawEnvironment: environment?.rawValue, appAppleId: appAppleId, bundleId: bundleId, bundleVersion: bundleVersion, signedTransactionInfo: signedTransactionInfo, signedRenewalInfo: signedRenewalInfo, rawStatus: status?.rawValue, rawConsumptionRequestReason: consumptionRequestReason?.rawValue)
     }
     
     public init(rawEnvironment: String? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, bundleVersion: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil, rawStatus: Int32? = nil, rawConsumptionRequestReason: String? = nil) {

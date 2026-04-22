@@ -6,12 +6,7 @@
 public struct HistoryResponse: Decodable, Encodable, Hashable, Sendable {
     
     public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, environment: AppStoreEnvironment? = nil, signedTransactions: [String]? = nil) {
-        self.revision = revision
-        self.hasMore = hasMore
-        self.bundleId = bundleId
-        self.appAppleId = appAppleId
-        self.environment = environment
-        self.signedTransactions = signedTransactions
+        self.init(revision: revision, hasMore: hasMore, bundleId: bundleId, appAppleId: appAppleId, rawEnvironment: environment?.rawValue, signedTransactions: signedTransactions)
     }
     
     public init(revision: String? = nil, hasMore: Bool? = nil, bundleId: String? = nil, appAppleId: Int64? = nil, rawEnvironment: String? = nil, signedTransactions: [String]? = nil) {
