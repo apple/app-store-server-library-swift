@@ -1,6 +1,8 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
+
 ///A decoded payload containing subscription renewal information for an auto-renewable subscription.
 ///
 ///[JWSRenewalInfoDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfodecodedpayload)
@@ -276,4 +278,6 @@ public struct JWSRenewalInfoDecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.appTransactionId, forKey: .appTransactionId)
         try container.encodeIfPresent(self.offerPeriod, forKey: .offerPeriod)
     }
+
+    public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
 }

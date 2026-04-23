@@ -10,7 +10,6 @@ import NIOFoundationCompat
 
 actor ChainVerifier {
     private static let EXPECTED_CHAIN_LENGTH = 3
-    private static let EXPECTED_JWT_SEGMENTS = 3
     private static let EXPECTED_ALGORITHM = "ES256"
     
     private static let MAXIMUM_CACHE_SIZE = 32 // There are unlikely to be more than a couple keys at once
@@ -28,19 +27,13 @@ actor ChainVerifier {
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment, currentTime: Date = .now) async -> VerificationResult<T> where T: Decodable & Sendable {
-        let header: JWTHeader
+        let header: JWTKit.JWTHeader
+        let parser = DefaultJWTParser(jsonDecoder: getJsonDecoder())
         let decodedBody: T
+        let dataToken = Data(signedData.utf8)
+
         do {
-            let bodySegments = signedData.components(separatedBy: ".")
-            if (bodySegments.count != ChainVerifier.EXPECTED_JWT_SEGMENTS) {
-                return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
-            }
-            let jsonDecoder = getJsonDecoder()
-            guard let headerData = Data(base64Encoded: base64URLToBase64(bodySegments[0])), let bodyData = Data(base64Encoded: base64URLToBase64(bodySegments[1])) else {
-                return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
-            }
-            header = try jsonDecoder.decode(JWTHeader.self, from: headerData)
-            decodedBody = try jsonDecoder.decode(type, from: bodyData)
+            (header, decodedBody, _) = try parser.parse(dataToken, as: type)
         } catch {
             return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
         }
@@ -149,11 +142,6 @@ struct VaporBody : JWTPayload {
     func verify(using algorithm: some JWTAlgorithm) async throws {
         // No-op
     }
-}
-
-struct JWTHeader: Decodable, Encodable {
-    public var alg: String?
-    public var x5c: [String]?
 }
 
 final class AppStoreOIDPolicy: VerifierPolicy {
