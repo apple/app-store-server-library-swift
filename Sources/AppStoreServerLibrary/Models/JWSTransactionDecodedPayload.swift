@@ -6,11 +6,11 @@ import Foundation
 ///[JWSTransactionDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload)
 public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encodable, Hashable, Sendable {
     
-    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, type: ProductType? = nil, appAccountToken: UUID? = nil, inAppOwnershipType: InAppOwnershipType? = nil, signedDate: Date? = nil, revocationReason: RevocationReason? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, environment: AppStoreEnvironment? = nil, storefront: String? = nil, storefrontId: String? = nil, transactionReason: TransactionReason? = nil, currency: String? = nil, price: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, revocationType: RevocationType? = nil, revocationPercentage: Int32? = nil) {
-        self.init(originalTransactionId: originalTransactionId, transactionId: transactionId, webOrderLineItemId: webOrderLineItemId, bundleId: bundleId, productId: productId, subscriptionGroupIdentifier: subscriptionGroupIdentifier, purchaseDate: purchaseDate, originalPurchaseDate: originalPurchaseDate, expiresDate: expiresDate, quantity: quantity, rawType: type?.rawValue, appAccountToken: appAccountToken, rawInAppOwnershipType: inAppOwnershipType?.rawValue, signedDate: signedDate, rawRevocationReason: revocationReason?.rawValue, revocationDate: revocationDate, isUpgraded: isUpgraded, rawOfferType: offerType?.rawValue, offerIdentifier: offerIdentifier, rawEnvironment: environment?.rawValue, storefront: storefront, storefrontId: storefrontId, rawTransactionReason: transactionReason?.rawValue, currency: currency, price: price, rawOfferDiscountType: offerDiscountType?.rawValue, appTransactionId: appTransactionId, offerPeriod: offerPeriod, rawRevocationType: revocationType?.rawValue, revocationPercentage: revocationPercentage)
+    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, type: ProductType? = nil, appAccountToken: UUID? = nil, inAppOwnershipType: InAppOwnershipType? = nil, signedDate: Date? = nil, revocationReason: RevocationReason? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, offerType: OfferType? = nil, offerIdentifier: String? = nil, environment: AppStoreEnvironment? = nil, storefront: String? = nil, storefrontId: String? = nil, transactionReason: TransactionReason? = nil, currency: String? = nil, price: Int64? = nil, offerDiscountType: OfferDiscountType? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, revocationType: RevocationType? = nil, revocationPercentage: Int32? = nil, advancedCommerceInfo: AdvancedCommerceTransactionInfo? = nil, billingPlanType: BillingPlanType? = nil, commitmentInfo: TransactionCommitmentInfo? = nil) {
+        self.init(originalTransactionId: originalTransactionId, transactionId: transactionId, webOrderLineItemId: webOrderLineItemId, bundleId: bundleId, productId: productId, subscriptionGroupIdentifier: subscriptionGroupIdentifier, purchaseDate: purchaseDate, originalPurchaseDate: originalPurchaseDate, expiresDate: expiresDate, quantity: quantity, rawType: type?.rawValue, appAccountToken: appAccountToken, rawInAppOwnershipType: inAppOwnershipType?.rawValue, signedDate: signedDate, rawRevocationReason: revocationReason?.rawValue, revocationDate: revocationDate, isUpgraded: isUpgraded, rawOfferType: offerType?.rawValue, offerIdentifier: offerIdentifier, rawEnvironment: environment?.rawValue, storefront: storefront, storefrontId: storefrontId, rawTransactionReason: transactionReason?.rawValue, currency: currency, price: price, rawOfferDiscountType: offerDiscountType?.rawValue, appTransactionId: appTransactionId, offerPeriod: offerPeriod, rawRevocationType: revocationType?.rawValue, revocationPercentage: revocationPercentage, advancedCommerceInfo: advancedCommerceInfo, rawBillingPlanType: billingPlanType?.rawValue, commitmentInfo: commitmentInfo)
     }
-    
-    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, rawType: String? = nil, appAccountToken: UUID? = nil, rawInAppOwnershipType: String? = nil, signedDate: Date? = nil, rawRevocationReason: Int32? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, rawEnvironment: String? = nil, storefront: String? = nil, storefrontId: String? = nil, rawTransactionReason: String? = nil, currency: String? = nil, price: Int64? = nil, rawOfferDiscountType: String? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, rawRevocationType: String? = nil, revocationPercentage: Int32? = nil) {
+
+    public init(originalTransactionId: String? = nil, transactionId: String? = nil, webOrderLineItemId: String? = nil, bundleId: String? = nil, productId: String? = nil, subscriptionGroupIdentifier: String? = nil, purchaseDate: Date? = nil, originalPurchaseDate: Date? = nil, expiresDate: Date? = nil, quantity: Int32? = nil, rawType: String? = nil, appAccountToken: UUID? = nil, rawInAppOwnershipType: String? = nil, signedDate: Date? = nil, rawRevocationReason: Int32? = nil, revocationDate: Date? = nil, isUpgraded: Bool? = nil, rawOfferType: Int32? = nil, offerIdentifier: String? = nil, rawEnvironment: String? = nil, storefront: String? = nil, storefrontId: String? = nil, rawTransactionReason: String? = nil, currency: String? = nil, price: Int64? = nil, rawOfferDiscountType: String? = nil, appTransactionId: String? = nil, offerPeriod: String? = nil, rawRevocationType: String? = nil, revocationPercentage: Int32? = nil, advancedCommerceInfo: AdvancedCommerceTransactionInfo? = nil, rawBillingPlanType: String? = nil, commitmentInfo: TransactionCommitmentInfo? = nil) {
         self.originalTransactionId = originalTransactionId
         self.transactionId = transactionId
         self.webOrderLineItemId = webOrderLineItemId
@@ -41,6 +41,9 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.offerPeriod = offerPeriod
         self.rawRevocationType = rawRevocationType
         self.revocationPercentage = revocationPercentage
+        self.advancedCommerceInfo = advancedCommerceInfo
+        self.rawBillingPlanType = rawBillingPlanType
+        self.commitmentInfo = commitmentInfo
     }
     
     ///The original transaction identifier of a purchase.
@@ -276,7 +279,28 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
     ///
     ///[revocationPercentage](https://developer.apple.com/documentation/appstoreservernotifications/revocationpercentage)
     public var revocationPercentage: Int32?
-    
+
+    ///Transaction information that is present only for Advanced Commerce SKUs.
+    ///
+    ///[advancedCommerceTransactionInfo](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercetransactioninfo)
+    public var advancedCommerceInfo: AdvancedCommerceTransactionInfo?
+
+    ///[billingPlanType](https://developer.apple.com/documentation/appstoreserverapi/billingplantype)
+    public var billingPlanType: BillingPlanType? {
+        get {
+            return rawBillingPlanType.flatMap { BillingPlanType(rawValue: $0) }
+        }
+        set {
+            self.rawBillingPlanType = newValue.map { $0.rawValue }
+        }
+    }
+
+    ///See ``billingPlanType``
+    public var rawBillingPlanType: String?
+
+    ///[TransactionCommitmentInfo](https://developer.apple.com/documentation/appstoreserverapi/transactioncommitmentinfo)
+    public var commitmentInfo: TransactionCommitmentInfo?
+
     public enum CodingKeys: CodingKey {
         case originalTransactionId
         case transactionId
@@ -308,6 +332,9 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         case offerPeriod
         case revocationType
         case revocationPercentage
+        case advancedCommerceInfo
+        case billingPlanType
+        case commitmentInfo
     }
     
     public init(from decoder: any Decoder) throws {
@@ -342,6 +369,9 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         self.offerPeriod = try container.decodeIfPresent(String.self, forKey: .offerPeriod)
         self.rawRevocationType = try container.decodeIfPresent(String.self, forKey: .revocationType)
         self.revocationPercentage = try container.decodeIfPresent(Int32.self, forKey: .revocationPercentage)
+        self.advancedCommerceInfo = try container.decodeIfPresent(AdvancedCommerceTransactionInfo.self, forKey: .advancedCommerceInfo)
+        self.rawBillingPlanType = try container.decodeIfPresent(String.self, forKey: .billingPlanType)
+        self.commitmentInfo = try container.decodeIfPresent(TransactionCommitmentInfo.self, forKey: .commitmentInfo)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -376,5 +406,8 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.offerPeriod, forKey: .offerPeriod)
         try container.encodeIfPresent(self.rawRevocationType, forKey: .revocationType)
         try container.encodeIfPresent(self.revocationPercentage, forKey: .revocationPercentage)
+        try container.encodeIfPresent(self.advancedCommerceInfo, forKey: .advancedCommerceInfo)
+        try container.encodeIfPresent(self.rawBillingPlanType, forKey: .billingPlanType)
+        try container.encodeIfPresent(self.commitmentInfo, forKey: .commitmentInfo)
     }
 }

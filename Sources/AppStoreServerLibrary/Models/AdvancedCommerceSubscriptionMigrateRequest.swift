@@ -8,10 +8,10 @@ public struct AdvancedCommerceSubscriptionMigrateRequest: Decodable, Encodable, 
     public init(requestInfo: AdvancedCommerceRequestInfo, descriptors: AdvancedCommerceSubscriptionMigrateDescriptors, items: [AdvancedCommerceSubscriptionMigrateItem], targetProductId: String, taxCode: String, renewalItems: [AdvancedCommerceSubscriptionMigrateRenewalItem]? = nil, storefront: String? = nil) throws {
         self.requestInfo = requestInfo
         self.descriptors = descriptors
-        self.items = try AdvancedCommerceValidationUtils.validateItems(items)
+        self.items = try HelperValidationUtils.validateItems(items)
         self.targetProductId = targetProductId
         self.taxCode = taxCode
-        self.renewalItems = try renewalItems.map { try AdvancedCommerceValidationUtils.validateItems($0) }
+        self.renewalItems = try renewalItems.map { try HelperValidationUtils.validateItems($0) }
         self.storefront = storefront
     }
 

@@ -24,4 +24,7 @@ public enum NotificationTypeV2: String, Decodable, Encodable, Hashable, Sendable
     case externalPurchaseToken = "EXTERNAL_PURCHASE_TOKEN"
     case oneTimeCharge = "ONE_TIME_CHARGE"
     case rescindConsent = "RESCIND_CONSENT"
+    case metadataUpdate = "METADATA_UPDATE"
+    case migration = "MIGRATION"
+    case priceChange = "PRICE_CHANGE"
 }

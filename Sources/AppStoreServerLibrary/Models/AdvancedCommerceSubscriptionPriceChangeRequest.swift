@@ -7,7 +7,7 @@ public struct AdvancedCommerceSubscriptionPriceChangeRequest: Decodable, Encodab
 
     public init(requestInfo: AdvancedCommerceRequestInfo, items: [AdvancedCommerceSubscriptionPriceChangeItem], currency: String? = nil, storefront: String? = nil) throws {
         self.requestInfo = requestInfo
-        self.items = try AdvancedCommerceValidationUtils.validateItems(items)
+        self.items = try HelperValidationUtils.validateItems(items)
         self.currency = currency
         self.storefront = storefront
     }

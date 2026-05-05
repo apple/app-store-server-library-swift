@@ -40,7 +40,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         // Create a RealtimeResponseBody with an AlternateProduct
         let messageId = UUID(uuidString: "b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901")!
         let productId = "com.example.alternate.product"
-        let alternateProduct = AlternateProduct(messageIdentifier: messageId, productId: productId)
+        let alternateProduct = AlternateProduct(messageIdentifier: messageId, productId: productId, billingPlanType: BillingPlanType.monthly)
         let responseBody = RealtimeResponseBody(alternateProduct: alternateProduct)
 
         // Serialize to JSON
@@ -54,6 +54,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertTrue(alternateProductDict.keys.contains("productId"), "AlternateProduct should have 'productId' field")
         XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", alternateProductDict["messageIdentifier"] as! String)
         XCTAssertEqual("com.example.alternate.product", alternateProductDict["productId"] as! String)
+        XCTAssertEqual("MONTHLY", alternateProductDict["billingPlanType"] as! String)
         XCTAssertFalse(json.keys.contains("message"), "JSON should not have 'message' field")
         XCTAssertFalse(json.keys.contains("promotionalOffer"), "JSON should not have 'promotionalOffer' field")
 
@@ -65,6 +66,8 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertNotNil(deserialized.alternateProduct)
         XCTAssertEqual(messageId, deserialized.alternateProduct?.messageIdentifier)
         XCTAssertEqual(productId, deserialized.alternateProduct?.productId)
+        XCTAssertEqual(BillingPlanType.monthly, deserialized.alternateProduct?.billingPlanType)
+        XCTAssertEqual("MONTHLY", deserialized.alternateProduct?.rawBillingPlanType)
         XCTAssertNil(deserialized.promotionalOffer)
     }
 
@@ -170,6 +173,33 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertEqual("keyId123", deserializedV1.keyId)
         XCTAssertEqual(appAccountToken, deserializedV1.appAccountToken)
         XCTAssertEqual("base64encodedSignature", deserializedV1.encodedSignature)
+    }
+
+    public func testRealtimeResponseBodyWithAdvancedCommerceInfo() throws {
+        let messageId = UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!
+        let acData = "eyJhbGciOiJFUzI1NiJ9.base64data"
+        let acInfo = AdvancedCommerceInfo(messageIdentifier: messageId, advancedCommerceData: acData)
+        let responseBody = RealtimeResponseBody(advancedCommerceInfo: acInfo)
+
+        let jsonData = try jsonEncoder.encode(responseBody)
+        let json = try JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
+
+        XCTAssertTrue(json.keys.contains("advancedCommerceInfo"))
+        let acInfoDict = json["advancedCommerceInfo"] as! [String: Any]
+        XCTAssertEqual("A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", acInfoDict["messageIdentifier"] as! String)
+        XCTAssertEqual(acData, acInfoDict["advancedCommerceData"] as! String)
+        XCTAssertFalse(json.keys.contains("message"))
+        XCTAssertFalse(json.keys.contains("alternateProduct"))
+        XCTAssertFalse(json.keys.contains("promotionalOffer"))
+
+        let deserialized = try jsonDecoder.decode(RealtimeResponseBody.self, from: jsonData)
+
+        XCTAssertNil(deserialized.message)
+        XCTAssertNil(deserialized.alternateProduct)
+        XCTAssertNil(deserialized.promotionalOffer)
+        XCTAssertNotNil(deserialized.advancedCommerceInfo)
+        XCTAssertEqual(messageId, deserialized.advancedCommerceInfo?.messageIdentifier)
+        XCTAssertEqual(acData, deserialized.advancedCommerceInfo?.advancedCommerceData)
     }
 
     public func testRealtimeResponseBodySerialization() throws {
