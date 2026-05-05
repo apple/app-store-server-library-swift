@@ -7,14 +7,14 @@ public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
 
     public init(period: AdvancedCommerceOfferPeriod, periodCount: Int32, price: Int64, reason: AdvancedCommerceOfferReason) throws {
         self.rawPeriod = period.rawValue
-        self.periodCount = try AdvancedCommerceValidationUtils.validatePeriodCount(periodCount)
+        self.periodCount = try HelperValidationUtils.validatePeriodCount(periodCount)
         self.price = price
         self.rawReason = reason.rawValue
     }
 
     public init(rawPeriod: String, periodCount: Int32, price: Int64, rawReason: String) throws {
         self.rawPeriod = rawPeriod
-        self.periodCount = try AdvancedCommerceValidationUtils.validatePeriodCount(periodCount)
+        self.periodCount = try HelperValidationUtils.validatePeriodCount(periodCount)
         self.price = price
         self.rawReason = rawReason
     }

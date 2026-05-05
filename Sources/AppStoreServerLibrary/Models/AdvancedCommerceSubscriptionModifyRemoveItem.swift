@@ -6,7 +6,7 @@
 public struct AdvancedCommerceSubscriptionModifyRemoveItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(sku: String) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
     }
 
     ///[SKU](https://developer.apple.com/documentation/advancedcommerceapi/sku)

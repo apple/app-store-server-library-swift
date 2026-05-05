@@ -6,7 +6,7 @@
 public struct AdvancedCommerceRequestRefundRequest: Decodable, Encodable, Hashable, Sendable {
 
     public init(items: [AdvancedCommerceRequestRefundItem], refundRiskingPreference: Bool, requestInfo: AdvancedCommerceRequestInfo, currency: String? = nil, storefront: String? = nil) throws {
-        self.items = try AdvancedCommerceValidationUtils.validateItems(items)
+        self.items = try HelperValidationUtils.validateItems(items)
         self.refundRiskingPreference = refundRiskingPreference
         self.requestInfo = requestInfo
         self.currency = currency

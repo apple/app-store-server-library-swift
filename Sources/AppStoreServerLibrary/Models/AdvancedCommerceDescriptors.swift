@@ -6,8 +6,8 @@
 public struct AdvancedCommerceDescriptors: Decodable, Encodable, Hashable, Sendable {
 
     public init(description: String, displayName: String) throws {
-        self.description = try AdvancedCommerceValidationUtils.validateDescription(description)
-        self.displayName = try AdvancedCommerceValidationUtils.validateDisplayName(displayName)
+        self.description = try HelperValidationUtils.validateDescription(description)
+        self.displayName = try HelperValidationUtils.validateDisplayName(displayName)
     }
 
     ///A string you provide that describes a SKU.

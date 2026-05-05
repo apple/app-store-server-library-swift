@@ -7,18 +7,18 @@ public struct AdvancedCommerceSubscriptionChangeMetadataItem: Decodable, Encodab
 
     public init(effective: AdvancedCommerceEffective, currentSku: String, description: String? = nil, displayName: String? = nil, sku: String? = nil) throws {
         self.rawEffective = effective.rawValue
-        self.currentSku = try AdvancedCommerceValidationUtils.validateSku(currentSku)
-        self.description = try description.map(AdvancedCommerceValidationUtils.validateDescription)
-        self.displayName = try displayName.map(AdvancedCommerceValidationUtils.validateDisplayName)
-        self.sku = try sku.map(AdvancedCommerceValidationUtils.validateSku)
+        self.currentSku = try HelperValidationUtils.validateSku(currentSku)
+        self.description = try description.map(HelperValidationUtils.validateDescription)
+        self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
+        self.sku = try sku.map(HelperValidationUtils.validateSku)
     }
 
     public init(rawEffective: String, currentSku: String, description: String? = nil, displayName: String? = nil, sku: String? = nil) throws {
         self.rawEffective = rawEffective
-        self.currentSku = try AdvancedCommerceValidationUtils.validateSku(currentSku)
-        self.description = try description.map(AdvancedCommerceValidationUtils.validateDescription)
-        self.displayName = try displayName.map(AdvancedCommerceValidationUtils.validateDisplayName)
-        self.sku = try sku.map(AdvancedCommerceValidationUtils.validateSku)
+        self.currentSku = try HelperValidationUtils.validateSku(currentSku)
+        self.description = try description.map(HelperValidationUtils.validateDescription)
+        self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
+        self.sku = try sku.map(HelperValidationUtils.validateSku)
     }
 
     ///The original SKU of the item.

@@ -7,10 +7,11 @@ import Foundation
 ///[RealtimeResponseBody](https://developer.apple.com/documentation/retentionmessaging/realtimeresponsebody)
 public struct RealtimeResponseBody: Decodable, Encodable, Hashable, Sendable {
 
-    public init(message: Message? = nil, alternateProduct: AlternateProduct? = nil, promotionalOffer: PromotionalOffer? = nil) {
+    public init(message: Message? = nil, alternateProduct: AlternateProduct? = nil, promotionalOffer: PromotionalOffer? = nil, advancedCommerceInfo: AdvancedCommerceInfo? = nil) {
         self.message = message
         self.alternateProduct = alternateProduct
         self.promotionalOffer = promotionalOffer
+        self.advancedCommerceInfo = advancedCommerceInfo
     }
 
     ///A retention message that's text-based and can include an optional image.
@@ -27,4 +28,9 @@ public struct RealtimeResponseBody: Decodable, Encodable, Hashable, Sendable {
     ///
     ///[promotionalOffer](https://developer.apple.com/documentation/retentionmessaging/promotionaloffer)
     public var promotionalOffer: PromotionalOffer?
+
+    ///A retention offer or switch plan option.
+    ///
+    ///[advancedCommerceInfo](https://developer.apple.com/documentation/retentionmessaging/advancedcommerceinfo)
+    public var advancedCommerceInfo: AdvancedCommerceInfo?
 }
