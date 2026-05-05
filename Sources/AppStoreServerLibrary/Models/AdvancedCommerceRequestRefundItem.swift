@@ -6,7 +6,7 @@
 public struct AdvancedCommerceRequestRefundItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(sku: String, refundReason: AdvancedCommerceRefundReason, refundType: AdvancedCommerceRefundType, revoke: Bool, refundAmount: Int32? = nil) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
         self.rawRefundReason = refundReason.rawValue
         self.rawRefundType = refundType.rawValue
         self.revoke = revoke
@@ -14,7 +14,7 @@ public struct AdvancedCommerceRequestRefundItem: Decodable, Encodable, Hashable,
     }
 
     public init(sku: String, rawRefundReason: String, rawRefundType: String, revoke: Bool, refundAmount: Int32? = nil) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
         self.rawRefundReason = rawRefundReason
         self.rawRefundType = rawRefundType
         self.revoke = revoke

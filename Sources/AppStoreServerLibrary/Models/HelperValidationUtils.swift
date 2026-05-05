@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Apple Inc. Licensed under MIT License.
 
-public struct AdvancedCommerceValidationUtils {
+public struct HelperValidationUtils {
 
     public static let maximumDescriptionLength = 45
     public static let maximumDisplayNameLength = 30

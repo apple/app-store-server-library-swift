@@ -6,7 +6,7 @@
 public struct AdvancedCommerceSubscriptionReactivateItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(sku: String) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
     }
 
     ///The SKU of the item to reactivate.

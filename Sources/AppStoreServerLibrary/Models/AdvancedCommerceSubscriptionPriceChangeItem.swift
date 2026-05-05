@@ -6,11 +6,11 @@
 public struct AdvancedCommerceSubscriptionPriceChangeItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(sku: String, price: Int64, dependentSKUs: [String]? = nil) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
         self.price = price
         if let dependentSKUs = dependentSKUs {
             for dependentSku in dependentSKUs {
-                _ = try AdvancedCommerceValidationUtils.validateSku(dependentSku)
+                _ = try HelperValidationUtils.validateSku(dependentSku)
             }
         }
         self.dependentSKUs = dependentSKUs

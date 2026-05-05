@@ -6,25 +6,25 @@
 public struct AdvancedCommerceSubscriptionModifyChangeItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(currentSku: String, description: String, displayName: String, effective: AdvancedCommerceEffective, price: Int64, reason: AdvancedCommerceReason, sku: String, offer: AdvancedCommerceOffer? = nil, proratedPrice: Int64? = nil) throws {
-        self.currentSku = try AdvancedCommerceValidationUtils.validateSku(currentSku)
-        self.description = try AdvancedCommerceValidationUtils.validateDescription(description)
-        self.displayName = try AdvancedCommerceValidationUtils.validateDisplayName(displayName)
+        self.currentSku = try HelperValidationUtils.validateSku(currentSku)
+        self.description = try HelperValidationUtils.validateDescription(description)
+        self.displayName = try HelperValidationUtils.validateDisplayName(displayName)
         self.rawEffective = effective.rawValue
         self.price = price
         self.rawReason = reason.rawValue
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
         self.offer = offer
         self.proratedPrice = proratedPrice
     }
 
     public init(currentSku: String, description: String, displayName: String, rawEffective: String, price: Int64, rawReason: String, sku: String, offer: AdvancedCommerceOffer? = nil, proratedPrice: Int64? = nil) throws {
-        self.currentSku = try AdvancedCommerceValidationUtils.validateSku(currentSku)
-        self.description = try AdvancedCommerceValidationUtils.validateDescription(description)
-        self.displayName = try AdvancedCommerceValidationUtils.validateDisplayName(displayName)
+        self.currentSku = try HelperValidationUtils.validateSku(currentSku)
+        self.description = try HelperValidationUtils.validateDescription(description)
+        self.displayName = try HelperValidationUtils.validateDisplayName(displayName)
         self.rawEffective = rawEffective
         self.price = price
         self.rawReason = rawReason
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
+        self.sku = try HelperValidationUtils.validateSku(sku)
         self.offer = offer
         self.proratedPrice = proratedPrice
     }

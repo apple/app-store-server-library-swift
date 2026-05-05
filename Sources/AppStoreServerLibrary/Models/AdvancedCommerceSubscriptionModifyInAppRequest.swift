@@ -9,12 +9,12 @@ public struct AdvancedCommerceSubscriptionModifyInAppRequest: AdvancedCommerceIn
         self.requestInfo = requestInfo
         self.transactionId = transactionId
         self.retainBillingCycle = retainBillingCycle
-        self.addItems = try addItems.map { try AdvancedCommerceValidationUtils.validateItems($0) }
-        self.changeItems = try changeItems.map { try AdvancedCommerceValidationUtils.validateItems($0) }
+        self.addItems = try addItems.map { try HelperValidationUtils.validateItems($0) }
+        self.changeItems = try changeItems.map { try HelperValidationUtils.validateItems($0) }
         self.currency = currency
         self.descriptors = descriptors
         self.periodChange = periodChange
-        self.removeItems = try removeItems.map { try AdvancedCommerceValidationUtils.validateItems($0) }
+        self.removeItems = try removeItems.map { try HelperValidationUtils.validateItems($0) }
         self.storefront = storefront
         self.taxCode = taxCode
     }

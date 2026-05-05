@@ -6,9 +6,9 @@
 public struct AdvancedCommerceSubscriptionModifyAddItem: Decodable, Encodable, Hashable, Sendable {
 
     public init(sku: String, description: String, displayName: String, price: Int64, offer: AdvancedCommerceOffer? = nil, proratedPrice: Int64? = nil) throws {
-        self.sku = try AdvancedCommerceValidationUtils.validateSku(sku)
-        self.description = try AdvancedCommerceValidationUtils.validateDescription(description)
-        self.displayName = try AdvancedCommerceValidationUtils.validateDisplayName(displayName)
+        self.sku = try HelperValidationUtils.validateSku(sku)
+        self.description = try HelperValidationUtils.validateDescription(description)
+        self.displayName = try HelperValidationUtils.validateDisplayName(displayName)
         self.price = price
         self.offer = offer
         self.proratedPrice = proratedPrice

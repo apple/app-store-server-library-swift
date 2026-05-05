@@ -131,52 +131,52 @@ final class AdvancedCommerceModelsTests: XCTestCase {
 
     public func testValidationUtilsDescription() throws {
         let validDescription = "Valid description"
-        XCTAssertEqual(validDescription, try AdvancedCommerceValidationUtils.validateDescription(validDescription))
+        XCTAssertEqual(validDescription, try HelperValidationUtils.validateDescription(validDescription))
 
         let maxLengthDescription = String(repeating: "A", count: 45)
-        XCTAssertEqual(maxLengthDescription, try AdvancedCommerceValidationUtils.validateDescription(maxLengthDescription))
+        XCTAssertEqual(maxLengthDescription, try HelperValidationUtils.validateDescription(maxLengthDescription))
 
         let tooLongDescription = String(repeating: "A", count: 46)
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validateDescription(tooLongDescription))
+        XCTAssertThrowsError(try HelperValidationUtils.validateDescription(tooLongDescription))
     }
 
     public func testValidationUtilsDisplayName() throws {
         let validDisplayName = "Valid Name"
-        XCTAssertEqual(validDisplayName, try AdvancedCommerceValidationUtils.validateDisplayName(validDisplayName))
+        XCTAssertEqual(validDisplayName, try HelperValidationUtils.validateDisplayName(validDisplayName))
 
         let maxLengthDisplayName = String(repeating: "A", count: 30)
-        XCTAssertEqual(maxLengthDisplayName, try AdvancedCommerceValidationUtils.validateDisplayName(maxLengthDisplayName))
+        XCTAssertEqual(maxLengthDisplayName, try HelperValidationUtils.validateDisplayName(maxLengthDisplayName))
 
         let tooLongDisplayName = String(repeating: "A", count: 31)
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validateDisplayName(tooLongDisplayName))
+        XCTAssertThrowsError(try HelperValidationUtils.validateDisplayName(tooLongDisplayName))
     }
 
     public func testValidationUtilsSku() throws {
         let validSku = "valid.sku.123"
-        XCTAssertEqual(validSku, try AdvancedCommerceValidationUtils.validateSku(validSku))
+        XCTAssertEqual(validSku, try HelperValidationUtils.validateSku(validSku))
 
         let maxLengthSku = String(repeating: "A", count: 128)
-        XCTAssertEqual(maxLengthSku, try AdvancedCommerceValidationUtils.validateSku(maxLengthSku))
+        XCTAssertEqual(maxLengthSku, try HelperValidationUtils.validateSku(maxLengthSku))
 
         let tooLongSku = String(repeating: "A", count: 129)
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validateSku(tooLongSku))
+        XCTAssertThrowsError(try HelperValidationUtils.validateSku(tooLongSku))
     }
 
     public func testValidationUtilsPeriodCount() throws {
-        XCTAssertEqual(1, try AdvancedCommerceValidationUtils.validatePeriodCount(1))
-        XCTAssertEqual(6, try AdvancedCommerceValidationUtils.validatePeriodCount(6))
-        XCTAssertEqual(12, try AdvancedCommerceValidationUtils.validatePeriodCount(12))
+        XCTAssertEqual(1, try HelperValidationUtils.validatePeriodCount(1))
+        XCTAssertEqual(6, try HelperValidationUtils.validatePeriodCount(6))
+        XCTAssertEqual(12, try HelperValidationUtils.validatePeriodCount(12))
 
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validatePeriodCount(0))
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validatePeriodCount(13))
+        XCTAssertThrowsError(try HelperValidationUtils.validatePeriodCount(0))
+        XCTAssertThrowsError(try HelperValidationUtils.validatePeriodCount(13))
     }
 
     public func testValidationUtilsItems() throws {
         let validList = [try AdvancedCommerceOneTimeChargeItem(description: "desc", displayName: "name", sku: "sku1", price: 1000)]
-        XCTAssertEqual(validList, try AdvancedCommerceValidationUtils.validateItems(validList))
+        XCTAssertEqual(validList, try HelperValidationUtils.validateItems(validList))
 
         let emptyList: [AdvancedCommerceOneTimeChargeItem] = []
-        XCTAssertThrowsError(try AdvancedCommerceValidationUtils.validateItems(emptyList))
+        XCTAssertThrowsError(try HelperValidationUtils.validateItems(emptyList))
     }
 
     public func testAdvancedCommerceDescriptors() throws {
@@ -643,5 +643,59 @@ final class AdvancedCommerceModelsTests: XCTestCase {
         XCTAssertEqual("signed_transaction_info_value", response.signedTransactionInfo)
 
         TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testAdvancedCommercePriceIncreaseInfoStatus() throws {
+        XCTAssertEqual("SCHEDULED", AdvancedCommercePriceIncreaseInfoStatus.scheduled.rawValue)
+        XCTAssertEqual("PENDING", AdvancedCommercePriceIncreaseInfoStatus.pending.rawValue)
+        XCTAssertEqual("ACCEPTED", AdvancedCommercePriceIncreaseInfoStatus.accepted.rawValue)
+
+        XCTAssertEqual(AdvancedCommercePriceIncreaseInfoStatus.scheduled, AdvancedCommercePriceIncreaseInfoStatus(rawValue: "SCHEDULED"))
+        XCTAssertEqual(AdvancedCommercePriceIncreaseInfoStatus.pending, AdvancedCommercePriceIncreaseInfoStatus(rawValue: "PENDING"))
+        XCTAssertEqual(AdvancedCommercePriceIncreaseInfoStatus.accepted, AdvancedCommercePriceIncreaseInfoStatus(rawValue: "ACCEPTED"))
+        XCTAssertNil(AdvancedCommercePriceIncreaseInfoStatus(rawValue: "INVALID"))
+
+        TestingUtility.confirmCodableInternallyConsistent(AdvancedCommercePriceIncreaseInfoStatus.scheduled)
+        TestingUtility.confirmCodableInternallyConsistent(AdvancedCommercePriceIncreaseInfoStatus.pending)
+        TestingUtility.confirmCodableInternallyConsistent(AdvancedCommercePriceIncreaseInfoStatus.accepted)
+    }
+
+    public func testBillingPlanType() throws {
+        XCTAssertEqual("BILLED_UPFRONT", BillingPlanType.billedUpfront.rawValue)
+        XCTAssertEqual("MONTHLY", BillingPlanType.monthly.rawValue)
+
+        XCTAssertEqual(BillingPlanType.billedUpfront, BillingPlanType(rawValue: "BILLED_UPFRONT"))
+        XCTAssertEqual(BillingPlanType.monthly, BillingPlanType(rawValue: "MONTHLY"))
+        XCTAssertNil(BillingPlanType(rawValue: "INVALID"))
+
+        TestingUtility.confirmCodableInternallyConsistent(BillingPlanType.billedUpfront)
+        TestingUtility.confirmCodableInternallyConsistent(BillingPlanType.monthly)
+    }
+
+    public func testRenewalBillingPlanType() throws {
+        XCTAssertEqual("BILLED_UPFRONT", RenewalBillingPlanType.billedUpfront.rawValue)
+        XCTAssertEqual("MONTHLY", RenewalBillingPlanType.monthly.rawValue)
+
+        XCTAssertEqual(RenewalBillingPlanType.billedUpfront, RenewalBillingPlanType(rawValue: "BILLED_UPFRONT"))
+        XCTAssertEqual(RenewalBillingPlanType.monthly, RenewalBillingPlanType(rawValue: "MONTHLY"))
+        XCTAssertNil(RenewalBillingPlanType(rawValue: "INVALID"))
+
+        TestingUtility.confirmCodableInternallyConsistent(RenewalBillingPlanType.billedUpfront)
+        TestingUtility.confirmCodableInternallyConsistent(RenewalBillingPlanType.monthly)
+    }
+
+    public func testTransactionCommitmentInfoBillingPeriodNumberValidation() throws {
+        let info1 = try TransactionCommitmentInfo(billingPeriodNumber: 1)
+        XCTAssertEqual(1, info1.billingPeriodNumber)
+
+        let info12 = try TransactionCommitmentInfo(billingPeriodNumber: 12)
+        XCTAssertEqual(12, info12.billingPeriodNumber)
+
+        let infoNil = try TransactionCommitmentInfo(billingPeriodNumber: nil)
+        XCTAssertNil(infoNil.billingPeriodNumber)
+
+        XCTAssertThrowsError(try TransactionCommitmentInfo(billingPeriodNumber: 0))
+        XCTAssertThrowsError(try TransactionCommitmentInfo(billingPeriodNumber: 13))
+        XCTAssertThrowsError(try TransactionCommitmentInfo(billingPeriodNumber: -1))
     }
 }

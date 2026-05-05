@@ -8,7 +8,7 @@ public struct AdvancedCommerceSubscriptionCreateRequest: AdvancedCommerceInAppRe
     public init(currency: String, descriptors: AdvancedCommerceDescriptors, items: [AdvancedCommerceSubscriptionCreateItem], period: AdvancedCommercePeriod, requestInfo: AdvancedCommerceRequestInfo, taxCode: String, previousTransactionId: String? = nil, storefront: String? = nil) throws {
         self.currency = currency
         self.descriptors = descriptors
-        self.items = try AdvancedCommerceValidationUtils.validateItems(items)
+        self.items = try HelperValidationUtils.validateItems(items)
         self.rawPeriod = period.rawValue
         self.requestInfo = requestInfo
         self.taxCode = taxCode
@@ -19,7 +19,7 @@ public struct AdvancedCommerceSubscriptionCreateRequest: AdvancedCommerceInAppRe
     public init(currency: String, descriptors: AdvancedCommerceDescriptors, items: [AdvancedCommerceSubscriptionCreateItem], rawPeriod: String, requestInfo: AdvancedCommerceRequestInfo, taxCode: String, previousTransactionId: String? = nil, storefront: String? = nil) throws {
         self.currency = currency
         self.descriptors = descriptors
-        self.items = try AdvancedCommerceValidationUtils.validateItems(items)
+        self.items = try HelperValidationUtils.validateItems(items)
         self.rawPeriod = rawPeriod
         self.requestInfo = requestInfo
         self.taxCode = taxCode

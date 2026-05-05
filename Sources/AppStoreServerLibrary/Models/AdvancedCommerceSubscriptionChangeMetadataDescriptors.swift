@@ -7,14 +7,14 @@ public struct AdvancedCommerceSubscriptionChangeMetadataDescriptors: Decodable, 
 
     public init(effective: AdvancedCommerceEffective, description: String? = nil, displayName: String? = nil) throws {
         self.rawEffective = effective.rawValue
-        self.description = try description.map(AdvancedCommerceValidationUtils.validateDescription)
-        self.displayName = try displayName.map(AdvancedCommerceValidationUtils.validateDisplayName)
+        self.description = try description.map(HelperValidationUtils.validateDescription)
+        self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
     }
 
     public init(rawEffective: String, description: String? = nil, displayName: String? = nil) throws {
         self.rawEffective = rawEffective
-        self.description = try description.map(AdvancedCommerceValidationUtils.validateDescription)
-        self.displayName = try displayName.map(AdvancedCommerceValidationUtils.validateDisplayName)
+        self.description = try description.map(HelperValidationUtils.validateDescription)
+        self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
     }
 
     ///A string you provide that describes a SKU.
