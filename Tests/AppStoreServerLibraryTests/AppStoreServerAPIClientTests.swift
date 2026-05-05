@@ -81,7 +81,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertNil(request.body)
         }
         
-        let response = await client.getAllSubscriptionStatuses(transactionId: "4321", status: [Status.expired, Status.active])
+        let response = await client.getAllSubscriptionStatuses(anyTransactionId: "4321", status: [Status.expired, Status.active])
         
         guard case .success(let statusResponse) = response else {
             XCTAssertTrue(false)
@@ -127,7 +127,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertNil(request.body)
         }
         
-        let response = await client.getRefundHistory(transactionId: "555555", revision: "revision_input")
+        let response = await client.getRefundHistory(anyTransactionId: "555555", revision: "revision_input")
         
         guard case .success(let refundHistoryResponse) = response else {
             XCTAssertTrue(false)
@@ -297,7 +297,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
+        let response = await client.getTransactionHistory(anyTransactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
@@ -345,7 +345,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
+        let response = await client.getTransactionHistory(anyTransactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
@@ -643,7 +643,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
+        let response = await client.getTransactionHistory(anyTransactionId: "1234", revision: "revision_input", transactionHistoryRequest: request, version: .v2)
         
         guard case .success(let historyResponse) = response else {
             XCTAssertTrue(false)
@@ -668,7 +668,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             revoked: false
         )
         
-        let response = await client.getTransactionHistory(transactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
+        let response = await client.getTransactionHistory(anyTransactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
         
         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = response else {
             XCTAssertTrue(false)
@@ -1077,7 +1077,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
              XCTAssertNil(request.body)
          }
 
-         let response = await client.getAppTransactionInfo(transactionId: "1234")
+         let response = await client.getAppTransactionInfo(anyTransactionId: "1234")
 
          guard case .success(let appTransactionInfoResponse) = response else {
              XCTAssertTrue(false)
@@ -1090,7 +1090,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
      public func testGetAppTransactionInfoInvalidTransactionId() async throws {
          let body = TestingUtility.readFile("resources/models/invalidTransactionIdError.json")
          let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
-         let result = await client.getAppTransactionInfo(transactionId: "invalid_id")
+         let result = await client.getAppTransactionInfo(anyTransactionId: "invalid_id")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
              return
@@ -1105,7 +1105,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
      public func testGetAppTransactionInfoTransactionIdNotFound() async throws {
          let body = TestingUtility.readFile("resources/models/transactionIdNotFoundError.json")
          let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
-         let result = await client.getAppTransactionInfo(transactionId: "not_found_id")
+         let result = await client.getAppTransactionInfo(anyTransactionId: "not_found_id")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
              return
@@ -1120,7 +1120,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
      public func testGetAppTransactionInfoAppTransactionDoesNotExist() async throws {
          let body = TestingUtility.readFile("resources/models/appTransactionDoesNotExistError.json")
          let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
-         let result = await client.getAppTransactionInfo(transactionId: "no_app_transaction")
+         let result = await client.getAppTransactionInfo(anyTransactionId: "no_app_transaction")
          guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
              XCTAssertTrue(false)
              return
@@ -1131,6 +1131,20 @@ final class AppStoreServerAPIClientTests: XCTestCase {
          XCTAssertEqual("No AppTransaction exists for the customer.", errorMessage)
          XCTAssertNil(causedBy)
      }
+
+    public func testFinishTransaction() async throws {
+        let client = try await getAppStoreServerAPIClient("") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/1234/finish", request.url)
+            XCTAssertNil(request.body)
+        }
+
+        let response = await client.finishTransaction(transactionId: "1234")
+        guard case .success(_) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
 
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) async throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)

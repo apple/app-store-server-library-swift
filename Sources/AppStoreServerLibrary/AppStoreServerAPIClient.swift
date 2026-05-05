@@ -217,11 +217,11 @@ public actor AppStoreServerAPIClient: Sendable {
     }
     
     ///Get the statuses for all of a customer’s auto-renewable subscriptions in your app.
-    ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
+    ///- Parameter anyTransactionId: Any transactionId, originalTransactionId, or appTransactionId that belongs to the customer for your app.
     ///- Parameter status: An optional filter that indicates the status of subscriptions to include in the response. Your query may specify more than one status query parameter.
     ///- Returns: A response that contains status information for all of a customer’s auto-renewable subscriptions in your app, or information about the failure
     ///[Get All Subscription Statuses](https://developer.apple.com/documentation/appstoreserverapi/get_all_subscription_statuses)
-    public func getAllSubscriptionStatuses(transactionId: String, status: [Status]? = nil) async -> APIResult<StatusResponse> {
+    public func getAllSubscriptionStatuses(anyTransactionId: String, status: [Status]? = nil) async -> APIResult<StatusResponse> {
         let request: String? = nil
         var queryParams: [String: [String]] = [:]
         if let innerStatus = status {
@@ -230,23 +230,23 @@ public actor AppStoreServerAPIClient: Sendable {
             }
         }
 
-        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/subscriptions/" + anyTransactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     
     ///Get a paginated list of all of a customer’s refunded in-app purchases for your app.
     ///
-    ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
+    ///- Parameter anyTransactionId: Any transactionId, originalTransactionId, or appTransactionId that belongs to the customer for your app.
     ///- Parameter revision:      A token you provide to get the next set of up to 20 transactions. All responses include a revision token. Use the revision token from the previous RefundHistoryResponse.
     ///- Returns: A response that contains status information for all of a customer’s auto-renewable subscriptions in your app, or information about the failure
     ///[Get Refund History](https://developer.apple.com/documentation/appstoreserverapi/get_refund_history)
-    public func getRefundHistory(transactionId: String, revision: String?) async -> APIResult<RefundHistoryResponse> {
+    public func getRefundHistory(anyTransactionId: String, revision: String?) async -> APIResult<RefundHistoryResponse> {
         let request: String? = nil
         var queryParams: [String: [String]] = [:]
         if let innerRevision = revision {
             queryParams["revision"] = [innerRevision]
         }
-        
-        return await makeRequestWithResponseBody(path: "/inApps/v2/refund/lookup/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
+
+        return await makeRequestWithResponseBody(path: "/inApps/v2/refund/lookup/" + anyTransactionId, method: .GET, queryParameters: queryParams, body: request)
     }
     
     ///Checks whether a renewal date extension request completed, and provides the final count of successful or failed extensions.
@@ -270,20 +270,20 @@ public actor AppStoreServerAPIClient: Sendable {
         return await makeRequestWithResponseBody(path: "/inApps/v1/notifications/test/" + testNotificationToken, method: .GET, queryParameters: [:], body: request)
     }
     
-    ///See `getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion)`
+    ///See `getTransactionHistory(anyTransactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion)`
     @available(*, deprecated)
-    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
-        return await self.getTransactionHistory(transactionId: transactionId, revision: revision, transactionHistoryRequest: transactionHistoryRequest, version: .v1)
+    public func getTransactionHistory(anyTransactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest) async -> APIResult<HistoryResponse> {
+        return await self.getTransactionHistory(anyTransactionId: anyTransactionId, revision: revision, transactionHistoryRequest: transactionHistoryRequest, version: .v1)
     }
-    
+
     ///Get a customer’s in-app purchase transaction history for your app.
     ///
-    ///- Parameter transactionId: The identifier of a transaction that belongs to the customer, and which may be an original transaction identifier.
+    ///- Parameter anyTransactionId: Any transactionId, originalTransactionId, or appTransactionId that belongs to the customer for your app.
     ///- Parameter revision:      A token you provide to get the next set of up to 20 transactions. All responses include a revision token. Note: For requests that use the revision token, include the same query parameters from the initial request. Use the revision token from the previous HistoryResponse.
     ///- Parameter version:      The version of the Get Transaction History endpoint to use. V2 is recommended.
     ///- Returns: A response that contains the customer’s transaction history for an app, or information about the failure
     ///[Get Transaction History](https://developer.apple.com/documentation/appstoreserverapi/get_transaction_history)
-    public func getTransactionHistory(transactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion) async -> APIResult<HistoryResponse> {
+    public func getTransactionHistory(anyTransactionId: String, revision: String?, transactionHistoryRequest: TransactionHistoryRequest, version: GetTransactionHistoryVersion) async -> APIResult<HistoryResponse> {
         let request: String? = nil
         var queryParams: [String: [String]] = [:]
         if let innerRevision = revision {
@@ -315,7 +315,7 @@ public actor AppStoreServerAPIClient: Sendable {
         if let innerRevoked = transactionHistoryRequest.revoked {
             queryParams["revoked"] = [String(innerRevoked)]
         }
-        return await makeRequestWithResponseBody(path: "/inApps/" + version.rawValue + "/history/" + transactionId, method: .GET, queryParameters: queryParams, body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/" + version.rawValue + "/history/" + anyTransactionId, method: .GET, queryParameters: queryParams, body: request)
     }
 
     ///Get information about a single transaction for your app.
@@ -534,12 +534,22 @@ public actor AppStoreServerAPIClient: Sendable {
     }
 
     ///Get a customer's app transaction information for your app.
-    ///- Parameter transactionId: Any originalTransactionId, transactionId or appTransactionId that belongs to the customer for your app.
+    ///- Parameter anyTransactionId: Any transactionId, originalTransactionId, or appTransactionId that belongs to the customer for your app.
     ///- Returns: A response that contains signed app transaction information for a customer.
     ///[Get App Transaction Info](https://developer.apple.com/documentation/appstoreserverapi/get-app-transaction-info)
-    public func getAppTransactionInfo(transactionId: String) async -> APIResult<AppTransactionInfoResponse> {
+    public func getAppTransactionInfo(anyTransactionId: String) async -> APIResult<AppTransactionInfoResponse> {
         let request: String? = nil
-        return await makeRequestWithResponseBody(path: "/inApps/v1/transactions/appTransactions/" + transactionId, method: .GET, queryParameters: [:], body: request)
+        return await makeRequestWithResponseBody(path: "/inApps/v1/transactions/appTransactions/" + anyTransactionId, method: .GET, queryParameters: [:], body: request)
+    }
+
+    ///Notifies the App Store server that your system has finished processing the customer's transaction.
+    ///
+    ///- Parameter transactionId: The transaction identifier of the transaction to mark as finished.
+    ///- Returns: Success, or information about the failure
+    ///[Finish Transaction](https://developer.apple.com/documentation/appstoreserverapi/finish-transaction)
+    public func finishTransaction(transactionId: String) async -> APIResult<Void> {
+        let request: String? = nil
+        return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/" + transactionId + "/finish", method: .POST, queryParameters: [:], body: request)
     }
 
     internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
