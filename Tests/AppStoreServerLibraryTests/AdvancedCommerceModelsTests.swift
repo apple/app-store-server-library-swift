@@ -645,6 +645,54 @@ final class AdvancedCommerceModelsTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(response)
     }
 
+    public func testOneTimeChargeCreateRequestDeserializationSetsOperationAndVersion() throws {
+        let json = TestingUtility.readFile("resources/models/advancedCommerceOneTimeChargeCreateRequest.json")
+        let jsonDecoder = getJsonDecoder()
+
+        let request = try jsonDecoder.decode(AdvancedCommerceOneTimeChargeCreateRequest.self, from: json.data(using: .utf8)!)
+
+        let encoded = try getJsonEncoder().encode(request)
+        let node = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        XCTAssertEqual("CREATE_ONE_TIME_CHARGE", node["operation"] as? String)
+        XCTAssertEqual("1", node["version"] as? String)
+    }
+
+    public func testSubscriptionCreateRequestDeserializationSetsOperationAndVersion() throws {
+        let json = TestingUtility.readFile("resources/models/advancedCommerceSubscriptionCreateRequest.json")
+        let jsonDecoder = getJsonDecoder()
+
+        let request = try jsonDecoder.decode(AdvancedCommerceSubscriptionCreateRequest.self, from: json.data(using: .utf8)!)
+
+        let encoded = try getJsonEncoder().encode(request)
+        let node = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        XCTAssertEqual("CREATE_SUBSCRIPTION", node["operation"] as? String)
+        XCTAssertEqual("1", node["version"] as? String)
+    }
+
+    public func testSubscriptionModifyInAppRequestDeserializationSetsOperationAndVersion() throws {
+        let json = TestingUtility.readFile("resources/models/advancedCommerceSubscriptionModifyInAppRequest.json")
+        let jsonDecoder = getJsonDecoder()
+
+        let request = try jsonDecoder.decode(AdvancedCommerceSubscriptionModifyInAppRequest.self, from: json.data(using: .utf8)!)
+
+        let encoded = try getJsonEncoder().encode(request)
+        let node = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        XCTAssertEqual("MODIFY_SUBSCRIPTION", node["operation"] as? String)
+        XCTAssertEqual("1", node["version"] as? String)
+    }
+
+    public func testSubscriptionReactivateInAppRequestDeserializationSetsOperationAndVersion() throws {
+        let json = TestingUtility.readFile("resources/models/advancedCommerceSubscriptionReactivateInAppRequest.json")
+        let jsonDecoder = getJsonDecoder()
+
+        let request = try jsonDecoder.decode(AdvancedCommerceSubscriptionReactivateInAppRequest.self, from: json.data(using: .utf8)!)
+
+        let encoded = try getJsonEncoder().encode(request)
+        let node = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+        XCTAssertEqual("REACTIVATE_SUBSCRIPTION", node["operation"] as? String)
+        XCTAssertEqual("1", node["version"] as? String)
+    }
+
     public func testAdvancedCommercePriceIncreaseInfoStatus() throws {
         XCTAssertEqual("SCHEDULED", AdvancedCommercePriceIncreaseInfoStatus.scheduled.rawValue)
         XCTAssertEqual("PENDING", AdvancedCommercePriceIncreaseInfoStatus.pending.rawValue)
