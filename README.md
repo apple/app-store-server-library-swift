@@ -146,7 +146,7 @@ let signatureCreator = try! PromotionalOfferSignatureCreator(privateKey: encoded
 
 let nonce = UUID()
 let timestamp = Int64(Date().timeIntervalSince1970) * 1000
-let signature = signatureCreator.createSignature(productIdentifier: productIdentifier, subscriptionOfferID: subscriptionOfferID, appAccountToken: appAccountToken, nonce: nonce, timestamp: timestamp)
+let signature = try! signatureCreator.createSignature(productIdentifier: productId, subscriptionOfferID: subscriptionOfferId, appAccountToken: appAccountToken, nonce: nonce, timestamp: timestamp)
 print(signature)
 ```
 
