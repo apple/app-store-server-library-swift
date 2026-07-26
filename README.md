@@ -79,7 +79,7 @@ let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId:
 let notificationPayload = "ey..."
 let notificationResult = await verifier.verifyAndDecodeNotification(signedPayload: notificationPayload)
 switch notificationResult {
-case .valid(let decodedNotificaiton):
+case .valid(let decodedNotification):
     ...
 case .invalid(let error):
     ...
