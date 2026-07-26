@@ -117,8 +117,8 @@ if let transactionId = transactionIdOptional {
         case .success(let successfulResponse):
             response = successfulResponse
         case .failure:
-            // Handle Failure
-            throw
+            // Handle failure; fatalError used for example purposes only
+            fatalError("Failed to fetch transaction history")
         }
         if let signedTransactions = response?.signedTransactions {
             transactions.append(contentsOf: signedTransactions)
