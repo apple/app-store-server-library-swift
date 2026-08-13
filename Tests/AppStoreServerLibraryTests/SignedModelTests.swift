@@ -134,6 +134,8 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        XCTAssertNil(notification.externalPurchaseToken!.tokenType)
+        XCTAssertNil(notification.externalPurchaseToken!.rawTokenType)
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
@@ -166,9 +168,45 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        XCTAssertNil(notification.externalPurchaseToken!.tokenType)
+        XCTAssertNil(notification.externalPurchaseToken!.rawTokenType)
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
-    
+
+    public func testExternalPurchaseTokenWithTokenTypeNotificationDecoding() async throws {
+        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenNotificationWithTokenType.json")
+
+        let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
+            XCTAssertEqual("com.example", bundleId)
+            XCTAssertEqual(55555, appAppleId)
+            XCTAssertEqual(.production, environment)
+            return nil
+        }
+
+        guard case .valid(let notification) = verifiedNotification else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual(NotificationTypeV2.externalPurchaseToken, notification.notificationType)
+        XCTAssertEqual("EXTERNAL_PURCHASE_TOKEN", notification.rawNotificationType)
+        XCTAssertEqual(Subtype.unreported, notification.subtype)
+        XCTAssertEqual("UNREPORTED", notification.rawSubtype)
+        XCTAssertEqual("002e14d5-51f5-4503-b5a8-c3a1af68eb20", notification.notificationUUID)
+        XCTAssertEqual("2.0", notification.version)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), notification.signedDate)
+        XCTAssertNil(notification.data)
+        XCTAssertNil(notification.summary)
+        XCTAssertNotNil(notification.externalPurchaseToken)
+        XCTAssertEqual("b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
+        XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
+        XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
+        XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        XCTAssertEqual(notification.externalPurchaseToken!.tokenType, .acquisition)
+        XCTAssertEqual(notification.externalPurchaseToken!.rawTokenType, "ACQUISITION")
+        TestingUtility.confirmCodableInternallyConsistent(notification)
+    }
+
     public func testTransactionDecoding() async throws {
         let signedTransaction = TestingUtility.createSignedDataFromJson("resources/models/signedTransaction.json")
 
