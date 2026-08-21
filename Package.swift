@@ -37,7 +37,11 @@ let package = Package(
             ]),
         .testTarget(
             name: "AppStoreServerLibraryTests",
-            dependencies: ["AppStoreServerLibrary"],
+            dependencies: [
+                "AppStoreServerLibrary",
+                // Generates the throwaway RSA keys the app receipt test PKI signs with
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+            ],
             resources: [.copy("resources")]
         ),
     ]

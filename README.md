@@ -128,6 +128,38 @@ if let transactionId = transactionIdOptional {
 }
 ```
 
+### App Receipt Verification Usage
+
+```swift
+import AppStoreServerLibrary
+
+let bundleId = "com.example"
+let appleRootCAs = loadRootCAs() // Specific implementation may vary
+let enableOnlineChecks = true
+let environment = AppStoreEnvironment.sandbox
+
+// try! used for example purposes only
+let verifier = try! AppReceiptVerifier(rootCertificates: appleRootCAs, bundleId: bundleId, environment: environment, enableOnlineChecks: enableOnlineChecks)
+
+let appReceipt = "MI..."
+let receiptResult = await verifier.verifyAndDecodeAppReceipt(encodedReceipt: appReceipt)
+switch receiptResult {
+case .valid(let decodedReceipt):
+    ...
+case .invalid(let error):
+    ...
+}
+
+let transactionIdResult = await verifier.verifyAndExtractTransactionId(encodedReceipt: appReceipt)
+switch transactionIdResult {
+case .valid(let transactionIdOptional):
+    // nil when the receipt contains no in-app purchases
+    ...
+case .invalid(let error):
+    ...
+}
+```
+
 ### Promotional Offer Signature Creation
 
 ```swift
