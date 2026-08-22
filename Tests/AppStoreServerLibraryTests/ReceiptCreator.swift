@@ -79,7 +79,9 @@ public final class ReceiptCreator: Sendable {
     ///BouncyCastle does, rather than over the payload directly, as genuine App Store receipts do
     ///- Parameter segmentedContent: Whether to encapsulate the payload in a constructed, segmented OCTET STRING, the
     ///BER shape genuine App Store receipts arrive in, rather than a single primitive one
-    public func signReceipt(_ payload: [UInt8], embeddedCertificates: Int? = nil, signingTime: Date = Date(), signedAttributes: Bool = true, segmentedContent: Bool = false) throws -> Data {
+    ///- Parameter paddingCertificates: Unrelated certificates embedded on top of the chain, as a receipt bloated to
+    ///make chain assembly expensive carries
+    public func signReceipt(_ payload: [UInt8], embeddedCertificates: Int? = nil, signingTime: Date = Date(), signedAttributes: Bool = true, segmentedContent: Bool = false, paddingCertificates: Int = 0) throws -> Data {
         let signedAttributeBytes = signedAttributes ? try ReceiptCreator.signedAttributeSet(payload: payload, signingTime: signingTime) : nil
         let signature = try signingKey.signature(for: SHA256.hash(data: signedAttributeBytes ?? payload), padding: .insecurePKCS1v1_5)
 
@@ -108,6 +110,9 @@ public final class ReceiptCreator: Sendable {
                     coder.appendConstructedNode(identifier: ReceiptCreator.CONTEXT_TAG_0) { coder in
                         for certificate in chain.prefix(embeddedCertificates ?? chain.count) {
                             try! coder.serialize(certificate)
+                        }
+                        for index in 0..<paddingCertificates {
+                            try! coder.serialize(try! ReceiptCreator.paddingCertificate(index))
                         }
                     }
                     try coder.serializeSetOf([try signerInfo(signedAttributeBytes: signedAttributeBytes, signature: signature)])
@@ -256,6 +261,13 @@ public final class ReceiptCreator: Sendable {
 
     private static func rsaKey() throws -> _RSA.Signing.PrivateKey {
         return try _RSA.Signing.PrivateKey(keySize: .bits2048)
+    }
+
+    ///A self-signed certificate carrying the WWDR subject name, so that it is a candidate at every step of chain
+    ///assembly rather than being skipped after one comparison.
+    private static func paddingCertificate(_ index: Int) throws -> Certificate {
+        let key = try rsaKey()
+        return try certificate(subject: distinguishedName("Test WWDR CA"), subjectKey: key, issuer: distinguishedName("Test WWDR CA"), issuerKey: key, certificateAuthority: true, markerOid: nil, notBefore: daysAgo(3650), notAfter: inOneYear())
     }
 
     private static func distinguishedName(_ commonName: String) -> DistinguishedName {

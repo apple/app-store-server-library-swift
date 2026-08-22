@@ -37,6 +37,7 @@ public struct AppReceiptVerifier: Sendable {
     private static let IAP_IS_IN_INTRO_OFFER_PERIOD = Int64(1719)
 
     private static let EXPECTED_CHAIN_LENGTH = 3
+    private static let MAXIMUM_EMBEDDED_CERTIFICATES = 10
 
     private var bundleId: String
     private var environment: AppStoreEnvironment
@@ -103,8 +104,12 @@ public struct AppReceiptVerifier: Sendable {
     }
 
     ///Verifies an app receipt and extracts a transaction id from its in-app purchases, the validated counterpart of
-    ///``ReceiptUtility/extractTransactionId(appReceipt:)`` with the same output contract: a transaction id from the
-    ///array of in-app purchases, or nil if the receipt contains none.
+    ///``ReceiptUtility/extractTransactionId(appReceipt:)``: a transaction id from the array of in-app purchases, or
+    ///nil if the receipt contains none.
+    ///
+    ///Which id, for a receipt carrying several, is deterministic here and is not the one ``ReceiptUtility`` returns:
+    ///this takes the first in-app purchase that carries an identifier, preferring its transaction id over its
+    ///original transaction id, where ``ReceiptUtility`` keeps overwriting and so yields the last.
     ///
     ///- Parameter encodedReceipt The base64-encoded app receipt
     ///- Returns: If success, a transaction id from the receipt's in-app purchases, nil if the receipt contains no
@@ -131,6 +136,12 @@ public struct AppReceiptVerifier: Sendable {
     ///leaf OID, and validates to the caller-supplied Apple roots. As with JWS signed data, the root of the chain comes
     ///from the caller, not from the receipt.
     private func verifyChain(signedData: PKCS7SignedData, effectiveDate: Date) async -> VerificationResult<Certificate> {
+        // The embedded certificates are attacker-supplied and are ordered into a chain below, before anything about
+        // the receipt has been verified, so a receipt carrying more of them than a chain can hold is rejected here
+        // rather than assembled.
+        guard signedData.certificates.count <= AppReceiptVerifier.MAXIMUM_EMBEDDED_CERTIFICATES else {
+            return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
+        }
         guard let leaf = signedData.signerCertificate() else {
             return VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE)
         }

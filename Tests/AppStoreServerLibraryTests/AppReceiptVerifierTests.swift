@@ -8,6 +8,7 @@ import SwiftASN1
 final class AppReceiptVerifierTests: XCTestCase {
 
     private static let BUNDLE_ID = "com.example"
+    private static let XCODE_BUNDLE_ID = "com.example.naturelab.backyardbirds.example"
     private static let APP_VERSION = "1.2.3"
     private static let ORIGINAL_APP_VERSION = "1.0"
     private static let OPAQUE_VALUE: [UInt8] = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -241,6 +242,66 @@ final class AppReceiptVerifierTests: XCTestCase {
 
         let verifier = AppReceiptVerifierTests.verifier(AppReceiptVerifierTests.xcodeReceiptCreator, environment: .xcode)
         await assertInvalid(.INVALID_ENVIRONMENT, await verifier.verifyAndDecodeAppReceipt(encodedReceipt: encode(receipt)))
+    }
+
+    ///The embedded certificates are attacker-supplied and are ordered into a chain before anything about the receipt
+    ///has been verified, so a receipt carrying more of them than a chain can hold is rejected rather than assembled.
+    public func testReceiptWithTooManyEmbeddedCertificates() async throws {
+        let receipt = try AppReceiptVerifierTests.receiptCreator.signReceipt(AppReceiptVerifierTests.receiptPayload("ProductionSandbox", AppReceiptVerifierTests.BUNDLE_ID, AppReceiptVerifierTests.RECEIPT_CREATION_DATE), paddingCertificates: 30)
+
+        let verifier = AppReceiptVerifierTests.verifier(environment: .sandbox)
+        await assertInvalid(.VERIFICATION_FAILURE, await verifier.verifyAndDecodeAppReceipt(encodedReceipt: encode(receipt)))
+    }
+
+    ///A receipt Xcode actually produced, which unlike the synthetic ones above is BER with indefinite lengths,
+    ///segmented octet strings and a double-wrapped payload.
+    public func testXcodeGeneratedAppReceiptDecoding() async throws {
+        let verifier = try AppReceiptVerifier(rootCertificates: [TestingUtility.readBytes("resources/certs/testCA.der")], bundleId: AppReceiptVerifierTests.XCODE_BUNDLE_ID, environment: .xcode, enableOnlineChecks: false)
+
+        let receipt = try await validReceipt(await verifier.verifyAndDecodeAppReceipt(encodedReceipt: TestingUtility.readFile("resources/xcode/xcode-app-receipt-with-transaction")))
+
+        XCTAssertEqual("Xcode", receipt.receiptType)
+        XCTAssertEqual(AppReceiptVerifierTests.XCODE_BUNDLE_ID, receipt.bundleId)
+        XCTAssertEqual("1", receipt.applicationVersion)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1697679940), receipt.receiptCreationDate)
+        XCTAssertEqual(1, receipt.inAppPurchases.count)
+        XCTAssertEqual("pass.premium", receipt.inAppPurchases[0].productId)
+        XCTAssertEqual("0", receipt.inAppPurchases[0].transactionId)
+    }
+
+    ///The output contract this shares with ReceiptUtility, checked against the same receipts.
+    public func testXcodeGeneratedAppReceiptTransactionIdExtraction() async throws {
+        let verifier = try AppReceiptVerifier(rootCertificates: [TestingUtility.readBytes("resources/certs/testCA.der")], bundleId: AppReceiptVerifierTests.XCODE_BUNDLE_ID, environment: .xcode, enableOnlineChecks: false)
+
+        switch await verifier.verifyAndExtractTransactionId(encodedReceipt: TestingUtility.readFile("resources/xcode/xcode-app-receipt-with-transaction")) {
+        case .valid(let transactionId):
+            XCTAssertEqual("0", transactionId)
+        case .invalid(let error):
+            XCTFail("Expected a valid receipt, got \(error)")
+        }
+        switch await verifier.verifyAndExtractTransactionId(encodedReceipt: TestingUtility.readFile("resources/xcode/xcode-app-receipt-empty")) {
+        case .valid(let transactionId):
+            XCTAssertNil(transactionId)
+        case .invalid(let error):
+            XCTFail("Expected a valid receipt, got \(error)")
+        }
+    }
+
+    ///As with an Xcode receipt, LocalTesting data is not signed by the App Store.
+    public func testLocalTestingReceiptDecoding() async throws {
+        let receipt = try AppReceiptVerifierTests.xcodeReceiptCreator.signReceipt(AppReceiptVerifierTests.receiptPayload("LocalTesting", AppReceiptVerifierTests.BUNDLE_ID, AppReceiptVerifierTests.RECEIPT_CREATION_DATE))
+
+        let decoded = try await validReceipt(AppReceiptVerifierTests.verifier(AppReceiptVerifierTests.xcodeReceiptCreator, environment: .localTesting).verifyAndDecodeAppReceipt(encodedReceipt: encode(receipt)))
+        XCTAssertEqual("LocalTesting", decoded.receiptType)
+        XCTAssertEqual(AppReceiptVerifierTests.BUNDLE_ID, decoded.bundleId)
+    }
+
+    ///Skipping the signature checks must not skip the app identity check.
+    public func testLocalTestingReceiptWithWrongBundleId() async throws {
+        let receipt = try AppReceiptVerifierTests.xcodeReceiptCreator.signReceipt(AppReceiptVerifierTests.receiptPayload("LocalTesting", AppReceiptVerifierTests.BUNDLE_ID, AppReceiptVerifierTests.RECEIPT_CREATION_DATE))
+
+        let verifier = AppReceiptVerifierTests.verifier(AppReceiptVerifierTests.xcodeReceiptCreator, environment: .localTesting, bundleId: "com.example.other")
+        await assertInvalid(.INVALID_APP_IDENTIFIER, await verifier.verifyAndDecodeAppReceipt(encodedReceipt: encode(receipt)))
     }
 
     public func testVerifyAndExtractTransactionId() async throws {
