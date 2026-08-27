@@ -79,7 +79,7 @@ let verifier = try! SignedDataVerifier(rootCertificates: appleRootCAs, bundleId:
 let notificationPayload = "ey..."
 let notificationResult = await verifier.verifyAndDecodeNotification(signedPayload: notificationPayload)
 switch notificationResult {
-case .valid(let decodedNotificaiton):
+case .valid(let decodedNotification):
     ...
 case .invalid(let error):
     ...
@@ -112,13 +112,13 @@ if let transactionId = transactionIdOptional {
     var transactions: [String] = []
     repeat {
         let revisionToken = response?.revision
-        let apiResponse = await client.getTransactionHistory(transactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest, version: .v2)
+        let apiResponse = await client.getTransactionHistory(anyTransactionId: transactionId, revision: revisionToken, transactionHistoryRequest: transactionHistoryRequest, version: .v2)
         switch apiResponse {
         case .success(let successfulResponse):
             response = successfulResponse
         case .failure:
-            // Handle Failure
-            throw
+            // Handle failure; fatalError used for example purposes only
+            fatalError("Failed to fetch transaction history")
         }
         if let signedTransactions = response?.signedTransactions {
             transactions.append(contentsOf: signedTransactions)
@@ -146,7 +146,7 @@ let signatureCreator = try! PromotionalOfferSignatureCreator(privateKey: encoded
 
 let nonce = UUID()
 let timestamp = Int64(Date().timeIntervalSince1970) * 1000
-let signature = signatureCreator.createSignature(productIdentifier: productIdentifier, subscriptionOfferID: subscriptionOfferID, appAccountToken: appAccountToken, nonce: nonce, timestamp: timestamp)
+let signature = try! signatureCreator.createSignature(productIdentifier: productId, subscriptionOfferID: subscriptionOfferId, appAccountToken: appAccountToken, nonce: nonce, timestamp: timestamp)
 print(signature)
 ```
 
