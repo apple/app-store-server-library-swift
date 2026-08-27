@@ -587,45 +587,77 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         let body = TestingUtility.readFile("resources/models/apiException.json")
         let client = try await getAppStoreServerAPIClient(body, .internalServerError, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(500, statusCode)
-        XCTAssertEqual(APIError.generalInternal, apiError)
-        XCTAssertEqual(5000000, rawApiError)
-        XCTAssertEqual("An unknown error occurred.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(500, failure.statusCode)
+        XCTAssertEqual(APIError.generalInternal, failure.apiError)
+        XCTAssertEqual(5000000, failure.rawApiError)
+        XCTAssertEqual("An unknown error occurred.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
     
     public func testAPITooManyRequests() async throws {
         let body = TestingUtility.readFile("resources/models/apiTooManyRequestsException.json")
         let client = try await getAppStoreServerAPIClient(body, .tooManyRequests, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(429, statusCode)
-        XCTAssertEqual(APIError.rateLimitExceeded, apiError)
-        XCTAssertEqual(4290000, rawApiError)
-        XCTAssertEqual("Rate limit exceeded.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(429, failure.statusCode)
+        XCTAssertEqual(APIError.rateLimitExceeded, failure.apiError)
+        XCTAssertEqual(4290000, failure.rawApiError)
+        XCTAssertEqual("Rate limit exceeded.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+        XCTAssertNil(failure.retryAfter)
+    }
+
+    public func testAPITooManyRequestsWithRetryAfter() async throws {
+        let body = TestingUtility.readFile("resources/models/apiTooManyRequestsException.json")
+        let client = try await getAppStoreServerAPIClient(body, .tooManyRequests, nil, [("Retry-After", "1698148900000")])
+        let result = await client.getTransactionInfo(transactionId: "1234")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(429, failure.statusCode)
+        XCTAssertEqual(APIError.rateLimitExceeded, failure.apiError)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), failure.retryAfter)
+        XCTAssertEqual(["1698148900000"], failure.headers["retry-after"])
+    }
+
+    public func testAPITooManyRequestsWithMalformedRetryAfter() async throws {
+        let body = TestingUtility.readFile("resources/models/apiTooManyRequestsException.json")
+        let rawRetryAfterValues = ["", " ", "not-a-number", "1698148900000.0", "+1698148900000",
+                                   "-1698148900000", "1698148900000abc", "99999999999999999999",
+                                   "Wed, 21 Oct 2015 07:28:00 GMT"]
+        for rawRetryAfter in rawRetryAfterValues {
+            let client = try await getAppStoreServerAPIClient(body, .tooManyRequests, nil, [("Retry-After", rawRetryAfter)])
+            let result = await client.getTransactionInfo(transactionId: "1234")
+            guard case .failure(let failure) = result else {
+                XCTAssertTrue(false)
+                return
+            }
+            XCTAssertEqual(429, failure.statusCode)
+            XCTAssertNil(failure.retryAfter, "Expected no retryAfter for raw value \"\(rawRetryAfter)\"")
+        }
     }
     
     public func testAPIUnknownError() async throws {
         let body = TestingUtility.readFile("resources/models/apiUnknownError.json")
         let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
         let result = await client.getTransactionInfo(transactionId: "1234")
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(400, statusCode)
-        XCTAssertNil(apiError)
-        XCTAssertEqual(9990000, rawApiError)
-        XCTAssertEqual("Testing error.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertNil(failure.apiError)
+        XCTAssertEqual(9990000, failure.rawApiError)
+        XCTAssertEqual("Testing error.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
     
     public func testDecodingWithUnknownEnumValue() async throws {
@@ -670,15 +702,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         
         let response = await client.getTransactionHistory(anyTransactionId: "1234", revision: "revision_input", transactionHistoryRequest: request)
         
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = response else {
+        guard case .failure(let failure) = response else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertNil(statusCode)
-        XCTAssertNil(rawApiError)
-        XCTAssertNil(apiError)
-        XCTAssertNil(errorMessage)
-        XCTAssertNotNil(causedBy)
+        XCTAssertNil(failure.statusCode)
+        XCTAssertNil(failure.rawApiError)
+        XCTAssertNil(failure.apiError)
+        XCTAssertNil(failure.errorMessage)
+        XCTAssertNotNil(failure.causedBy)
     }
     
     public func testXcodeEnvironmentForAppStoreServerAPIClient() async throws {
@@ -721,15 +753,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
         let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(400, statusCode)
-        XCTAssertNotNil(apiError)
-        XCTAssertEqual(4000183, rawApiError)
-        XCTAssertEqual("Invalid request. The app account token field must be a valid UUID.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(4000183, failure.rawApiError)
+        XCTAssertEqual("Invalid request. The app account token field must be a valid UUID.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
 
     public func testFamilySharedTransactionNotSupportedError() async throws {
@@ -739,15 +771,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
         let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(400, statusCode)
-        XCTAssertNotNil(apiError)
-        XCTAssertEqual(4000185, rawApiError)
-        XCTAssertEqual("Invalid request. Family Sharing transactions aren't supported by this endpoint.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(4000185, failure.rawApiError)
+        XCTAssertEqual("Invalid request. Family Sharing transactions aren't supported by this endpoint.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
 
     public func testTransactionIdNotOriginalTransactionIdError() async throws {
@@ -757,15 +789,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813")!
         )
         let result = await client.setAppAccountToken(originalTransactionId: "1234", updateAppAccountTokenRequest: updateAppAccountTokenRequest)
-        guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+        guard case .failure(let failure) = result else {
             XCTAssertTrue(false)
             return
         }
-        XCTAssertEqual(400, statusCode)
-        XCTAssertNotNil(apiError)
-        XCTAssertEqual(4000187, rawApiError)
-        XCTAssertEqual("Invalid request. The transaction ID provided is not an original transaction ID.", errorMessage)
-        XCTAssertNil(causedBy)
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(4000187, failure.rawApiError)
+        XCTAssertEqual("Invalid request. The transaction ID provided is not an original transaction ID.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
 
     public func testUploadImage() async throws {
@@ -1091,45 +1123,45 @@ final class AppStoreServerAPIClientTests: XCTestCase {
          let body = TestingUtility.readFile("resources/models/invalidTransactionIdError.json")
          let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
          let result = await client.getAppTransactionInfo(anyTransactionId: "invalid_id")
-         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+         guard case .failure(let failure) = result else {
              XCTAssertTrue(false)
              return
          }
-         XCTAssertEqual(400, statusCode)
-         XCTAssertEqual(APIError.invalidTransactionId, apiError)
-         XCTAssertEqual(4000006, rawApiError)
-         XCTAssertEqual("Invalid transaction id.", errorMessage)
-         XCTAssertNil(causedBy)
+         XCTAssertEqual(400, failure.statusCode)
+         XCTAssertEqual(APIError.invalidTransactionId, failure.apiError)
+         XCTAssertEqual(4000006, failure.rawApiError)
+         XCTAssertEqual("Invalid transaction id.", failure.errorMessage)
+         XCTAssertNil(failure.causedBy)
      }
 
      public func testGetAppTransactionInfoTransactionIdNotFound() async throws {
          let body = TestingUtility.readFile("resources/models/transactionIdNotFoundError.json")
          let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
          let result = await client.getAppTransactionInfo(anyTransactionId: "not_found_id")
-         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+         guard case .failure(let failure) = result else {
              XCTAssertTrue(false)
              return
          }
-         XCTAssertEqual(404, statusCode)
-         XCTAssertEqual(APIError.transactionIdNotFound, apiError)
-         XCTAssertEqual(4040010, rawApiError)
-         XCTAssertEqual("Transaction id not found.", errorMessage)
-         XCTAssertNil(causedBy)
+         XCTAssertEqual(404, failure.statusCode)
+         XCTAssertEqual(APIError.transactionIdNotFound, failure.apiError)
+         XCTAssertEqual(4040010, failure.rawApiError)
+         XCTAssertEqual("Transaction id not found.", failure.errorMessage)
+         XCTAssertNil(failure.causedBy)
      }
 
      public func testGetAppTransactionInfoAppTransactionDoesNotExist() async throws {
          let body = TestingUtility.readFile("resources/models/appTransactionDoesNotExistError.json")
          let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
          let result = await client.getAppTransactionInfo(anyTransactionId: "no_app_transaction")
-         guard case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy) = result else {
+         guard case .failure(let failure) = result else {
              XCTAssertTrue(false)
              return
          }
-         XCTAssertEqual(404, statusCode)
-         XCTAssertEqual(APIError.AppTransactionDoesNotExistError, apiError)
-         XCTAssertEqual(4040019, rawApiError)
-         XCTAssertEqual("No AppTransaction exists for the customer.", errorMessage)
-         XCTAssertNil(causedBy)
+         XCTAssertEqual(404, failure.statusCode)
+         XCTAssertEqual(APIError.AppTransactionDoesNotExistError, failure.apiError)
+         XCTAssertEqual(4040019, failure.rawApiError)
+         XCTAssertEqual("No AppTransaction exists for the customer.", failure.errorMessage)
+         XCTAssertNil(failure.causedBy)
      }
 
     public func testFinishTransaction() async throws {
@@ -1156,11 +1188,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     }
 
     private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?) async throws -> AppStoreServerAPIClient {
+        return try await getAppStoreServerAPIClient(body, status, requestVerifier, [])
+    }
+
+    private func getAppStoreServerAPIClient(_ body: String, _ status: HTTPResponseStatus, _ requestVerifier: RequestVerifier?, _ responseHeaders: [(String, String)]) async throws -> AppStoreServerAPIClient {
         let key = getSigningKey()
         let client = try AppStoreServerAPIClient(signingKey: key, keyId: "keyId", issuerId: "issuerId", bundleId: "com.example", environment: AppStoreEnvironment.localTesting)
         await client.setExecuteRequestOverride { request, requestBody in
             try requestVerifier.map { try $0(request, requestBody) }
-            let headers = [("Content-Type", "application/json")]
+            let headers = [("Content-Type", "application/json")] + responseHeaders
             let bufferedBody = HTTPClientResponse.Body.bytes(.init(string: body))
             return HTTPClientResponse(version: .http1_1, status: status, headers: HTTPHeaders(headers), body: bufferedBody)
         }
