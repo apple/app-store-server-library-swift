@@ -93,7 +93,7 @@ public actor AppStoreServerAPIClient: Sendable {
             }
             
             guard let url = urlComponents?.url else {
-                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil)
+                return APIResult.failure(APIFailure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil, headers: [:]))
             }
             
             var urlRequest = HTTPClientRequest(url: url.absoluteString)
@@ -124,22 +124,24 @@ public actor AppStoreServerAPIClient: Sendable {
             }
             
             let response = try await executeRequest(urlRequest, requestBody)
+            let responseHeaders = APIFailure.normalizeHeaders(response.headers)
             var body = try await response.body.collect(upTo: 1024 * 1024)
             guard let data = body.readData(length: body.readableBytes) else {
-                throw APIFetchError()
+                throw APIFetchError(headers: responseHeaders)
             }
             if response.status.code >= 200 && response.status.code < 300 {
                 return APIResult.success(response: data)
             } else if let decodedBody = try? getJsonDecoder().decode(ErrorPayload.self, from: data), let errorCode = decodedBody.errorCode, let errorMessage = decodedBody.errorMessage {
-                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: errorCode, apiError: APIError.init(rawValue: errorCode), errorMessage: errorMessage, causedBy: nil)
+                return APIResult.failure(APIFailure(statusCode: Int(response.status.code), rawApiError: errorCode, apiError: APIError.init(rawValue: errorCode), errorMessage: errorMessage, causedBy: nil, headers: responseHeaders))
             } else {
-                return APIResult.failure(statusCode: Int(response.status.code), rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil)
+                return APIResult.failure(APIFailure(statusCode: Int(response.status.code), rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: nil, headers: responseHeaders))
             }
         } catch (let error) {
-            return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error)
+            let responseHeaders = (error as? APIFetchError)?.headers ?? [:]
+            return APIResult.failure(APIFailure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error, headers: responseHeaders))
         }
     }
-    
+
     // requestBody passed for testing purposes
     internal func executeRequest(_ urlRequest: HTTPClientRequest, _ requestBody: Data?) async throws -> HTTPClientResponse {
         if let override = executeRequestOverride {
@@ -147,7 +149,7 @@ public actor AppStoreServerAPIClient: Sendable {
         }
         return try await self.client.execute(urlRequest, timeout: .seconds(30))
     }
-    
+
     private func makeRequestWithResponseBody<T: Encodable, R: Decodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<R> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
@@ -157,20 +159,20 @@ public actor AppStoreServerAPIClient: Sendable {
                 let decodedBody = try decoder.decode(R.self, from: data)
                 return APIResult.success(response: decodedBody)
             } catch (let error) {
-                return APIResult.failure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error)
+                return APIResult.failure(APIFailure(statusCode: nil, rawApiError: nil, apiError: nil, errorMessage: nil, causedBy: error, headers: [:]))
             }
-        case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let error):
-            return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: error)
+        case .failure(let failure):
+            return APIResult.failure(failure)
         }
     }
-    
+
     private func makeRequestWithoutResponseBody<T: Encodable>(path: String, method: HTTPMethod, queryParameters: [String: [String]], body: T?) async -> APIResult<Void> {
         let response = await makeRequest(path: path, method: method, queryParameters: queryParameters, body: body)
         switch response {
             case .success:
                 return APIResult.success(response: ())
-            case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy):
-                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: causedBy)
+            case .failure(let failure):
+                return APIResult.failure(failure)
         }
     }
 
@@ -179,8 +181,8 @@ public actor AppStoreServerAPIClient: Sendable {
         switch response {
             case .success:
                 return APIResult.success(response: ())
-            case .failure(let statusCode, let rawApiError, let apiError, let errorMessage, let causedBy):
-                return APIResult.failure(statusCode: statusCode, rawApiError: rawApiError, apiError: apiError, errorMessage: errorMessage, causedBy: causedBy)
+            case .failure(let failure):
+                return APIResult.failure(failure)
         }
     }
 
@@ -563,12 +565,61 @@ public actor AppStoreServerAPIClient: Sendable {
         }
     }
     
-    private struct APIFetchError: Error {}
+    private struct APIFetchError: Error {
+        let headers: [String: [String]]
+    }
 }
 
 public enum APIResult<T: Sendable>: Sendable {
     case success(response: T)
-    case failure(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, errorMessage: String?, causedBy: Error?)
+    case failure(APIFailure)
+}
+
+public struct APIFailure: Sendable {
+    public let statusCode: Int?
+    public let rawApiError: Int64?
+    public let apiError: APIError?
+    public let errorMessage: String?
+    public let causedBy: Error?
+    ///The headers of the response, keyed by lowercased header name
+    public let headers: [String: [String]]
+
+    ///The time that informs you when you can next send a request
+    ///
+    ///[Identifying rate limits](https://developer.apple.com/documentation/appstoreserverapi/identifying-rate-limits)
+    public let retryAfter: Date?
+
+    internal init(statusCode: Int?, rawApiError: Int64?, apiError: APIError?, errorMessage: String?, causedBy: Error?, headers: [String: [String]]) {
+        self.statusCode = statusCode
+        self.rawApiError = rawApiError
+        self.apiError = apiError
+        self.errorMessage = errorMessage
+        self.causedBy = causedBy
+        self.headers = headers
+        self.retryAfter = APIFailure.parseRetryAfter(headers["retry-after"])
+    }
+
+    internal static func normalizeHeaders(_ headers: HTTPHeaders) -> [String: [String]] {
+        var normalizedHeaders: [String: [String]] = [:]
+        for (name, value) in headers {
+            normalizedHeaders[name.lowercased(), default: []].append(value)
+        }
+        return normalizedHeaders
+    }
+
+    internal static func parseRetryAfter(_ retryAfterValues: [String]?) -> Date? {
+        guard let rawRetryAfter = retryAfterValues?.first else {
+            return nil
+        }
+        let trimmedRetryAfter = rawRetryAfter.trimmingCharacters(in: .whitespaces)
+        guard !trimmedRetryAfter.isEmpty, trimmedRetryAfter.allSatisfy({ $0.isASCII && $0.isNumber }) else {
+            return nil
+        }
+        guard let retryAfter = Int64(trimmedRetryAfter) else {
+            return nil
+        }
+        return Date(timeIntervalSince1970: Double(retryAfter) / 1000.0)
+    }
 }
 
 public enum APIError: Int64, Hashable, Sendable {

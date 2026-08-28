@@ -53,12 +53,13 @@ let response = await client.requestTestNotification()
 switch response {
 case .success(let response):
     print(response.testNotificationToken)
-case .failure(let errorCode, let rawApiError, let apiError, let errorMessage, let causedBy):
-    print(errorCode)
-    print(rawApiError)
-    print(apiError)
-    print(errorMessage)
-    print(causedBy)
+case .failure(let failure):
+    print(failure.statusCode)
+    print(failure.rawApiError)
+    print(failure.apiError)
+    print(failure.errorMessage)
+    print(failure.causedBy)
+    print(failure.retryAfter)
 }
 ```
 
