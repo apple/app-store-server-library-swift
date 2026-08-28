@@ -134,6 +134,9 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        XCTAssertEqual(TokenType.acquisition, notification.externalPurchaseToken!.tokenType)
+        XCTAssertEqual("ACQUISITION", notification.externalPurchaseToken!.rawTokenType)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698149000), notification.externalPurchaseToken!.tokenExpirationDate)
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
@@ -166,6 +169,9 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
+        XCTAssertEqual(TokenType.acquisition, notification.externalPurchaseToken!.tokenType)
+        XCTAssertEqual("ACQUISITION", notification.externalPurchaseToken!.rawTokenType)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698149000), notification.externalPurchaseToken!.tokenExpirationDate)
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     

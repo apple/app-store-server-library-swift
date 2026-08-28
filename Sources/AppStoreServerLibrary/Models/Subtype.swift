@@ -21,4 +21,6 @@ public enum Subtype: String, Decodable, Encodable, Hashable, Sendable {
     case summary = "SUMMARY"
     case failure = "FAILURE"
     case unreported = "UNREPORTED"
+    case activeTokenReminder = "ACTIVE_TOKEN_REMINDER"
+    case created = "CREATED"
 }
