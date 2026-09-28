@@ -1178,6 +1178,215 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
     }
 
+    public func testChangeSubscriptionPrice() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionPriceChangeResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/changePrice/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("7C80BB86-F892-4B21-A919-1357811D6C4F", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("USD", decodedJson["currency"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+            let item = (decodedJson["items"] as! [[String: Any]])[0]
+            XCTAssertEqual("AD_FREE_1M", item["SKU"] as! String)
+            XCTAssertEqual(12990, item["price"] as! Int)
+            XCTAssertEqual(["ADVANCED_FEATURES_1M"], item["dependentSKUs"] as! [String])
+        }
+
+        let subscriptionPriceChangeRequest = try AdvancedCommerceSubscriptionPriceChangeRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "7c80bb86-f892-4b21-a919-1357811d6c4f")!),
+            items: [try AdvancedCommerceSubscriptionPriceChangeItem(sku: "AD_FREE_1M", price: 12990, dependentSKUs: ["ADVANCED_FEATURES_1M"])],
+            currency: "USD",
+            storefront: "USA"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(subscriptionPriceChangeRequest)
+
+        let response = await client.changeSubscriptionPrice(transactionId: "4124214", subscriptionPriceChangeRequest: subscriptionPriceChangeRequest)
+
+        guard case .success(let priceChangeResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_renewal_info", priceChangeResponse.signedRenewalInfo)
+        XCTAssertEqual("signed_transaction_info", priceChangeResponse.signedTransactionInfo)
+    }
+
+    public func testCancelSubscription() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionCancelResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/cancel/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+        }
+
+        let subscriptionCancelRequest = AdvancedCommerceSubscriptionCancelRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            storefront: "USA"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(subscriptionCancelRequest)
+
+        let response = await client.cancelSubscription(transactionId: "4124214", subscriptionCancelRequest: subscriptionCancelRequest)
+
+        guard case .success(let cancelResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_renewal_info", cancelResponse.signedRenewalInfo)
+        XCTAssertEqual("signed_transaction_info", cancelResponse.signedTransactionInfo)
+    }
+
+    public func testRevokeSubscription() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionRevokeResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/revoke/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("UNINTENDED_PURCHASE", decodedJson["refundReason"] as! String)
+            XCTAssertEqual(true, decodedJson["refundRiskingPreference"] as! Bool)
+            XCTAssertEqual("PRORATED", decodedJson["refundType"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+        }
+
+        let subscriptionRevokeRequest = AdvancedCommerceSubscriptionRevokeRequest(
+            refundReason: AdvancedCommerceRefundReason.unintendedPurchase,
+            refundRiskingPreference: true,
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            refundType: AdvancedCommerceRefundType.prorated,
+            storefront: "USA"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(subscriptionRevokeRequest)
+
+        let response = await client.revokeSubscription(transactionId: "4124214", subscriptionRevokeRequest: subscriptionRevokeRequest)
+
+        guard case .success(let revokeResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_renewal_info", revokeResponse.signedRenewalInfo)
+        XCTAssertEqual("signed_transaction_info", revokeResponse.signedTransactionInfo)
+    }
+
+    public func testRequestTransactionRefund() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceRequestRefundResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/transaction/requestRefund/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual(true, decodedJson["refundRiskingPreference"] as! Bool)
+            XCTAssertEqual("USD", decodedJson["currency"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+            let item = (decodedJson["items"] as! [[String: Any]])[0]
+            XCTAssertEqual("AD_FREE_1M", item["SKU"] as! String)
+            XCTAssertEqual("UNSATISFIED_WITH_PURCHASE", item["refundReason"] as! String)
+            XCTAssertEqual("FULL", item["refundType"] as! String)
+            XCTAssertEqual(true, item["revoke"] as! Bool)
+        }
+
+        let requestRefundRequest = try AdvancedCommerceRequestRefundRequest(
+            items: [try AdvancedCommerceRequestRefundItem(sku: "AD_FREE_1M", refundReason: AdvancedCommerceRefundReason.unsatisfiedWithPurchase, refundType: AdvancedCommerceRefundType.full, revoke: true)],
+            refundRiskingPreference: true,
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            currency: "USD",
+            storefront: "USA"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(requestRefundRequest)
+
+        let response = await client.requestTransactionRefund(transactionId: "4124214", requestRefundRequest: requestRefundRequest)
+
+        guard case .success(let requestRefundResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_transaction_info_value", requestRefundResponse.signedTransactionInfo)
+    }
+
+    public func testChangeSubscriptionMetadata() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionChangeMetadataResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/changeMetadata/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            let descriptors = decodedJson["descriptors"] as! [String: Any]
+            XCTAssertEqual("NEXT_BILL_CYCLE", descriptors["effective"] as! String)
+            XCTAssertEqual("Remove ads and unlock advanced features.", descriptors["description"] as! String)
+            XCTAssertEqual("Ad-free package", descriptors["displayName"] as! String)
+            let item = (decodedJson["items"] as! [[String: Any]])[0]
+            XCTAssertEqual("AD_FREE_1M", item["currentSKU"] as! String)
+            XCTAssertEqual("NEXT_BILL_CYCLE", item["effective"] as! String)
+            XCTAssertEqual("AD_FREE_1M_V2", item["SKU"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+            XCTAssertEqual("C003-00-1", decodedJson["taxCode"] as! String)
+        }
+
+        let subscriptionChangeMetadataRequest = AdvancedCommerceSubscriptionChangeMetadataRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            descriptors: try AdvancedCommerceSubscriptionChangeMetadataDescriptors(effective: AdvancedCommerceEffective.nextBillCycle, description: "Remove ads and unlock advanced features.", displayName: "Ad-free package"),
+            items: [try AdvancedCommerceSubscriptionChangeMetadataItem(effective: AdvancedCommerceEffective.nextBillCycle, currentSku: "AD_FREE_1M", sku: "AD_FREE_1M_V2")],
+            storefront: "USA",
+            taxCode: "C003-00-1"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(subscriptionChangeMetadataRequest)
+
+        let response = await client.changeSubscriptionMetadata(transactionId: "4124214", subscriptionChangeMetadataRequest: subscriptionChangeMetadataRequest)
+
+        guard case .success(let changeMetadataResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_renewal_info", changeMetadataResponse.signedRenewalInfo)
+        XCTAssertEqual("signed_transaction_info", changeMetadataResponse.signedTransactionInfo)
+    }
+
+    public func testMigrateSubscriptionToAdvancedCommerceAPI() async throws {
+        let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionMigrateResponse.json") { request, body in
+            XCTAssertEqual(.POST, request.method)
+            XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/migrate/4124214", request.url)
+
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            let descriptors = decodedJson["descriptors"] as! [String: Any]
+            XCTAssertEqual("Remove ads and unlock advanced features.", descriptors["description"] as! String)
+            XCTAssertEqual("Ad-free package", descriptors["displayName"] as! String)
+            let item = (decodedJson["items"] as! [[String: Any]])[0]
+            XCTAssertEqual("AD_FREE_1M", item["SKU"] as! String)
+            XCTAssertEqual("Remove ads for the service.", item["description"] as! String)
+            XCTAssertEqual("Ad-free monthly plan", item["displayName"] as! String)
+            XCTAssertEqual("com.example.base", decodedJson["targetProductId"] as! String)
+            XCTAssertEqual("C003-00-1", decodedJson["taxCode"] as! String)
+            XCTAssertEqual("USA", decodedJson["storefront"] as! String)
+        }
+
+        let subscriptionMigrateRequest = try AdvancedCommerceSubscriptionMigrateRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            descriptors: try AdvancedCommerceSubscriptionMigrateDescriptors(description: "Remove ads and unlock advanced features.", displayName: "Ad-free package"),
+            items: [try AdvancedCommerceSubscriptionMigrateItem(sku: "AD_FREE_1M", description: "Remove ads for the service.", displayName: "Ad-free monthly plan")],
+            targetProductId: "com.example.base",
+            taxCode: "C003-00-1",
+            storefront: "USA"
+        )
+
+        TestingUtility.confirmCodableInternallyConsistent(subscriptionMigrateRequest)
+
+        let response = await client.migrateSubscriptionToAdvancedCommerceAPI(transactionId: "4124214", subscriptionMigrateRequest: subscriptionMigrateRequest)
+
+        guard case .success(let migrateResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual("signed_renewal_info_value", migrateResponse.signedRenewalInfo)
+        XCTAssertEqual("signed_transaction_info_value", migrateResponse.signedTransactionInfo)
+    }
+
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) async throws -> AppStoreServerAPIClient {
         let body = TestingUtility.readFile(path)
         return try await getAppStoreServerAPIClient(body, requestVerifier)
