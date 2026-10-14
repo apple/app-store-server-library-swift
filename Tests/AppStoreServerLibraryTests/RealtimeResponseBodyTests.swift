@@ -22,7 +22,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertTrue(json.keys.contains("message"), "JSON should have 'message' field")
         let messageDict = json["message"] as! [String: Any]
         XCTAssertTrue(messageDict.keys.contains("messageIdentifier"), "Message should have 'messageIdentifier' field")
-        XCTAssertEqual("A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", messageDict["messageIdentifier"] as! String)
+        XCTAssertEqual("a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", messageDict["messageIdentifier"] as! String)
         XCTAssertFalse(json.keys.contains("alternateProduct"), "JSON should not have 'alternateProduct' field")
         XCTAssertFalse(json.keys.contains("promotionalOffer"), "JSON should not have 'promotionalOffer' field")
 
@@ -52,7 +52,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         let alternateProductDict = json["alternateProduct"] as! [String: Any]
         XCTAssertTrue(alternateProductDict.keys.contains("messageIdentifier"), "AlternateProduct should have 'messageIdentifier' field")
         XCTAssertTrue(alternateProductDict.keys.contains("productId"), "AlternateProduct should have 'productId' field")
-        XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", alternateProductDict["messageIdentifier"] as! String)
+        XCTAssertEqual("b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901", alternateProductDict["messageIdentifier"] as! String)
         XCTAssertEqual("com.example.alternate.product", alternateProductDict["productId"] as! String)
         XCTAssertEqual("MONTHLY", alternateProductDict["billingPlanType"] as! String)
         XCTAssertFalse(json.keys.contains("message"), "JSON should not have 'message' field")
@@ -87,7 +87,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         let promotionalOfferDict = json["promotionalOffer"] as! [String: Any]
         XCTAssertTrue(promotionalOfferDict.keys.contains("messageIdentifier"), "PromotionalOffer should have 'messageIdentifier' field")
         XCTAssertTrue(promotionalOfferDict.keys.contains("promotionalOfferSignatureV2"), "PromotionalOffer should have 'promotionalOfferSignatureV2' field")
-        XCTAssertEqual("C3D4E5F6-A789-0123-C3D4-E5F6A7890123", promotionalOfferDict["messageIdentifier"] as! String)
+        XCTAssertEqual("c3d4e5f6-a789-0123-c3d4-e5f6a7890123", promotionalOfferDict["messageIdentifier"] as! String)
         XCTAssertEqual("signature2", promotionalOfferDict["promotionalOfferSignatureV2"] as! String)
         XCTAssertFalse(promotionalOfferDict.keys.contains("promotionalOfferSignatureV1"), "PromotionalOffer should not have 'promotionalOfferSignatureV1' field")
         XCTAssertFalse(json.keys.contains("message"), "JSON should not have 'message' field")
@@ -114,7 +114,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
             encodedSignature: "base64encodedSignature",
             productId: "com.example.product",
             nonce: nonce,
-            timestamp: 1698148900000,
+            timestamp: Date(timeIntervalSince1970: 1698148900),
             keyId: "keyId123",
             offerIdentifier: "offer123",
             appAccountToken: appAccountToken
@@ -123,8 +123,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         let promotionalOffer = PromotionalOffer(messageIdentifier: messageId, promotionalOfferSignatureV1: signatureV1)
         let responseBody = RealtimeResponseBody(promotionalOffer: promotionalOffer)
 
-        // Serialize to JSON
-        let jsonData = try jsonEncoder.encode(responseBody)
+        let jsonData = try getJsonEncoder().encode(responseBody)
         let json = try JSONSerialization.jsonObject(with: jsonData) as! [String: Any]
 
         // Validate JSON structure
@@ -132,7 +131,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         let promotionalOfferDict = json["promotionalOffer"] as! [String: Any]
         XCTAssertTrue(promotionalOfferDict.keys.contains("messageIdentifier"), "PromotionalOffer should have 'messageIdentifier' field")
         XCTAssertTrue(promotionalOfferDict.keys.contains("promotionalOfferSignatureV1"), "PromotionalOffer should have 'promotionalOfferSignatureV1' field")
-        XCTAssertEqual("D4E5F6A7-8901-2345-D4E5-F6A789012345", promotionalOfferDict["messageIdentifier"] as! String)
+        XCTAssertEqual("d4e5f6a7-8901-2345-d4e5-f6a789012345", promotionalOfferDict["messageIdentifier"] as! String)
 
         let v1Dict = promotionalOfferDict["promotionalOfferSignatureV1"] as! [String: Any]
         XCTAssertTrue(v1Dict.keys.contains("encodedSignature"), "V1 signature should have 'encodedSignature' field")
@@ -154,8 +153,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertFalse(json.keys.contains("message"), "JSON should not have 'message' field")
         XCTAssertFalse(json.keys.contains("alternateProduct"), "JSON should not have 'alternateProduct' field")
 
-        // Deserialize back
-        let deserialized = try jsonDecoder.decode(RealtimeResponseBody.self, from: jsonData)
+        let deserialized = try getJsonDecoder().decode(RealtimeResponseBody.self, from: jsonData)
 
         // Verify
         XCTAssertNil(deserialized.message)
@@ -169,10 +167,89 @@ final class RealtimeResponseBodyTests: XCTestCase {
         XCTAssertEqual("com.example.product", deserializedV1.productId)
         XCTAssertEqual("offer123", deserializedV1.offerIdentifier)
         XCTAssertEqual(nonce, deserializedV1.nonce)
-        XCTAssertEqual(1698148900000, deserializedV1.timestamp)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), deserializedV1.timestamp)
         XCTAssertEqual("keyId123", deserializedV1.keyId)
         XCTAssertEqual(appAccountToken, deserializedV1.appAccountToken)
         XCTAssertEqual("base64encodedSignature", deserializedV1.encodedSignature)
+    }
+
+    public func testPromotionalOfferSignatureV1TimestampEncodesIntegerMilliseconds() throws {
+        let signatureV1 = PromotionalOfferSignatureV1(
+            encodedSignature: "base64encodedSignature",
+            productId: "com.example.product",
+            nonce: UUID(uuidString: "E5F6A789-0123-4567-E5F6-A78901234567")!,
+            timestamp: Date(timeIntervalSince1970: 1698148900.123),
+            keyId: "keyId123",
+            offerIdentifier: "offer123"
+        )
+        let responseBody = RealtimeResponseBody(promotionalOffer: PromotionalOffer(messageIdentifier: UUID(uuidString: "d4e5f6a7-8901-2345-d4e5-f6a789012345")!, promotionalOfferSignatureV1: signatureV1))
+
+        let jsonData = try getJsonEncoder().encode(responseBody)
+        let jsonString = String(data: jsonData, encoding: .utf8)!
+        XCTAssertTrue(jsonString.contains("\"timestamp\":1698148900123"), jsonString)
+        let v1Dict = ((try JSONSerialization.jsonObject(with: jsonData) as! [String: Any])["promotionalOffer"] as! [String: Any])["promotionalOfferSignatureV1"] as! [String: Any]
+        XCTAssertEqual(1698148900123, v1Dict["timestamp"] as! Int64)
+        XCTAssertEqual("e5f6a789-0123-4567-e5f6-a78901234567", v1Dict["nonce"] as! String)
+
+        let decoded = try getJsonDecoder().decode(RealtimeResponseBody.self, from: jsonData)
+        let decodedV1 = decoded.promotionalOffer!.promotionalOfferSignatureV1!
+        XCTAssertEqual(1698148900123, Int64((decodedV1.timestamp.timeIntervalSince1970 * 1000.0).rounded(.towardZero)))
+    }
+
+    public func testRealtimeResponseBodyWithPlainJSONEncoderAndDecoder() throws {
+        let signatureV1 = PromotionalOfferSignatureV1(
+            encodedSignature: "base64encodedSignature",
+            productId: "com.example.product",
+            nonce: UUID(uuidString: "e5f6a789-0123-4567-e5f6-a78901234567")!,
+            timestamp: Date(timeIntervalSince1970: 1698148900.1239),
+            keyId: "keyId123",
+            offerIdentifier: "offer123"
+        )
+        let responseBody = RealtimeResponseBody(promotionalOffer: PromotionalOffer(messageIdentifier: UUID(uuidString: "d4e5f6a7-8901-2345-d4e5-f6a789012345")!, promotionalOfferSignatureV1: signatureV1))
+
+        let plainData = try JSONEncoder().encode(responseBody)
+        let plainString = String(data: plainData, encoding: .utf8)!
+        XCTAssertTrue(plainString.contains("\"timestamp\":1698148900123,") || plainString.contains("\"timestamp\":1698148900123}"), plainString)
+        let plainJson = try JSONSerialization.jsonObject(with: plainData) as! NSDictionary
+        let v1Dict = (plainJson["promotionalOffer"] as! [String: Any])["promotionalOfferSignatureV1"] as! [String: Any]
+        XCTAssertEqual(1698148900123, v1Dict["timestamp"] as! Int64)
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: getJsonEncoder().encode(responseBody)) as! NSDictionary, plainJson)
+
+        let strategies: [JSONEncoder.DateEncodingStrategy] = [.deferredToDate, .secondsSince1970, .millisecondsSince1970, .iso8601]
+        for strategy in strategies {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = strategy
+            XCTAssertEqual(plainJson, try JSONSerialization.jsonObject(with: encoder.encode(responseBody)) as! NSDictionary)
+        }
+
+        let decoded = try JSONDecoder().decode(RealtimeResponseBody.self, from: plainData)
+        let decodedV1 = decoded.promotionalOffer!.promotionalOfferSignatureV1!
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900.123), decodedV1.timestamp)
+        XCTAssertEqual(try getJsonDecoder().decode(RealtimeResponseBody.self, from: plainData), decoded)
+        let isoDecoder = JSONDecoder()
+        isoDecoder.dateDecodingStrategy = .iso8601
+        XCTAssertEqual(decoded, try isoDecoder.decode(RealtimeResponseBody.self, from: plainData))
+    }
+
+    public func testPromotionalOfferSignatureV1DecodesFractionalMilliseconds() throws {
+        let json = "{\"encodedSignature\":\"sig\",\"productId\":\"p\",\"nonce\":\"e5f6a789-0123-4567-e5f6-a78901234567\",\"timestamp\":1698148900123.75,\"keyId\":\"k\",\"offerIdentifier\":\"o\"}"
+        let data = json.data(using: .utf8)!
+        let library = try getJsonDecoder().decode(PromotionalOfferSignatureV1.self, from: data)
+        let plain = try JSONDecoder().decode(PromotionalOfferSignatureV1.self, from: data)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148900123.75 / 1000.0), library.timestamp)
+        XCTAssertEqual(library, plain)
+        let v1Dict = try JSONSerialization.jsonObject(with: JSONEncoder().encode(plain)) as! [String: Any]
+        XCTAssertEqual(1698148900123, v1Dict["timestamp"] as! Int64)
+    }
+
+    public func testPromotionalOfferSignatureV1RejectsInvalidUUID() throws {
+        let json = "{\"encodedSignature\":\"sig\",\"productId\":\"p\",\"nonce\":\"not-a-uuid\",\"timestamp\":1698148900123,\"keyId\":\"k\",\"offerIdentifier\":\"o\"}"
+        XCTAssertThrowsError(try getJsonDecoder().decode(PromotionalOfferSignatureV1.self, from: json.data(using: .utf8)!)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                return XCTFail()
+            }
+            XCTAssertEqual("nonce", context.codingPath.last?.stringValue)
+        }
     }
 
     public func testRealtimeResponseBodyWithAdvancedCommerceInfo() throws {
@@ -186,7 +263,7 @@ final class RealtimeResponseBodyTests: XCTestCase {
 
         XCTAssertTrue(json.keys.contains("advancedCommerceInfo"))
         let acInfoDict = json["advancedCommerceInfo"] as! [String: Any]
-        XCTAssertEqual("A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", acInfoDict["messageIdentifier"] as! String)
+        XCTAssertEqual("a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", acInfoDict["messageIdentifier"] as! String)
         XCTAssertEqual(acData, acInfoDict["advancedCommerceData"] as! String)
         XCTAssertFalse(json.keys.contains("message"))
         XCTAssertFalse(json.keys.contains("alternateProduct"))

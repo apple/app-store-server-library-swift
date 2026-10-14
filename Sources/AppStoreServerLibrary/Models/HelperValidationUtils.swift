@@ -32,10 +32,11 @@ public struct HelperValidationUtils {
     /// - Returns: the validated SKU
     /// - Throws: if SKU exceeds maximum length
     public static func validateSku(_ sku: String) throws -> String {
-        guard sku.count <= maximumSkuLength else {
-            throw ValidationError.stringTooLong(fieldName: "SKU", maxLength: maximumSkuLength)
-        }
-        return sku
+        return try validateSku(sku, fieldName: "SKU")
+    }
+
+    internal static func validateSku(_ sku: String, fieldName: String) throws -> String {
+        return try validateString(sku, maxLength: maximumSkuLength, fieldName: fieldName)
     }
 
     ///Validates periodCount is not nil and between `minPeriod` and `maxPeriod` inclusive.
@@ -50,20 +51,24 @@ public struct HelperValidationUtils {
         return periodCount
     }
 
-    ///Validates a list of items is not empty and contains no nil elements.
+    ///Validates a list of items is not empty.
     ///
     /// - Parameter items: the list of items to validate
     /// - Returns: the validated list of items
     /// - Throws: if the list is empty
     public static func validateItems<T>(_ items: [T]) throws -> [T] {
+        return try validateItems(items, fieldName: "items")
+    }
+
+    internal static func validateItems<T>(_ items: [T], fieldName: String) throws -> [T] {
         guard !items.isEmpty else {
-            throw ValidationError.emptyList(fieldName: "items")
+            throw ValidationError.emptyList(fieldName: fieldName)
         }
         return items
     }
 
     private static func validateString(_ value: String, maxLength: Int, fieldName: String) throws -> String {
-        guard value.count <= maxLength else {
+        guard value.unicodeScalars.count <= maxLength else {
             throw ValidationError.stringTooLong(fieldName: fieldName, maxLength: maxLength)
         }
         return value

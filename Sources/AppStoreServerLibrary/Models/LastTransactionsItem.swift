@@ -4,17 +4,23 @@
 ///
 ///[lastTransactionsItem](https://developer.apple.com/documentation/appstoreserverapi/lasttransactionsitem)
 public struct LastTransactionsItem: Decodable, Encodable, Hashable, Sendable {
-    
-    public init(status: Status? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
-        self.init(rawStatus: status?.rawValue, originalTransactionId: originalTransactionId, signedTransactionInfo: signedTransactionInfo, signedRenewalInfo: signedRenewalInfo)
+
+    public init(originalTransactionId: String? = nil, status: Status? = nil, signedRenewalInfo: String? = nil, signedTransactionInfo: String? = nil) {
+        self.init(originalTransactionId: originalTransactionId, rawStatus: status?.rawValue, signedRenewalInfo: signedRenewalInfo, signedTransactionInfo: signedTransactionInfo)
     }
-    
-    public init(rawStatus: Int32? = nil, originalTransactionId: String? = nil, signedTransactionInfo: String? = nil, signedRenewalInfo: String? = nil) {
-        self.rawStatus = rawStatus
+
+    @_disfavoredOverload
+    public init(originalTransactionId: String? = nil, rawStatus: Int32? = nil, signedRenewalInfo: String? = nil, signedTransactionInfo: String? = nil) {
         self.originalTransactionId = originalTransactionId
-        self.signedTransactionInfo = signedTransactionInfo
+        self.rawStatus = rawStatus
         self.signedRenewalInfo = signedRenewalInfo
+        self.signedTransactionInfo = signedTransactionInfo
     }
+
+    ///The original transaction identifier of the auto-renewable subscription.
+    ///
+    ///[originalTransactionId](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionid)
+    public var originalTransactionId: String?
 
     ///The status of the auto-renewable subscription.
     ///
@@ -27,45 +33,40 @@ public struct LastTransactionsItem: Decodable, Encodable, Hashable, Sendable {
             self.rawStatus = newValue.map { $0.rawValue }
         }
     }
-    
+
     ///See ``status``
     public var rawStatus: Int32?
 
-    ///The original transaction identifier of a purchase.
+    ///The subscription renewal information signed by the App Store, in JSON Web Signature (JWS) format.
     ///
-    ///[originalTransactionId](https://developer.apple.com/documentation/appstoreserverapi/originaltransactionid)
-    public var originalTransactionId: String?
+    ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
+    public var signedRenewalInfo: String?
 
-    ///Transaction information signed by the App Store, in JSON Web Signature (JWS) format.
+    ///The transaction information signed by the App Store, in JWS format.
     ///
     ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     public var signedTransactionInfo: String?
 
-    ///Subscription renewal information, signed by the App Store, in JSON Web Signature (JWS) format.
-    ///
-    ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
-    public var signedRenewalInfo: String?
-    
     public enum CodingKeys: CodingKey {
-        case status
         case originalTransactionId
-        case signedTransactionInfo
+        case status
         case signedRenewalInfo
+        case signedTransactionInfo
     }
-    
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
         self.originalTransactionId = try container.decodeIfPresent(String.self, forKey: .originalTransactionId)
-        self.signedTransactionInfo = try container.decodeIfPresent(String.self, forKey: .signedTransactionInfo)
+        self.rawStatus = try container.decodeIfPresent(Int32.self, forKey: .status)
         self.signedRenewalInfo = try container.decodeIfPresent(String.self, forKey: .signedRenewalInfo)
+        self.signedTransactionInfo = try container.decodeIfPresent(String.self, forKey: .signedTransactionInfo)
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.rawStatus, forKey: .status)
         try container.encodeIfPresent(self.originalTransactionId, forKey: .originalTransactionId)
-        try container.encodeIfPresent(self.signedTransactionInfo, forKey: .signedTransactionInfo)
+        try container.encodeIfPresent(self.rawStatus, forKey: .status)
         try container.encodeIfPresent(self.signedRenewalInfo, forKey: .signedRenewalInfo)
+        try container.encodeIfPresent(self.signedTransactionInfo, forKey: .signedTransactionInfo)
     }
 }

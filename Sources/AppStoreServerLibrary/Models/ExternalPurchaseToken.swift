@@ -1,45 +1,52 @@
 // Copyright (c) 2024 Apple Inc. Licensed under MIT License.
 
 import Foundation
+
 ///The payload data that contains an external purchase token.
 ///
 ///[externalPurchaseToken](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchasetoken)
 public struct ExternalPurchaseToken: Decodable, Encodable, Hashable, Sendable {
 
-    public init(externalPurchaseId: String? = nil, tokenCreationDate: Int64? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, tokenType: TokenType? = nil, tokenExpirationDate: Date? = nil) {
-        self.init(externalPurchaseId: externalPurchaseId, tokenCreationDate: tokenCreationDate, appAppleId: appAppleId, bundleId: bundleId, rawTokenType: tokenType?.rawValue, tokenExpirationDate: tokenExpirationDate)
+    public init(externalPurchaseId: String, tokenCreationDate: Date, appAppleId: Int64, bundleId: String, tokenExpirationDate: Date? = nil, tokenType: TokenType? = nil) {
+        self.init(externalPurchaseId: externalPurchaseId, tokenCreationDate: tokenCreationDate, appAppleId: appAppleId, bundleId: bundleId, tokenExpirationDate: tokenExpirationDate, rawTokenType: tokenType?.rawValue)
     }
 
-    public init(externalPurchaseId: String? = nil, tokenCreationDate: Int64? = nil, appAppleId: Int64? = nil, bundleId: String? = nil, rawTokenType: String? = nil, tokenExpirationDate: Date? = nil) {
+    @_disfavoredOverload
+    public init(externalPurchaseId: String, tokenCreationDate: Date, appAppleId: Int64, bundleId: String, tokenExpirationDate: Date? = nil, rawTokenType: String? = nil) {
         self.externalPurchaseId = externalPurchaseId
         self.tokenCreationDate = tokenCreationDate
         self.appAppleId = appAppleId
         self.bundleId = bundleId
-        self.rawTokenType = rawTokenType
         self.tokenExpirationDate = tokenExpirationDate
+        self.rawTokenType = rawTokenType
     }
 
-    ///The field of an external purchase token that uniquely identifies the token.
+    ///The unique identifier of the token.
     ///
     ///[externalPurchaseId](https://developer.apple.com/documentation/appstoreservernotifications/externalpurchaseid)
-    public var externalPurchaseId: String?
+    public var externalPurchaseId: String
 
-    ///The field of an external purchase token that contains the UNIX date, in milliseconds, when the system created the token.
+    ///The UNIX time, in milliseconds, when the system created the token.
     ///
     ///[tokenCreationDate](https://developer.apple.com/documentation/appstoreservernotifications/tokencreationdate)
-    public var tokenCreationDate: Int64?
+    public var tokenCreationDate: Date
 
-    ///The unique identifier of an app in the App Store.
+    ///The app Apple ID for which the system generated the token.
     ///
     ///[appAppleId](https://developer.apple.com/documentation/appstoreservernotifications/appappleid)
-    public var appAppleId: Int64?
+    public var appAppleId: Int64
 
-    ///The bundle identifier of an app.
+    ///The bundle ID of the app for which the system generated the token.
     ///
     ///[bundleId](https://developer.apple.com/documentation/appstoreservernotifications/bundleid)
-    public var bundleId: String?
+    public var bundleId: String
 
-    ///The type of an external purchase custom link token.
+    ///The UNIX time, in milliseconds, when a token expires.
+    ///
+    ///[tokenExpirationDate](https://developer.apple.com/documentation/appstoreservernotifications/tokenexpirationdate)
+    public var tokenExpirationDate: Date?
+
+    ///The custom link token type, either SERVICES or ACQUISITION.
     ///
     ///[tokenType](https://developer.apple.com/documentation/appstoreservernotifications/tokentype)
     public var tokenType: TokenType? {
@@ -54,37 +61,32 @@ public struct ExternalPurchaseToken: Decodable, Encodable, Hashable, Sendable {
     ///See ``tokenType``
     public var rawTokenType: String?
 
-    ///The field of a custom link token that contains the UNIX date, in milliseconds, when the token expires.
-    ///
-    ///[tokenExpirationDate](https://developer.apple.com/documentation/appstoreservernotifications/tokenexpirationdate)
-    public var tokenExpirationDate: Date?
-
     public enum CodingKeys: CodingKey {
         case externalPurchaseId
         case tokenCreationDate
         case appAppleId
         case bundleId
-        case tokenType
         case tokenExpirationDate
+        case tokenType
     }
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.externalPurchaseId = try container.decodeIfPresent(String.self, forKey: .externalPurchaseId)
-        self.tokenCreationDate = try container.decodeIfPresent(Int64.self, forKey: .tokenCreationDate)
-        self.appAppleId = try container.decodeIfPresent(Int64.self, forKey: .appAppleId)
-        self.bundleId = try container.decodeIfPresent(String.self, forKey: .bundleId)
+        self.externalPurchaseId = try container.decode(String.self, forKey: .externalPurchaseId)
+        self.tokenCreationDate = try Date(timeIntervalSince1970: container.decode(Double.self, forKey: .tokenCreationDate) / 1000.0)
+        self.appAppleId = try container.decode(Int64.self, forKey: .appAppleId)
+        self.bundleId = try container.decode(String.self, forKey: .bundleId)
+        self.tokenExpirationDate = try container.decodeIfPresent(Double.self, forKey: .tokenExpirationDate).map { Date(timeIntervalSince1970: $0 / 1000.0) }
         self.rawTokenType = try container.decodeIfPresent(String.self, forKey: .tokenType)
-        self.tokenExpirationDate = try container.decodeIfPresent(Date.self, forKey: .tokenExpirationDate)
     }
 
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.externalPurchaseId, forKey: .externalPurchaseId)
-        try container.encodeIfPresent(self.tokenCreationDate, forKey: .tokenCreationDate)
-        try container.encodeIfPresent(self.appAppleId, forKey: .appAppleId)
-        try container.encodeIfPresent(self.bundleId, forKey: .bundleId)
+        try container.encode(self.externalPurchaseId, forKey: .externalPurchaseId)
+        try container.encode((self.tokenCreationDate.timeIntervalSince1970 * 1000.0).rounded(.towardZero), forKey: .tokenCreationDate)
+        try container.encode(self.appAppleId, forKey: .appAppleId)
+        try container.encode(self.bundleId, forKey: .bundleId)
+        try container.encodeIfPresent(self.tokenExpirationDate.map { ($0.timeIntervalSince1970 * 1000.0).rounded(.towardZero) }, forKey: .tokenExpirationDate)
         try container.encodeIfPresent(self.rawTokenType, forKey: .tokenType)
-        try container.encodeIfPresent(self.tokenExpirationDate, forKey: .tokenExpirationDate)
     }
 }

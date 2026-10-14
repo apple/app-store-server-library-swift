@@ -1,7 +1,5 @@
 // Copyright (c) 2026 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
 ///The request body for configuring the URL of your Get Retention Message endpoint.
 ///
 ///[RealtimeUrlRequest](https://developer.apple.com/documentation/retentionmessaging/realtimeurlrequest)
@@ -14,7 +12,7 @@ public struct RealtimeUrlRequest: Decodable, Encodable, Hashable, Sendable {
     }
 
     public init(realtimeURL: String) throws {
-        guard realtimeURL.count <= Self.maximumRealtimeURLLength else {
+        guard realtimeURL.unicodeScalars.count <= Self.maximumRealtimeURLLength else {
             throw ValidationError.realtimeURLTooLong
         }
         self.realtimeURL = realtimeURL

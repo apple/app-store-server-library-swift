@@ -4,6 +4,10 @@ import XCTest
 @testable import AppStoreServerLibrary
 
 import X509
+import SwiftASN1
+import Crypto
+import AsyncHTTPClient
+import NIOHTTP1
 
 final class SignedDataVerifierTests: XCTestCase {
 
@@ -62,7 +66,7 @@ final class SignedDataVerifierTests: XCTestCase {
     func testValidChainExpired() async throws {
         let EXPIRED_DATE: Date = Date(timeIntervalSince1970: TimeInterval(2280946846))
         let verifier: ChainVerifier = getChainVerifier(base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)
-        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_INVALID_OID_BASE64_ENCODED)!))
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let result: X509.VerificationResult = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EXPIRED_DATE)
         switch result {
@@ -87,40 +91,79 @@ final class SignedDataVerifierTests: XCTestCase {
     }
     
     func testOcspResponseCaching() async throws {
-        var verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 1, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        var verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
         verifier.setDate(newDate: CLOCK_DATE + 1) // 1 second
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(1, calls)
     }
     
     func testOcspResponseCachingHasExpiration() async throws {
-        var verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        var verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
         verifier.setDate(newDate: CLOCK_DATE + 900) // 15 minutes
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(2, calls)
     }
     
     func testOcspResponseCachingWithDifferentChains() async throws {
-        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
-        let altLeaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let altLeaf = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED)!))
         let altIntermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
         let _ = await verifier.verifyChain(leaf: altLeaf, intermediate: altIntermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(2, calls)
     }
     
     func testOcspResponseCachingWithSlightlyDifferentChains() async throws {
-        let verifier: DateOverrideChainVerifier = DateOverrideChainVerifier(expectedCalls: 2, currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
         let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
         let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
         let altIntermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: REAL_APPLE_INTERMEDIATE_BASE64_ENCODED)!))
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
         let _ = await verifier.verifyChain(leaf: leaf, intermediate: altIntermediate, online: true, validationTime: EFFECTIVE_DATE)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(2, calls)
+    }
+    
+    func testNoCachingWithoutOcsp() async throws {
+        let verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: LEAF_CERT_BASE64_ENCODED)!))
+        let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: INTERMEDIATE_CA_BASE64_ENCODED)!))
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
+        let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: false, validationTime: EFFECTIVE_DATE)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(2, calls)
+        let cacheSize = await verifier.chainVerifier.verifiedPublicKeyCache.count
+        XCTAssertEqual(0, cacheSize)
+    }
+    
+    func testOcspResponseCacheEvictsExpiredEntries() async throws {
+        var verifier: DateOverrideChainVerifier = await DateOverrideChainVerifier(currentDate: CLOCK_DATE, base64EncodedRootCertificate: ROOT_CA_BASE64_ENCODED)!
+        let certificates = [LEAF_CERT_BASE64_ENCODED, LEAF_CERT_INVALID_OID_BASE64_ENCODED, LEAF_CERT_FOR_INTERMEDIATE_CA_INVALID_OID_BASE64_ENCODED, INTERMEDIATE_CA_BASE64_ENCODED, INTERMEDIATE_CA_INVALID_OID_BASE64_ENCODED, REAL_APPLE_INTERMEDIATE_BASE64_ENCODED].map {
+            try! Certificate(derEncoded: Array(Data(base64Encoded: $0)!))
+        }
+        let chains = certificates.flatMap { leaf in certificates.map { intermediate in (leaf, intermediate) } }
+        for (leaf, intermediate) in chains.prefix(33) {
+            let _ = await verifier.verifyChain(leaf: leaf, intermediate: intermediate, online: true, validationTime: EFFECTIVE_DATE)
+        }
+        var cacheSize = await verifier.chainVerifier.verifiedPublicKeyCache.count
+        XCTAssertEqual(33, cacheSize)
+        verifier.setDate(newDate: CLOCK_DATE + 901)
+        let _ = await verifier.verifyChain(leaf: chains[33].0, intermediate: chains[33].1, online: true, validationTime: EFFECTIVE_DATE)
+        cacheSize = await verifier.chainVerifier.verifiedPublicKeyCache.count
+        XCTAssertEqual(1, cacheSize)
+        let calls = await verifier.callCounter.count
+        XCTAssertEqual(34, calls)
     }
     
     // The following test will communicate with Apple's OCSP servers, disable this test for offline testing
@@ -251,24 +294,237 @@ final class SignedDataVerifierTests: XCTestCase {
         }
     }
     
+    public func testTamperedPayloadFailsVerification() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.sandbox, "com.example")
+        let transactionInfo = TestingUtility.readFile("resources/mock_signed_data/transactionInfo")
+        let components = transactionInfo.components(separatedBy: ".")
+        var payload = try! JSONSerialization.jsonObject(with: Data(base64Encoded: base64URLToBase64(components[1]))!) as! [String: Any]
+        payload["productId"] = "com.example.tampered"
+        let tamperedPayload = base64ToBase64URL(try! JSONSerialization.data(withJSONObject: payload).base64EncodedString())
+        let tamperedTransactionInfo = [components[0], tamperedPayload, components[2]].joined(separator: ".")
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: tamperedTransactionInfo)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE), transactionResult)
+    }
+    
+    public func testInvalidChainLength() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.sandbox, "com.example")
+        let signedData = replaceX5CHeader(TestingUtility.readFile("resources/mock_signed_data/transactionInfo"), [LEAF_CERT_BASE64_ENCODED, INTERMEDIATE_CA_BASE64_ENCODED])
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: signedData)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), transactionResult)
+    }
+    
+    public func testMalformedBase64InCertificateList() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.sandbox, "com.example")
+        let signedData = replaceX5CHeader(TestingUtility.readFile("resources/mock_signed_data/transactionInfo"), ["abc", INTERMEDIATE_CA_BASE64_ENCODED, ROOT_CA_BASE64_ENCODED])
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: signedData)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE), transactionResult)
+    }
+    
+    public func testMalformedCertificateList() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.sandbox, "com.example")
+        let signedData = replaceX5CHeader(TestingUtility.readFile("resources/mock_signed_data/transactionInfo"), [Data("abc".utf8).base64EncodedString(), INTERMEDIATE_CA_BASE64_ENCODED, ROOT_CA_BASE64_ENCODED])
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: signedData)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE), transactionResult)
+    }
+    
+    public func testMalformedRootCertificates() {
+        XCTAssertThrowsError(try SignedDataVerifier(rootCertificates: [Data("abc".utf8)], bundleId: "com.example", appAppleId: 1234, environment: .sandbox, enableOnlineChecks: false))
+    }
+    
+    public func testEmptyRootCertificateList() async throws {
+        let verifier = try SignedDataVerifier(rootCertificates: [], bundleId: "com.example", appAppleId: 1234, environment: .sandbox, enableOnlineChecks: false)
+        let transactionInfo = TestingUtility.readFile("resources/mock_signed_data/transactionInfo")
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: transactionInfo)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE), transactionResult)
+    }
+    
+    public func testProductionEnvironmentRequiresAppAppleId() {
+        XCTAssertThrowsError(try SignedDataVerifier(rootCertificates: [TestingUtility.readBytes("resources/certs/testCA.der")], bundleId: "com.example", appAppleId: nil, environment: .production, enableOnlineChecks: false)) { error in
+            XCTAssertEqual(SignedDataVerifier.ConfigurationError.INVALID_APP_APPLE_ID, error as? SignedDataVerifier.ConfigurationError)
+        }
+    }
+    
+    public func testOcspNetworkFailureIsRetryable() async {
+        let verifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED, requester: Requester(executeRequestOverride: { _ in
+            throw TestNetworkError()
+        }))
+        let result = await verifier.verify(signedData: createSignedDataWithRealAppleChain(), type: JWSTransactionDecodedPayload.self, onlineVerification: true, environment: .production, currentTime: EFFECTIVE_DATE)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.RETRYABLE_VERIFICATION_FAILURE), result)
+    }
+    
+    public func testOcspHttpErrorIsRetryable() async {
+        let verifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED, requester: Requester(executeRequestOverride: { _ in
+            return HTTPClientResponse(status: .serviceUnavailable)
+        }))
+        let result = await verifier.verify(signedData: createSignedDataWithRealAppleChain(), type: JWSTransactionDecodedPayload.self, onlineVerification: true, environment: .production, currentTime: EFFECTIVE_DATE)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.RETRYABLE_VERIFICATION_FAILURE), result)
+    }
+    
+    public func testInvalidOcspResponseIsNotRetryable() async {
+        let verifier = getChainVerifier(base64EncodedRootCertificate: REAL_APPLE_ROOT_BASE64_ENCODED, requester: Requester(executeRequestOverride: { _ in
+            return HTTPClientResponse(status: .ok, body: .bytes(.init(string: "Not an OCSP response")))
+        }))
+        let result = await verifier.verify(signedData: createSignedDataWithRealAppleChain(), type: JWSTransactionDecodedPayload.self, onlineVerification: true, environment: .production, currentTime: EFFECTIVE_DATE)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE), result)
+    }
+    
+    public func testWrongEnvironmentForRenewalInfo() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.production, "com.example")
+        let renewalInfo = TestingUtility.readFile("resources/mock_signed_data/renewalInfo")
+        let renewalInfoResult = await verifier.verifyAndDecodeRenewalInfo(signedRenewalInfo: renewalInfo)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT), renewalInfoResult)
+    }
+    
+    public func testWrongEnvironmentForTransaction() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.production, "com.example")
+        let transactionInfo = TestingUtility.readFile("resources/mock_signed_data/transactionInfo")
+        let transactionResult = await verifier.verifyAndDecodeTransaction(signedTransaction: transactionInfo)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT), transactionResult)
+    }
+    
+    public func testWrongBundleIdForAppTransaction() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.localTesting, "com.example.x")
+        let signedAppTransaction = TestingUtility.createSignedDataFromJson("resources/models/appTransaction.json")
+        let appTransactionResult = await verifier.verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER), appTransactionResult)
+    }
+    
+    public func testWrongEnvironmentForAppTransaction() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.xcode, "com.example")
+        let signedAppTransaction = TestingUtility.createSignedDataFromJson("resources/models/appTransaction.json")
+        let appTransactionResult = await verifier.verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT), appTransactionResult)
+    }
+    
+    public func testProductionAppTransaction() async throws {
+        let (rootCertificate, signedAppTransaction) = try createSignedDataWithTestChain(payload: TestingUtility.readFile("resources/models/appTransaction.json").replacingOccurrences(of: "\"LocalTesting\"", with: "\"Production\""))
+        let verifier = try SignedDataVerifier(rootCertificates: [rootCertificate], bundleId: "com.example", appAppleId: 531412, environment: .production, enableOnlineChecks: false)
+        let appTransactionResult = await verifier.verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
+        switch appTransactionResult {
+        case .valid(let appTransaction):
+            XCTAssertEqual(AppStoreEnvironment.production, appTransaction.receiptType)
+            XCTAssertEqual(531412, appTransaction.appAppleId)
+        case .invalid(_):
+            XCTAssert(false)
+        }
+    }
+    
+    public func testWrongAppAppleIdForAppTransaction() async throws {
+        let (rootCertificate, signedAppTransaction) = try createSignedDataWithTestChain(payload: TestingUtility.readFile("resources/models/appTransaction.json").replacingOccurrences(of: "\"LocalTesting\"", with: "\"Production\""))
+        let verifier = try SignedDataVerifier(rootCertificates: [rootCertificate], bundleId: "com.example", appAppleId: 1234, environment: .production, enableOnlineChecks: false)
+        let appTransactionResult = await verifier.verifyAndDecodeAppTransaction(signedAppTransaction: signedAppTransaction)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER), appTransactionResult)
+    }
+    
+    public func testProductionRealtimeRequest() async throws {
+        let (rootCertificate, signedPayload) = try createSignedDataWithTestChain(payload: TestingUtility.readFile("resources/models/decodedRealtimeRequest.json").replacingOccurrences(of: "\"LocalTesting\"", with: "\"Production\""))
+        let verifier = try SignedDataVerifier(rootCertificates: [rootCertificate], bundleId: "com.example", appAppleId: 531412, environment: .production, enableOnlineChecks: false)
+        let realtimeRequestResult = await verifier.verifyAndDecodeRealtimeRequest(signedPayload: signedPayload)
+        switch realtimeRequestResult {
+        case .valid(let realtimeRequest):
+            XCTAssertEqual(AppStoreEnvironment.production, realtimeRequest.environment)
+            XCTAssertEqual(531412, realtimeRequest.appAppleId)
+        case .invalid(_):
+            XCTAssert(false)
+        }
+    }
+    
+    public func testWrongAppAppleIdForRealtimeRequest() async throws {
+        let (rootCertificate, signedPayload) = try createSignedDataWithTestChain(payload: TestingUtility.readFile("resources/models/decodedRealtimeRequest.json").replacingOccurrences(of: "\"LocalTesting\"", with: "\"Production\""))
+        let verifier = try SignedDataVerifier(rootCertificates: [rootCertificate], bundleId: "com.example", appAppleId: 1234, environment: .production, enableOnlineChecks: false)
+        let realtimeRequestResult = await verifier.verifyAndDecodeRealtimeRequest(signedPayload: signedPayload)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_APP_IDENTIFIER), realtimeRequestResult)
+    }
+    
+    public func testWrongEnvironmentForRealtimeRequest() async {
+        let verifier: SignedDataVerifier = TestingUtility.getSignedDataVerifier(.xcode, "com.example")
+        let signedPayload = TestingUtility.createSignedDataFromJson("resources/models/decodedRealtimeRequest.json")
+        let realtimeRequestResult = await verifier.verifyAndDecodeRealtimeRequest(signedPayload: signedPayload)
+        XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_ENVIRONMENT), realtimeRequestResult)
+    }
+    
+    private func getChainVerifier(base64EncodedRootCertificate: String, requester: Requester) -> ChainVerifier {
+        return try! ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!], requester: requester)
+    }
+    
+    private func replaceX5CHeader(_ signedData: String, _ x5c: [String]) -> String {
+        let components = signedData.components(separatedBy: ".")
+        var header = try! JSONSerialization.jsonObject(with: Data(base64Encoded: base64URLToBase64(components[0]))!) as! [String: Any]
+        header["x5c"] = x5c
+        let encodedHeader = base64ToBase64URL(try! JSONSerialization.data(withJSONObject: header).base64EncodedString())
+        return [encodedHeader, components[1], components[2]].joined(separator: ".")
+    }
+    
+    private func createSignedDataWithRealAppleChain() -> String {
+        let header = try! JSONSerialization.data(withJSONObject: ["alg": "ES256", "x5c": [REAL_APPLE_SIGNING_CERTIFICATE_BASE64_ENCODED, REAL_APPLE_INTERMEDIATE_BASE64_ENCODED, REAL_APPLE_ROOT_BASE64_ENCODED]])
+        let payload = Data("{\"bundleId\":\"com.example\"}".utf8)
+        return [base64ToBase64URL(header.base64EncodedString()), base64ToBase64URL(payload.base64EncodedString()), base64ToBase64URL(Data("signature".utf8).base64EncodedString())].joined(separator: ".")
+    }
+    
+    private func createSignedDataWithTestChain(payload: String) throws -> (Data, String) {
+        let rootKey = P256.Signing.PrivateKey()
+        let intermediateKey = P256.Signing.PrivateKey()
+        let leafKey = P256.Signing.PrivateKey()
+        let rootName = try DistinguishedName { CommonName("Test Root") }
+        let intermediateName = try DistinguishedName { CommonName("Test Intermediate") }
+        let leafName = try DistinguishedName { CommonName("Test Leaf") }
+        let notValidBefore = Date(timeIntervalSince1970: 1600000000)
+        let notValidAfter = Date(timeIntervalSince1970: 2100000000)
+        let root = try Certificate(version: .v3, serialNumber: Certificate.SerialNumber(), publicKey: .init(rootKey.publicKey), notValidBefore: notValidBefore, notValidAfter: notValidAfter, issuer: rootName, subject: rootName, signatureAlgorithm: .ecdsaWithSHA256, extensions: try Certificate.Extensions {
+            Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
+            Critical(KeyUsage(keyCertSign: true))
+        }, issuerPrivateKey: .init(rootKey))
+        let intermediate = try Certificate(version: .v3, serialNumber: Certificate.SerialNumber(), publicKey: .init(intermediateKey.publicKey), notValidBefore: notValidBefore, notValidAfter: notValidAfter, issuer: rootName, subject: intermediateName, signatureAlgorithm: .ecdsaWithSHA256, extensions: try Certificate.Extensions {
+            Critical(BasicConstraints.isCertificateAuthority(maxPathLength: 0))
+            Critical(KeyUsage(keyCertSign: true))
+            Certificate.Extension(oid: [1, 2, 840, 113635, 100, 6, 2, 1], critical: false, value: [0x05, 0x00])
+        }, issuerPrivateKey: .init(rootKey))
+        let leaf = try Certificate(version: .v3, serialNumber: Certificate.SerialNumber(), publicKey: .init(leafKey.publicKey), notValidBefore: notValidBefore, notValidAfter: notValidAfter, issuer: intermediateName, subject: leafName, signatureAlgorithm: .ecdsaWithSHA256, extensions: try Certificate.Extensions {
+            Critical(BasicConstraints.notCertificateAuthority)
+            Critical(KeyUsage(digitalSignature: true))
+            Certificate.Extension(oid: [1, 2, 840, 113635, 100, 6, 11, 1], critical: false, value: [0x05, 0x00])
+        }, issuerPrivateKey: .init(intermediateKey))
+        let encodedCertificates = try [leaf, intermediate, root].map { certificate in
+            var serializer = DER.Serializer()
+            try serializer.serialize(certificate)
+            return Data(serializer.serializedBytes)
+        }
+        let header = try JSONSerialization.data(withJSONObject: ["alg": "ES256", "x5c": encodedCertificates.map { $0.base64EncodedString() }])
+        let signingInput = base64ToBase64URL(header.base64EncodedString()) + "." + base64ToBase64URL(Data(payload.utf8).base64EncodedString())
+        let signature = try leafKey.signature(for: Data(signingInput.utf8))
+        return (encodedCertificates[2], signingInput + "." + base64ToBase64URL(signature.rawRepresentation.base64EncodedString()))
+    }
+    
+    private func base64ToBase64URL(_ encodedString: String) -> String {
+        return encodedString
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+    
+    struct TestNetworkError: Error {}
+    
     private func getChainVerifier(base64EncodedRootCertificate: String) -> ChainVerifier {
         return try! ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
     }
     
     struct DateOverrideChainVerifier {
         let chainVerifier: ChainVerifier
+        let callCounter: CallCounter
         var currentDate: Int64
-        var expectation : XCTestExpectation
         
-        init?(expectedCalls: Int, currentDate: Int64, base64EncodedRootCertificate: String) {
+        init?(currentDate: Int64, base64EncodedRootCertificate: String) async {
             self.currentDate = currentDate
-            self.expectation = XCTestExpectation()
-            self.expectation.assertForOverFulfill = true
-            self.expectation.expectedFulfillmentCount = expectedCalls
             guard let chainVerifier = try? ChainVerifier(rootCertificates: [Data(base64Encoded: base64EncodedRootCertificate)!])
             else { return nil }
+            let callCounter = CallCounter()
+            await chainVerifier.setVerifyChainWithoutCachingOverride { _, _, _, _, _ in
+                await callCounter.increment()
+                return .validCertificate([])
+            }
             
             self.chainVerifier = chainVerifier
+            self.callCounter = callCounter
         }
         
         mutating func setDate(newDate: Int64) {
@@ -283,13 +539,16 @@ final class SignedDataVerifierTests: XCTestCase {
             await chainVerifier.verifyChain(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime, currentTime: getDate())
         }
         
-        func verifyChainWithoutCaching(leaf: Certificate, intermediate: Certificate, online: Bool, validationTime: Date) async -> X509.VerificationResult {
-            expectation.fulfill()
-            return .validCertificate([])
-        }
-        
         func getDate() -> Date {
             return Date(timeIntervalSince1970: TimeInterval(currentDate))
+        }
+    }
+    
+    actor CallCounter {
+        private(set) var count = 0
+        
+        func increment() {
+            count += 1
         }
     }
 }

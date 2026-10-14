@@ -32,10 +32,10 @@ public struct AdvancedCommerceRenewalItem: Decodable, Encodable, Hashable, Senda
 
     public enum CodingKeys: String, CodingKey {
         case sku = "SKU"
-        case description
-        case displayName
-        case offer
-        case price
-        case priceIncreaseInfo
+        case description = "description"
+        case displayName = "displayName"
+        case offer = "offer"
+        case price = "price"
+        case priceIncreaseInfo = "priceIncreaseInfo"
     }
 }

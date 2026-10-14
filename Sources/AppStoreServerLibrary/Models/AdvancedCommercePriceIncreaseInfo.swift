@@ -7,6 +7,7 @@ public struct AdvancedCommercePriceIncreaseInfo: Decodable, Encodable, Hashable,
         self.init(dependentSKUs: dependentSKUs, price: price, rawStatus: status?.rawValue)
     }
 
+    @_disfavoredOverload
     public init(dependentSKUs: [String]? = nil, price: Int64? = nil, rawStatus: String? = nil) {
         self.dependentSKUs = dependentSKUs
         self.price = price

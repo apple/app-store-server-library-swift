@@ -14,7 +14,7 @@ public struct UploadMessageImage: Decodable, Encodable, Hashable, Sendable {
     }
 
     public init(imageIdentifier: UUID, altText: String) throws {
-        guard altText.count <= Self.maximumAltTextLength else {
+        guard altText.unicodeScalars.count <= Self.maximumAltTextLength else {
             throw ValidationError.altTextTooLong
         }
         self.imageIdentifier = imageIdentifier
@@ -30,4 +30,15 @@ public struct UploadMessageImage: Decodable, Encodable, Hashable, Sendable {
     ///
     ///[altText](https://developer.apple.com/documentation/retentionmessaging/alttext)
     public var altText: String
+
+    public enum CodingKeys: CodingKey {
+        case imageIdentifier
+        case altText
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.imageIdentifier.uuidString.lowercased(), forKey: .imageIdentifier)
+        try container.encode(self.altText, forKey: .altText)
+    }
 }

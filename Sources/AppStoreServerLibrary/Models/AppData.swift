@@ -1,7 +1,5 @@
 // Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
 ///The object that contains the app metadata and signed app transaction information.
 ///
 ///[appData](https://developer.apple.com/documentation/appstoreservernotifications/appdata)
@@ -11,6 +9,7 @@ public struct AppData: Decodable, Encodable, Hashable, Sendable {
         self.init(appAppleId: appAppleId, bundleId: bundleId, rawEnvironment: environment?.rawValue, signedAppTransactionInfo: signedAppTransactionInfo)
     }
 
+    @_disfavoredOverload
     public init(appAppleId: Int64? = nil, bundleId: String? = nil, rawEnvironment: String? = nil, signedAppTransactionInfo: String? = nil) {
         self.appAppleId = appAppleId
         self.bundleId = bundleId

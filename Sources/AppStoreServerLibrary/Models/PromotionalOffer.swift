@@ -27,4 +27,17 @@ public struct PromotionalOffer: Decodable, Encodable, Hashable, Sendable {
     ///
     ///[promotionalOfferSignatureV1](https://developer.apple.com/documentation/retentionmessaging/promotionaloffersignaturev1)
     public var promotionalOfferSignatureV1: PromotionalOfferSignatureV1?
+
+    public enum CodingKeys: CodingKey {
+        case messageIdentifier
+        case promotionalOfferSignatureV2
+        case promotionalOfferSignatureV1
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.messageIdentifier?.uuidString.lowercased(), forKey: .messageIdentifier)
+        try container.encodeIfPresent(self.promotionalOfferSignatureV2, forKey: .promotionalOfferSignatureV2)
+        try container.encodeIfPresent(self.promotionalOfferSignatureV1, forKey: .promotionalOfferSignatureV1)
+    }
 }

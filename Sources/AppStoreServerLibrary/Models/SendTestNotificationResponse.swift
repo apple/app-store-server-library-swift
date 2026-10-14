@@ -9,7 +9,7 @@ public struct SendTestNotificationResponse: Decodable, Encodable, Hashable, Send
         self.testNotificationToken = testNotificationToken
     }
 
-    ///A unique identifier for a notification test that the App Store server sends to your server.
+    ///The test notification token that uniquely identifies the notification test that App Store Server Notifications sends to your server.
     ///
     ///[testNotificationToken](https://developer.apple.com/documentation/appstoreserverapi/testnotificationtoken)
     public var testNotificationToken: String?

@@ -38,6 +38,12 @@
         "SKU": "com.example.sku.premium",
         "description": "Premium feature",
         "displayName": "Premium Feature",
+        "offer": {
+          "period": "P1M",
+          "periodCount": 3,
+          "price": 4990,
+          "reason": "ACQUISITION"
+        },
         "price": 9990,
         "refunds": [
           {
@@ -62,5 +68,6 @@
     "commitmentExpiresDate": 1698150000000,
     "commitmentPrice": 119880,
     "totalBillingPeriods": 12
-  }
+  },
+  "previousOriginalTransactionId": "11111"
 }

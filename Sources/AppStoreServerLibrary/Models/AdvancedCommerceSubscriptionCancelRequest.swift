@@ -10,9 +10,13 @@ public struct AdvancedCommerceSubscriptionCancelRequest: Decodable, Encodable, H
         self.storefront = storefront
     }
 
+    ///The metadata to include in server requests.
+    ///
     ///[RequestInfo](https://developer.apple.com/documentation/advancedcommerceapi/requestinfo)
     public var requestInfo: AdvancedCommerceRequestInfo
 
+    ///A three-letter code that represents the country or region associated with the App Store storefront.
+    ///
     ///[storefront](https://developer.apple.com/documentation/advancedcommerceapi/storefront)
     public var storefront: String?
 }

@@ -6,10 +6,7 @@
 public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
 
     public init(period: AdvancedCommerceOfferPeriod, periodCount: Int32, price: Int64, reason: AdvancedCommerceOfferReason) throws {
-        self.rawPeriod = period.rawValue
-        self.periodCount = try HelperValidationUtils.validatePeriodCount(periodCount)
-        self.price = price
-        self.rawReason = reason.rawValue
+        try self.init(rawPeriod: period.rawValue, periodCount: periodCount, price: price, rawReason: reason.rawValue)
     }
 
     public init(rawPeriod: String, periodCount: Int32, price: Int64, rawReason: String) throws {
@@ -20,6 +17,8 @@ public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
     }
 
     ///The period of the offer.
+    ///
+    ///[Offer](https://developer.apple.com/documentation/advancedcommerceapi/offer)
     public var period: AdvancedCommerceOfferPeriod? {
         get {
             return AdvancedCommerceOfferPeriod(rawValue: rawPeriod)
@@ -33,14 +32,18 @@ public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
     public var rawPeriod: String
 
     ///The number of periods the offer is active.
+    ///
+    ///[Offer](https://developer.apple.com/documentation/advancedcommerceapi/offer)
     public var periodCount: Int32
 
     ///The offer price, in milliunits.
     ///
-    ///[Price](https://developer.apple.com/documentation/advancedcommerceapi/price)
+    ///[price](https://developer.apple.com/documentation/advancedcommerceapi/price)
     public var price: Int64
 
     ///The reason for the offer.
+    ///
+    ///[Offer](https://developer.apple.com/documentation/advancedcommerceapi/offer)
     public var reason: AdvancedCommerceOfferReason? {
         get {
             return AdvancedCommerceOfferReason(rawValue: rawReason)
@@ -63,7 +66,7 @@ public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.rawPeriod = try container.decode(String.self, forKey: .period)
-        self.periodCount = try container.decode(Int32.self, forKey: .periodCount)
+        self.periodCount = try HelperValidationUtils.validatePeriodCount(container.decode(Int32.self, forKey: .periodCount))
         self.price = try container.decode(Int64.self, forKey: .price)
         self.rawReason = try container.decode(String.self, forKey: .reason)
     }
@@ -71,7 +74,7 @@ public struct AdvancedCommerceOffer: Decodable, Encodable, Hashable, Sendable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.rawPeriod, forKey: .period)
-        try container.encode(self.periodCount, forKey: .periodCount)
+        try container.encode(HelperValidationUtils.validatePeriodCount(self.periodCount), forKey: .periodCount)
         try container.encode(self.price, forKey: .price)
         try container.encode(self.rawReason, forKey: .reason)
     }

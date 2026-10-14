@@ -1,25 +1,27 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+
 ///The success or error information and the date the App Store server records when it attempts to send a server notification to your server.
 ///
 ///[sendAttemptItem](https://developer.apple.com/documentation/appstoreserverapi/sendattemptitem)
 public struct SendAttemptItem: Decodable, Encodable, Hashable, Sendable {
-    
+
     public init(attemptDate: Date? = nil, sendAttemptResult: SendAttemptResult? = nil) {
         self.init(attemptDate: attemptDate, rawSendAttemptResult: sendAttemptResult?.rawValue)
     }
-    
+
+    @_disfavoredOverload
     public init(attemptDate: Date? = nil, rawSendAttemptResult: String? = nil) {
         self.attemptDate = attemptDate
         self.rawSendAttemptResult = rawSendAttemptResult
     }
-    
-    ///The date the App Store server attempts to send a notification.
+
+    ///The date the App Store server attempts to send the notification.
     ///
-    ///[attemptDate](https://developer.apple.com/documentation/appstoreservernotifications/attemptdate)
+    ///[attemptDate](https://developer.apple.com/documentation/appstoreserverapi/attemptdate)
     public var attemptDate: Date?
-    
+
     ///The success or error information the App Store server records when it attempts to send an App Store server notification to your server.
     ///
     ///[sendAttemptResult](https://developer.apple.com/documentation/appstoreserverapi/sendattemptresult)
@@ -31,24 +33,24 @@ public struct SendAttemptItem: Decodable, Encodable, Hashable, Sendable {
             self.rawSendAttemptResult = newValue.map { $0.rawValue }
         }
     }
-    
+
     ///See ``sendAttemptResult``
     public var rawSendAttemptResult: String?
-    
+
     public enum CodingKeys: CodingKey {
         case attemptDate
         case sendAttemptResult
     }
-    
+
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.attemptDate = try container.decodeIfPresent(Date.self, forKey: .attemptDate)
+        self.attemptDate = try container.decodeIfPresent(Double.self, forKey: .attemptDate).map { Date(timeIntervalSince1970: $0 / 1000.0) }
         self.rawSendAttemptResult = try container.decodeIfPresent(String.self, forKey: .sendAttemptResult)
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.attemptDate, forKey: .attemptDate)
+        try container.encodeIfPresent(self.attemptDate.map { ($0.timeIntervalSince1970 * 1000.0).rounded(.towardZero) }, forKey: .attemptDate)
         try container.encodeIfPresent(self.rawSendAttemptResult, forKey: .sendAttemptResult)
     }
 }

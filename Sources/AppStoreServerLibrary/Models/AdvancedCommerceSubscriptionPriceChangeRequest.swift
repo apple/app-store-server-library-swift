@@ -12,6 +12,11 @@ public struct AdvancedCommerceSubscriptionPriceChangeRequest: Decodable, Encodab
         self.storefront = storefront
     }
 
+    ///Metadata that identifies the request.
+    ///
+    ///[RequestInfo](https://developer.apple.com/documentation/advancedcommerceapi/requestinfo)
+    public var requestInfo: AdvancedCommerceRequestInfo
+
     ///The currency of the prices.
     ///
     ///[currency](https://developer.apple.com/documentation/advancedcommerceapi/currency)
@@ -22,13 +27,23 @@ public struct AdvancedCommerceSubscriptionPriceChangeRequest: Decodable, Encodab
     ///[SubscriptionPriceChangeItem](https://developer.apple.com/documentation/advancedcommerceapi/subscriptionpricechangeitem)
     public var items: [AdvancedCommerceSubscriptionPriceChangeItem]
 
-    ///Metadata that identifies the request.
-    ///
-    ///[RequestInfo](https://developer.apple.com/documentation/advancedcommerceapi/requestinfo)
-    public var requestInfo: AdvancedCommerceRequestInfo
-
     ///The App Store storefront of the subscription.
     ///
     ///[storefront](https://developer.apple.com/documentation/advancedcommerceapi/storefront)
     public var storefront: String?
+
+    public enum CodingKeys: CodingKey {
+        case requestInfo
+        case currency
+        case items
+        case storefront
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.requestInfo, forKey: .requestInfo)
+        try container.encodeIfPresent(self.currency, forKey: .currency)
+        try container.encode(HelperValidationUtils.validateItems(self.items), forKey: .items)
+        try container.encodeIfPresent(self.storefront, forKey: .storefront)
+    }
 }

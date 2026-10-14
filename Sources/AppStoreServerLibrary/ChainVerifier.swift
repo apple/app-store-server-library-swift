@@ -18,13 +18,20 @@ actor ChainVerifier {
     
     private let store: CertificateStore
     private let requester: Requester
-    private var verifiedPublicKeyCache: [CacheKey: CacheValue]
+    private(set) var verifiedPublicKeyCache: [CacheKey: CacheValue]
+    // For testing purposes
+    private var verifyChainWithoutCachingOverride: (@Sendable (Certificate, Certificate, Bool, Date, Date) async -> X509.VerificationResult)?
     
-    init(rootCertificates: [Data]) throws {
+    init(rootCertificates: [Data], requester: Requester = Requester()) throws {
         let parsedCertificates = try rootCertificates.map { try Certificate(derEncoded: [UInt8]($0)) }
         self.store = CertificateStore(parsedCertificates)
-        self.requester = Requester()
+        self.requester = requester
         self.verifiedPublicKeyCache = [:]
+        self.verifyChainWithoutCachingOverride = nil
+    }
+    
+    internal func setVerifyChainWithoutCachingOverride(_ override: @escaping @Sendable (Certificate, Certificate, Bool, Date, Date) async -> X509.VerificationResult) {
+        self.verifyChainWithoutCachingOverride = override
     }
     
     func verify<T: DecodedSignedData>(signedData: String, type: T.Type, onlineVerification: Bool, environment: AppStoreEnvironment, currentTime: Date = .now) async -> VerificationResult<T> where T: Decodable & Sendable {
@@ -59,13 +66,13 @@ actor ChainVerifier {
         }
         
 
-        guard let leaf_der_enocded = Data(base64Encoded: x5c_header[0]),
-              let intermeidate_der_encoded = Data(base64Encoded: x5c_header[1]) else {
+        guard let leafDerEncoded = Data(base64Encoded: x5c_header[0]),
+              let intermediateDerEncoded = Data(base64Encoded: x5c_header[1]),
+              let leafCertificate = try? Certificate(derEncoded: Array(leafDerEncoded)),
+              let intermediateCertificate = try? Certificate(derEncoded: Array(intermediateDerEncoded)) else {
             return VerificationResult.invalid(VerificationError.INVALID_CERTIFICATE)
         }
         do {
-            let leafCertificate = try Certificate(derEncoded: Array(leaf_der_enocded))
-            let intermediateCertificate = try Certificate(derEncoded: Array(intermeidate_der_encoded))
             let validationTime = !onlineVerification && decodedBody.signedDateOptional != nil ? decodedBody.signedDateOptional! : currentTime
             
             let verificationResult = await verifyChain(leaf: leafCertificate, intermediate: intermediateCertificate, online: onlineVerification, validationTime: validationTime, currentTime: currentTime)
@@ -92,7 +99,7 @@ actor ChainVerifier {
                 return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
             }
         } catch {
-            return VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT)
+            return VerificationResult.invalid(VerificationError.VERIFICATION_FAILURE)
         }
     }
     
@@ -104,7 +111,12 @@ actor ChainVerifier {
                 }
             }
         }
-        let verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime, currentTime: currentTime)
+        let verificationResult: X509.VerificationResult
+        if let override = verifyChainWithoutCachingOverride {
+            verificationResult = await override(leaf, intermediate, online, validationTime, currentTime)
+        } else {
+            verificationResult = await verifyChainWithoutCaching(leaf: leaf, intermediate: intermediate, online: online, validationTime: validationTime, currentTime: currentTime)
+        }
         
         if online {
             if case .validCertificate = verificationResult {
@@ -192,6 +204,16 @@ final class Requester: OCSPRequester {
     static let OCSP_NETWORK_REQUEST_FAILED = "OCSP_NETWORK_REQUEST_FAILED"
 
     private let client: HTTPClient = .shared
+    // For testing purposes
+    private let executeRequestOverride: (@Sendable (HTTPClientRequest) async throws -> HTTPClientResponse)?
+
+    init() {
+        self.executeRequestOverride = nil
+    }
+
+    init(executeRequestOverride: @escaping @Sendable (HTTPClientRequest) async throws -> HTTPClientResponse) {
+        self.executeRequestOverride = executeRequestOverride
+    }
 
     func query(request: [UInt8], uri: String) async -> X509.OCSPRequesterQueryResult {
         do {
@@ -199,7 +221,12 @@ final class Requester: OCSPRequester {
             urlRequest.method = .POST
             urlRequest.headers.add(name: "Content-Type", value: "application/ocsp-request")
             urlRequest.body = .bytes(request)
-            let response = try await client.execute(urlRequest, timeout: .seconds(30))
+            let response: HTTPClientResponse
+            if let override = executeRequestOverride {
+                response = try await override(urlRequest)
+            } else {
+                response = try await client.execute(urlRequest, timeout: .seconds(30))
+            }
 
             // Check status code
             guard response.status.code == 200 else {

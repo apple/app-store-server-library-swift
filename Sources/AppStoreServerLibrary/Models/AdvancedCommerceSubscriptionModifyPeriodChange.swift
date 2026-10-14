@@ -6,8 +6,7 @@
 public struct AdvancedCommerceSubscriptionModifyPeriodChange: Decodable, Encodable, Hashable, Sendable {
 
     public init(effective: AdvancedCommerceEffective, period: AdvancedCommercePeriod) {
-        self.rawEffective = effective.rawValue
-        self.rawPeriod = period.rawValue
+        self.init(rawEffective: effective.rawValue, rawPeriod: period.rawValue)
     }
 
     public init(rawEffective: String, rawPeriod: String) {
@@ -15,6 +14,8 @@ public struct AdvancedCommerceSubscriptionModifyPeriodChange: Decodable, Encodab
         self.rawPeriod = rawPeriod
     }
 
+    ///A string value that indicates when a requested change to an auto-renewable subscription goes into effect.
+    ///
     ///[effective](https://developer.apple.com/documentation/advancedcommerceapi/effective)
     public var effective: AdvancedCommerceEffective? {
         get {
@@ -28,7 +29,9 @@ public struct AdvancedCommerceSubscriptionModifyPeriodChange: Decodable, Encodab
     ///See ``effective``
     public var rawEffective: String
 
-    ///[Period](https://developer.apple.com/documentation/advancedcommerceapi/period)
+    ///The duration of a single cycle of an auto-renewable subscription.
+    ///
+    ///[period](https://developer.apple.com/documentation/advancedcommerceapi/period)
     public var period: AdvancedCommercePeriod? {
         get {
             return AdvancedCommercePeriod(rawValue: rawPeriod)

@@ -1,7 +1,5 @@
 // Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
 ///A response that contains status information for all images.
 ///
 ///[GetImageListResponse](https://developer.apple.com/documentation/retentionmessaging/getimagelistresponse)

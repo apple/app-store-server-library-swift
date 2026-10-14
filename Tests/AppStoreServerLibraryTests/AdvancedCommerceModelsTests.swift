@@ -172,11 +172,261 @@ final class AdvancedCommerceModelsTests: XCTestCase {
     }
 
     public func testValidationUtilsItems() throws {
-        let validList = [try AdvancedCommerceOneTimeChargeItem(description: "desc", displayName: "name", sku: "sku1", price: 1000)]
+        let validList = [try AdvancedCommerceOneTimeChargeItem(sku: "sku1", description: "desc", displayName: "name", price: 1000)]
         XCTAssertEqual(validList, try HelperValidationUtils.validateItems(validList))
 
         let emptyList: [AdvancedCommerceOneTimeChargeItem] = []
         XCTAssertThrowsError(try HelperValidationUtils.validateItems(emptyList))
+    }
+
+    public func testValidationUtilsMeasuresLengthInUnicodeCodePoints() throws {
+        let nonBmpDescription = String(repeating: "\u{1F44D}", count: 45)
+        XCTAssertEqual(nonBmpDescription, try HelperValidationUtils.validateDescription(nonBmpDescription))
+        XCTAssertThrowsError(try HelperValidationUtils.validateDescription(nonBmpDescription + "\u{1F44D}"))
+
+        let combiningDisplayName = String(repeating: "e\u{0301}", count: 15)
+        XCTAssertEqual(combiningDisplayName, try HelperValidationUtils.validateDisplayName(combiningDisplayName))
+        XCTAssertThrowsError(try HelperValidationUtils.validateDisplayName(String(repeating: "e\u{0301}", count: 16)))
+
+        let combiningSku = String(repeating: "e\u{0301}", count: 64)
+        XCTAssertEqual(combiningSku, try HelperValidationUtils.validateSku(combiningSku))
+        XCTAssertThrowsError(try HelperValidationUtils.validateSku(combiningSku + "e"))
+    }
+
+    public func testValidationErrorsReportFieldName() throws {
+        let requestInfo = AdvancedCommerceRequestInfo(requestReferenceId: UUID())
+        let tooLongSku = String(repeating: "A", count: 129)
+
+        assertValidationError(try HelperValidationUtils.validateItems([String]()), "items list cannot be empty")
+        assertValidationError(try HelperValidationUtils.validateSku(tooLongSku), "SKU length cannot exceed 128 characters")
+        assertValidationError(try AdvancedCommerceSubscriptionModifyInAppRequest(requestInfo: requestInfo, retainBillingCycle: true, transactionId: "transactionId", addItems: []), "addItems list cannot be empty")
+        assertValidationError(try AdvancedCommerceSubscriptionModifyInAppRequest(requestInfo: requestInfo, retainBillingCycle: true, transactionId: "transactionId", changeItems: []), "changeItems list cannot be empty")
+        assertValidationError(try AdvancedCommerceSubscriptionModifyInAppRequest(requestInfo: requestInfo, retainBillingCycle: true, transactionId: "transactionId", removeItems: []), "removeItems list cannot be empty")
+
+        let migrateDescriptors = try AdvancedCommerceSubscriptionMigrateDescriptors(description: "description", displayName: "displayName")
+        let migrateItem = try AdvancedCommerceSubscriptionMigrateItem(sku: "sku", description: "description", displayName: "displayName")
+        assertValidationError(try AdvancedCommerceSubscriptionMigrateRequest(requestInfo: requestInfo, descriptors: migrateDescriptors, items: [], targetProductId: "targetProductId", taxCode: "taxCode"), "items list cannot be empty")
+        assertValidationError(try AdvancedCommerceSubscriptionMigrateRequest(requestInfo: requestInfo, descriptors: migrateDescriptors, items: [migrateItem], targetProductId: "targetProductId", taxCode: "taxCode", renewalItems: []), "renewalItems list cannot be empty")
+
+        assertValidationError(try AdvancedCommerceSubscriptionModifyChangeItem(sku: "sku", description: "description", displayName: "displayName", currentSku: tooLongSku, effective: .immediately, price: 1000, reason: .upgrade), "currentSKU length cannot exceed 128 characters")
+        assertValidationError(try AdvancedCommerceSubscriptionModifyChangeItem(sku: tooLongSku, description: "description", displayName: "displayName", currentSku: "currentSku", effective: .immediately, price: 1000, reason: .upgrade), "SKU length cannot exceed 128 characters")
+        assertValidationError(try AdvancedCommerceSubscriptionChangeMetadataItem(currentSku: tooLongSku, effective: .immediately), "currentSKU length cannot exceed 128 characters")
+        assertValidationError(try AdvancedCommerceSubscriptionPriceChangeItem(sku: "sku", price: 1000, dependentSKUs: [tooLongSku]), "dependentSKUs length cannot exceed 128 characters")
+    }
+
+    public func testEncodingSubscriptionCreateRequestValidatesFieldsChangedAfterInitialization() throws {
+        let offer = try AdvancedCommerceOffer(period: .p1M, periodCount: 3, price: 1000, reason: .acquisition)
+        let item = try AdvancedCommerceSubscriptionCreateItem(sku: "sku", description: "description", displayName: "displayName", price: 2000, offer: offer)
+        let descriptors = try AdvancedCommerceDescriptors(description: "description", displayName: "displayName")
+        let validRequest = try AdvancedCommerceSubscriptionCreateRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), currency: "USD", descriptors: descriptors, items: [item], period: .p1M, taxCode: "taxCode")
+        XCTAssertNoThrow(try getJsonEncoder().encode(validRequest))
+
+        var request = validRequest
+        request.descriptors.description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+
+        request = validRequest
+        request.descriptors.displayName = String(repeating: "A", count: 31)
+        assertValidationError(try getJsonEncoder().encode(request), "displayName length cannot exceed 30 characters")
+
+        request = validRequest
+        request.items = []
+        assertValidationError(try getJsonEncoder().encode(request), "items list cannot be empty")
+
+        request = validRequest
+        request.items[0].description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+
+        request = validRequest
+        request.items[0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(request), "SKU length cannot exceed 128 characters")
+
+        request = validRequest
+        request.items[0].offer!.periodCount = 13
+        assertValidationError(try getJsonEncoder().encode(request), "periodCount must be between 1 and 12")
+    }
+
+    public func testEncodingSubscriptionModifyInAppRequestValidatesFieldsChangedAfterInitialization() throws {
+        let offer = try AdvancedCommerceOffer(period: .p1M, periodCount: 3, price: 1000, reason: .retention)
+        let addItem = try AdvancedCommerceSubscriptionModifyAddItem(sku: "sku", description: "description", displayName: "displayName", price: 2000, offer: offer)
+        let changeItem = try AdvancedCommerceSubscriptionModifyChangeItem(sku: "sku2", description: "description", displayName: "displayName", currentSku: "currentSku", effective: .immediately, price: 3000, reason: .applyOffer, offer: offer)
+        let removeItem = try AdvancedCommerceSubscriptionModifyRemoveItem(sku: "sku3")
+        let descriptors = try AdvancedCommerceSubscriptionModifyDescriptors(effective: .nextBillCycle, description: "description", displayName: "displayName")
+        let validRequest = try AdvancedCommerceSubscriptionModifyInAppRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), retainBillingCycle: true, transactionId: "transactionId", addItems: [addItem], changeItems: [changeItem], descriptors: descriptors, removeItems: [removeItem])
+        XCTAssertNoThrow(try getJsonEncoder().encode(validRequest))
+
+        var request = validRequest
+        request.addItems = []
+        assertValidationError(try getJsonEncoder().encode(request), "addItems list cannot be empty")
+
+        request = validRequest
+        request.changeItems = []
+        assertValidationError(try getJsonEncoder().encode(request), "changeItems list cannot be empty")
+
+        request = validRequest
+        request.removeItems = []
+        assertValidationError(try getJsonEncoder().encode(request), "removeItems list cannot be empty")
+
+        request = validRequest
+        request.addItems![0].displayName = String(repeating: "A", count: 31)
+        assertValidationError(try getJsonEncoder().encode(request), "displayName length cannot exceed 30 characters")
+
+        request = validRequest
+        request.addItems![0].offer!.periodCount = 0
+        assertValidationError(try getJsonEncoder().encode(request), "periodCount must be between 1 and 12")
+
+        request = validRequest
+        request.changeItems![0].currentSku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(request), "currentSKU length cannot exceed 128 characters")
+
+        request = validRequest
+        request.changeItems![0].description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+
+        request = validRequest
+        request.changeItems![0].offer!.periodCount = 13
+        assertValidationError(try getJsonEncoder().encode(request), "periodCount must be between 1 and 12")
+
+        request = validRequest
+        request.removeItems![0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(request), "SKU length cannot exceed 128 characters")
+
+        request = validRequest
+        request.descriptors!.description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+    }
+
+    public func testEncodingSubscriptionMigrateRequestValidatesFieldsChangedAfterInitialization() throws {
+        let descriptors = try AdvancedCommerceSubscriptionMigrateDescriptors(description: "description", displayName: "displayName")
+        let item = try AdvancedCommerceSubscriptionMigrateItem(sku: "sku", description: "description", displayName: "displayName")
+        let renewalItem = try AdvancedCommerceSubscriptionMigrateRenewalItem(sku: "sku2", description: "description", displayName: "displayName")
+        let validRequest = try AdvancedCommerceSubscriptionMigrateRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), descriptors: descriptors, items: [item], targetProductId: "targetProductId", taxCode: "taxCode", renewalItems: [renewalItem])
+        XCTAssertNoThrow(try getJsonEncoder().encode(validRequest))
+
+        var request = validRequest
+        request.items = []
+        assertValidationError(try getJsonEncoder().encode(request), "items list cannot be empty")
+
+        request = validRequest
+        request.renewalItems = []
+        assertValidationError(try getJsonEncoder().encode(request), "renewalItems list cannot be empty")
+
+        request = validRequest
+        request.items[0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(request), "SKU length cannot exceed 128 characters")
+
+        request = validRequest
+        request.renewalItems![0].displayName = String(repeating: "A", count: 31)
+        assertValidationError(try getJsonEncoder().encode(request), "displayName length cannot exceed 30 characters")
+
+        request = validRequest
+        request.descriptors.description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+    }
+
+    public func testSubscriptionMigrateDescriptorsRequiresDescriptionAndDisplayName() throws {
+        let validDescriptors = try AdvancedCommerceSubscriptionMigrateDescriptors(description: "description", displayName: "displayName")
+        let node = try JSONSerialization.jsonObject(with: getJsonEncoder().encode(validDescriptors)) as! [String: Any]
+        XCTAssertEqual("description", node["description"] as? String)
+        XCTAssertEqual("displayName", node["displayName"] as? String)
+
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionMigrateDescriptors.self, node, requiredKeys: ["description", "displayName"])
+    }
+
+    public func testEncodingOtherRequestsValidatesFieldsChangedAfterInitialization() throws {
+        let requestInfo = AdvancedCommerceRequestInfo(requestReferenceId: UUID())
+
+        var oneTimeChargeItem = try AdvancedCommerceOneTimeChargeItem(sku: "sku", description: "description", displayName: "displayName", price: 1000)
+        oneTimeChargeItem.description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(AdvancedCommerceOneTimeChargeCreateRequest(requestInfo: requestInfo, currency: "USD", item: oneTimeChargeItem, taxCode: "taxCode")), "description length cannot exceed 45 characters")
+
+        let refundItem = try AdvancedCommerceRequestRefundItem(sku: "sku", refundReason: .legal, refundType: .full, revoke: true)
+        var refundRequest = try AdvancedCommerceRequestRefundRequest(requestInfo: requestInfo, items: [refundItem], refundRiskingPreference: true)
+        XCTAssertNoThrow(try getJsonEncoder().encode(refundRequest))
+        refundRequest.items[0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(refundRequest), "SKU length cannot exceed 128 characters")
+        refundRequest.items = []
+        assertValidationError(try getJsonEncoder().encode(refundRequest), "items list cannot be empty")
+
+        let priceChangeItem = try AdvancedCommerceSubscriptionPriceChangeItem(sku: "sku", price: 1000, dependentSKUs: ["dependentSKU"])
+        var priceChangeRequest = try AdvancedCommerceSubscriptionPriceChangeRequest(requestInfo: requestInfo, items: [priceChangeItem])
+        XCTAssertNoThrow(try getJsonEncoder().encode(priceChangeRequest))
+        priceChangeRequest.items[0].dependentSKUs = [String(repeating: "A", count: 129)]
+        assertValidationError(try getJsonEncoder().encode(priceChangeRequest), "dependentSKUs length cannot exceed 128 characters")
+        priceChangeRequest.items[0].dependentSKUs = nil
+        priceChangeRequest.items[0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(priceChangeRequest), "SKU length cannot exceed 128 characters")
+        priceChangeRequest.items = []
+        assertValidationError(try getJsonEncoder().encode(priceChangeRequest), "items list cannot be empty")
+
+        var reactivateItem = try AdvancedCommerceSubscriptionReactivateItem(sku: "sku")
+        reactivateItem.sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(AdvancedCommerceSubscriptionReactivateInAppRequest(requestInfo: requestInfo, transactionId: "transactionId", items: [reactivateItem])), "SKU length cannot exceed 128 characters")
+
+        let changeMetadataItem = try AdvancedCommerceSubscriptionChangeMetadataItem(currentSku: "currentSku", effective: .immediately, sku: "sku", description: "description", displayName: "displayName")
+        let changeMetadataDescriptors = try AdvancedCommerceSubscriptionChangeMetadataDescriptors(effective: .immediately, description: "description", displayName: "displayName")
+        let validChangeMetadataRequest = AdvancedCommerceSubscriptionChangeMetadataRequest(requestInfo: requestInfo, descriptors: changeMetadataDescriptors, items: [changeMetadataItem])
+        XCTAssertNoThrow(try getJsonEncoder().encode(validChangeMetadataRequest))
+        var changeMetadataRequest = validChangeMetadataRequest
+        changeMetadataRequest.items![0].sku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(changeMetadataRequest), "SKU length cannot exceed 128 characters")
+        changeMetadataRequest = validChangeMetadataRequest
+        changeMetadataRequest.items![0].currentSku = String(repeating: "A", count: 129)
+        assertValidationError(try getJsonEncoder().encode(changeMetadataRequest), "currentSKU length cannot exceed 128 characters")
+        changeMetadataRequest = validChangeMetadataRequest
+        changeMetadataRequest.items![0].description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(changeMetadataRequest), "description length cannot exceed 45 characters")
+        changeMetadataRequest = validChangeMetadataRequest
+        changeMetadataRequest.descriptors!.displayName = String(repeating: "A", count: 31)
+        assertValidationError(try getJsonEncoder().encode(changeMetadataRequest), "displayName length cannot exceed 30 characters")
+    }
+
+    public func testSubscriptionChangeMetadataRequestRequiresAtLeastOneItemWhenItemsAreIncluded() throws {
+        let requestInfo = AdvancedCommerceRequestInfo(requestReferenceId: UUID())
+
+        let emptyItemsRequest = AdvancedCommerceSubscriptionChangeMetadataRequest(requestInfo: requestInfo, items: [])
+        assertValidationError(try getJsonEncoder().encode(emptyItemsRequest), "items list cannot be empty")
+
+        let noItemsRequest = AdvancedCommerceSubscriptionChangeMetadataRequest(requestInfo: requestInfo, storefront: "USA")
+        let node = try JSONSerialization.jsonObject(with: getJsonEncoder().encode(noItemsRequest)) as! [String: Any]
+        XCTAssertNil(node["items"])
+        XCTAssertEqual("USA", node["storefront"] as? String)
+    }
+
+    public func testSubscriptionReactivateInAppRequestItemsValidation() throws {
+        let requestInfo = AdvancedCommerceRequestInfo(requestReferenceId: UUID())
+        let item = try AdvancedCommerceSubscriptionReactivateItem(sku: "sku")
+
+        assertValidationError(try AdvancedCommerceSubscriptionReactivateInAppRequest(requestInfo: requestInfo, transactionId: "transactionId", items: []), "items list cannot be empty")
+        var emptyItemsRequest = try AdvancedCommerceSubscriptionReactivateInAppRequest(requestInfo: requestInfo, transactionId: "transactionId", items: [item])
+        emptyItemsRequest.items = []
+        assertValidationError(try getJsonEncoder().encode(emptyItemsRequest), "items list cannot be empty")
+
+        let noItemsRequest = try AdvancedCommerceSubscriptionReactivateInAppRequest(requestInfo: requestInfo, transactionId: "transactionId")
+        XCTAssertNil(noItemsRequest.items)
+        let noItemsNode = try JSONSerialization.jsonObject(with: getJsonEncoder().encode(noItemsRequest)) as! [String: Any]
+        XCTAssertNil(noItemsNode["items"])
+
+        let validRequest = try AdvancedCommerceSubscriptionReactivateInAppRequest(requestInfo: requestInfo, transactionId: "transactionId", items: [item])
+        XCTAssertEqual([item], validRequest.items)
+        let validNode = try JSONSerialization.jsonObject(with: getJsonEncoder().encode(validRequest)) as! [String: Any]
+        XCTAssertEqual("sku", ((validNode["items"] as! [[String: Any]])[0])["SKU"] as? String)
+    }
+
+    public func testDecodingPayloadsAppliesRequestLimits() throws {
+        let json = "{\"SKU\": \"sku\", \"description\": \"description\", \"displayName\": \"displayName\", \"offer\": {\"period\": \"P1M\", \"periodCount\": %d, \"price\": 1000, \"reason\": \"ACQUISITION\"}, \"price\": 2000}"
+
+        assertValidationError(try getJsonDecoder().decode(AdvancedCommerceTransactionItem.self, from: String(format: json, 13).data(using: .utf8)!), "periodCount must be between 1 and 12")
+
+        let item = try getJsonDecoder().decode(AdvancedCommerceTransactionItem.self, from: String(format: json, 12).data(using: .utf8)!)
+        XCTAssertEqual(12, item.offer!.periodCount)
+        TestingUtility.confirmCodableInternallyConsistent(item)
+    }
+
+    private func assertValidationError<T>(_ expression: @autoclosure () throws -> T, _ expectedDescription: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertThrowsError(try expression(), file: file, line: line) { error in
+            XCTAssertEqual(expectedDescription, (error as? HelperValidationUtils.ValidationError)?.description, file: file, line: line)
+        }
     }
 
     public func testAdvancedCommerceDescriptors() throws {
@@ -232,6 +482,18 @@ final class AdvancedCommerceModelsTests: XCTestCase {
         XCTAssertEqual(5000, item.refundAmount)
 
         TestingUtility.confirmCodableInternallyConsistent(item)
+    }
+
+    public func testAdvancedCommerceRequestRefundItemRefundAmountIs64Bit() throws {
+        let refundAmount: Int64 = 5_000_000_000
+        let item = try AdvancedCommerceRequestRefundItem(sku: "sku", refundReason: .legal, refundType: .custom, revoke: false, refundAmount: refundAmount)
+        XCTAssertEqual(refundAmount, try encodeToDictionary(item)["refundAmount"] as? Int64)
+
+        var json = TestingUtility.readJsonObject("resources/models/advancedCommerceRequestRefundItem.json")
+        json["refundAmount"] = refundAmount
+        let decoded = try getJsonDecoder().decode(AdvancedCommerceRequestRefundItem.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertEqual(refundAmount, decoded.refundAmount)
+        TestingUtility.confirmCodableInternallyConsistent(decoded)
     }
 
     public func testAdvancedCommerceOffer() throws {
@@ -359,6 +621,82 @@ final class AdvancedCommerceModelsTests: XCTestCase {
         XCTAssertEqual("signed_transaction_info", response.signedTransactionInfo)
 
         TestingUtility.confirmCodableInternallyConsistent(response)
+    }
+
+    public func testResponsesWithoutRequiredFieldsFailToDecode() throws {
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceRequestRefundResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceRequestRefundResponse.json"), requiredKeys: ["signedTransactionInfo"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionCancelResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceSubscriptionCancelResponse.json"), requiredKeys: ["signedTransactionInfo", "signedRenewalInfo"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionChangeMetadataResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceSubscriptionChangeMetadataResponse.json"), requiredKeys: ["signedTransactionInfo", "signedRenewalInfo"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionMigrateResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceSubscriptionMigrateResponse.json"), requiredKeys: ["signedTransactionInfo", "signedRenewalInfo"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionPriceChangeResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceSubscriptionPriceChangeResponse.json"), requiredKeys: ["signedTransactionInfo", "signedRenewalInfo"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceSubscriptionRevokeResponse.self, TestingUtility.readJsonObject("resources/models/advancedCommerceSubscriptionRevokeResponse.json"), requiredKeys: ["signedTransactionInfo", "signedRenewalInfo"])
+    }
+
+    public func testOfferAndDescriptorsWithoutARequiredFieldFailToDecode() throws {
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceOffer.self, TestingUtility.readJsonObject("resources/models/advancedCommerceOffer.json"), requiredKeys: ["price", "period", "periodCount", "reason"])
+        TestingUtility.confirmRequiredKeys(AdvancedCommerceDescriptors.self, TestingUtility.readJsonObject("resources/models/advancedCommerceDescriptors.json"), requiredKeys: ["displayName", "description"])
+    }
+
+    public func testOfferAndDescriptorsOutsideTheRequestLimitsFailToDecode() throws {
+        func offerJson(_ periodCount: Int) -> Data {
+            return "{\"price\": 1000, \"period\": \"P1M\", \"periodCount\": \(periodCount), \"reason\": \"ACQUISITION\"}".data(using: .utf8)!
+        }
+        func descriptorsJson(displayName: Int, description: Int) -> Data {
+            return "{\"displayName\": \"\(String(repeating: "A", count: displayName))\", \"description\": \"\(String(repeating: "A", count: description))\"}".data(using: .utf8)!
+        }
+        assertValidationError(try getJsonDecoder().decode(AdvancedCommerceOffer.self, from: offerJson(13)), "periodCount must be between 1 and 12")
+        assertValidationError(try getJsonDecoder().decode(AdvancedCommerceOffer.self, from: offerJson(0)), "periodCount must be between 1 and 12")
+        assertValidationError(try getJsonDecoder().decode(AdvancedCommerceDescriptors.self, from: descriptorsJson(displayName: 31, description: 45)), "displayName length cannot exceed 30 characters")
+        assertValidationError(try getJsonDecoder().decode(AdvancedCommerceDescriptors.self, from: descriptorsJson(displayName: 30, description: 46)), "description length cannot exceed 45 characters")
+
+        for periodCount in [1, 12] {
+            let offer = try getJsonDecoder().decode(AdvancedCommerceOffer.self, from: offerJson(periodCount))
+            XCTAssertEqual(Int32(periodCount), offer.periodCount)
+            TestingUtility.confirmCodableInternallyConsistent(offer)
+        }
+        var offer = try getJsonDecoder().decode(AdvancedCommerceOffer.self, from: offerJson(12))
+        let descriptors = try getJsonDecoder().decode(AdvancedCommerceDescriptors.self, from: descriptorsJson(displayName: 30, description: 45))
+        XCTAssertEqual(30, descriptors.displayName.count)
+        XCTAssertEqual(45, descriptors.description.count)
+        TestingUtility.confirmCodableInternallyConsistent(descriptors)
+
+        offer.periodCount = 13
+        assertValidationError(try getJsonEncoder().encode(offer), "periodCount must be between 1 and 12")
+        var tooLong = descriptors
+        tooLong.displayName = String(repeating: "A", count: 31)
+        assertValidationError(try getJsonEncoder().encode(tooLong), "displayName length cannot exceed 30 characters")
+
+        let addItem = try AdvancedCommerceSubscriptionModifyAddItem(sku: "sku", description: "description", displayName: "displayName", price: 2000, offer: offer)
+        let modifyRequest = try AdvancedCommerceSubscriptionModifyInAppRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), retainBillingCycle: true, transactionId: "transactionId", addItems: [addItem])
+        assertValidationError(try getJsonEncoder().encode(modifyRequest), "periodCount must be between 1 and 12")
+        let item = try AdvancedCommerceSubscriptionCreateItem(sku: "sku", description: "description", displayName: "displayName", price: 2000)
+        let createRequest = try AdvancedCommerceSubscriptionCreateRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), currency: "USD", descriptors: tooLong, items: [item], period: .p1M, taxCode: "taxCode")
+        assertValidationError(try getJsonEncoder().encode(createRequest), "displayName length cannot exceed 30 characters")
+    }
+
+    public func testOfferAndDescriptorsFieldsAreRequiredToBuildARequest() throws {
+        let offer = try AdvancedCommerceOffer(period: .p1M, periodCount: 3, price: 1000, reason: .acquisition)
+        XCTAssertEqual(["period", "periodCount", "price", "reason"], try encodeToDictionary(offer).keys.sorted())
+        let rawOffer = try AdvancedCommerceOffer(rawPeriod: "P1M", periodCount: 3, price: 1000, rawReason: "ACQUISITION")
+        XCTAssertEqual(offer, rawOffer)
+        let descriptors = try AdvancedCommerceDescriptors(description: "description", displayName: "displayName")
+        XCTAssertEqual(["description", "displayName"], try encodeToDictionary(descriptors).keys.sorted())
+
+        assertValidationError(try AdvancedCommerceOffer(period: .p1M, periodCount: 13, price: 1000, reason: .acquisition), "periodCount must be between 1 and 12")
+        assertValidationError(try AdvancedCommerceDescriptors(description: "description", displayName: String(repeating: "A", count: 31)), "displayName length cannot exceed 30 characters")
+        assertValidationError(try AdvancedCommerceDescriptors(description: String(repeating: "A", count: 46), displayName: "displayName"), "description length cannot exceed 45 characters")
+
+        let item = try AdvancedCommerceSubscriptionCreateItem(sku: "sku", description: "description", displayName: "displayName", price: 2000, offer: offer)
+        let validRequest = try AdvancedCommerceSubscriptionCreateRequest(requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID()), currency: "USD", descriptors: descriptors, items: [item], period: .p1M, taxCode: "taxCode")
+        XCTAssertNoThrow(try getJsonEncoder().encode(validRequest))
+
+        var request = validRequest
+        request.descriptors.description = String(repeating: "A", count: 46)
+        assertValidationError(try getJsonEncoder().encode(request), "description length cannot exceed 45 characters")
+    }
+
+    private func encodeToDictionary(_ value: any Encodable) throws -> [String: Any] {
+        return try JSONSerialization.jsonObject(with: getJsonEncoder().encode(value)) as! [String: Any]
     }
 
     public func testAdvancedCommerceSubscriptionRevokeResponse() throws {

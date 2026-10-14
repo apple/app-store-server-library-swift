@@ -34,6 +34,12 @@
         "SKU": "com.example.sku.premium",
         "description": "Premium feature",
         "displayName": "Premium Feature",
+        "offer": {
+          "period": "P2W",
+          "periodCount": 2,
+          "price": 2990,
+          "reason": "WIN_BACK"
+        },
         "price": 9990,
         "priceIncreaseInfo": {
           "dependentSKUs": [

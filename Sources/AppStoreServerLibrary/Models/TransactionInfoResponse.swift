@@ -14,4 +14,3 @@ public struct TransactionInfoResponse: Decodable, Encodable, Hashable, Sendable 
     ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     public var signedTransactionInfo: String?
 }
-
