@@ -554,6 +554,66 @@ public actor AppStoreServerAPIClient: Sendable {
         return await makeRequestWithoutResponseBody(path: "/inApps/v1/transactions/" + transactionId + "/finish", method: .POST, queryParameters: [:], body: request)
     }
 
+    ///Increase or decrease the price of an auto-renewable subscription, a bundle, or individual items within a subscription at the next renewal.
+    ///
+    ///- Parameter transactionId: A transaction identifier of the auto-renewable subscription that is subject to the price change.
+    ///- Parameter subscriptionPriceChangeRequest: The request body that contains the details of the price change.
+    ///- Returns: A response that contains signed JWS renewal and JWS transaction information after a subscription price change request.
+    ///[Change Subscription Price](https://developer.apple.com/documentation/advancedcommerceapi/change-subscription-price)
+    public func changeSubscriptionPrice(transactionId: String, subscriptionPriceChangeRequest: AdvancedCommerceSubscriptionPriceChangeRequest) async -> APIResult<AdvancedCommerceSubscriptionPriceChangeResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/subscription/changePrice/" + transactionId, method: .POST, queryParameters: [:], body: subscriptionPriceChangeRequest)
+    }
+
+    ///Turn off automatic renewal to cancel a customer's auto-renewable subscription.
+    ///
+    ///- Parameter transactionId: The transaction identifier of the auto-renewable subscription to cancel.
+    ///- Parameter subscriptionCancelRequest: The request body that includes information about the subscription to cancel.
+    ///- Returns: The response body for a successful subscription cancellation.
+    ///[Cancel a Subscription](https://developer.apple.com/documentation/advancedcommerceapi/cancel-a-subscription)
+    public func cancelSubscription(transactionId: String, subscriptionCancelRequest: AdvancedCommerceSubscriptionCancelRequest) async -> APIResult<AdvancedCommerceSubscriptionCancelResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/subscription/cancel/" + transactionId, method: .POST, queryParameters: [:], body: subscriptionCancelRequest)
+    }
+
+    ///Immediately cancel a customer's subscription and all the items that are included in the subscription, and request a full or prorated refund.
+    ///
+    ///- Parameter transactionId: The transaction identifier of the auto-renewable subscription to revoke.
+    ///- Parameter subscriptionRevokeRequest: The request body you provide to terminate a subscription and all its items immediately.
+    ///- Returns: The response body for a successful revoke-subscription request.
+    ///[Revoke Subscription](https://developer.apple.com/documentation/advancedcommerceapi/revoke-subscription)
+    public func revokeSubscription(transactionId: String, subscriptionRevokeRequest: AdvancedCommerceSubscriptionRevokeRequest) async -> APIResult<AdvancedCommerceSubscriptionRevokeResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/subscription/revoke/" + transactionId, method: .POST, queryParameters: [:], body: subscriptionRevokeRequest)
+    }
+
+    ///Request a refund for a one-time charge or subscription transaction.
+    ///
+    ///- Parameter transactionId: The transaction identifier for which you request a refund.
+    ///- Parameter requestRefundRequest: The request body for requesting a refund for a transaction.
+    ///- Returns: The response body for a transaction refund request.
+    ///[Request Transaction Refund](https://developer.apple.com/documentation/advancedcommerceapi/request-transaction-refund)
+    public func requestTransactionRefund(transactionId: String, requestRefundRequest: AdvancedCommerceRequestRefundRequest) async -> APIResult<AdvancedCommerceRequestRefundResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/transaction/requestRefund/" + transactionId, method: .POST, queryParameters: [:], body: requestRefundRequest)
+    }
+
+    ///Update the SKU, display name, and description associated with a subscription, without affecting the subscription's billing or its service.
+    ///
+    ///- Parameter transactionId: The transaction identifier of the auto-renewable subscription to get changes to its metadata.
+    ///- Parameter subscriptionChangeMetadataRequest: The request body that contains the metadata changes.
+    ///- Returns: The response body for a successful subscription metadata change.
+    ///[Change Subscription Metadata](https://developer.apple.com/documentation/advancedcommerceapi/change-subscription-metadata)
+    public func changeSubscriptionMetadata(transactionId: String, subscriptionChangeMetadataRequest: AdvancedCommerceSubscriptionChangeMetadataRequest) async -> APIResult<AdvancedCommerceSubscriptionChangeMetadataResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/subscription/changeMetadata/" + transactionId, method: .POST, queryParameters: [:], body: subscriptionChangeMetadataRequest)
+    }
+
+    ///Migrate a subscription that a customer purchased through Apple In-App Purchase to a subscription you manage using the Advanced Commerce API.
+    ///
+    ///- Parameter transactionId: The transaction identifier of the auto-renewable subscription to migrate.
+    ///- Parameter subscriptionMigrateRequest: The request body that contains the details for the migration.
+    ///- Returns: A response that contains signed renewal and transaction information after a subscription successfully migrates to the Advanced Commerce API.
+    ///[Migrate a Subscription to Advanced Commerce API](https://developer.apple.com/documentation/advancedcommerceapi/migrate-subscription-to-advanced-commerce-api)
+    public func migrateSubscriptionToAdvancedCommerceAPI(transactionId: String, subscriptionMigrateRequest: AdvancedCommerceSubscriptionMigrateRequest) async -> APIResult<AdvancedCommerceSubscriptionMigrateResponse> {
+        return await makeRequestWithResponseBody(path: "/advancedCommerce/v1/subscription/migrate/" + transactionId, method: .POST, queryParameters: [:], body: subscriptionMigrateRequest)
+    }
+
     internal struct AppStoreServerAPIJWT: JWTPayload, Equatable {
         var exp: ExpirationClaim
         var iss: IssuerClaim
