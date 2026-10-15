@@ -98,7 +98,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(41234, notification.summary!.appAppleId)
         XCTAssertEqual("com.example", notification.summary!.bundleId)
         XCTAssertEqual("com.example.product", notification.summary!.productId)
-        XCTAssertEqual("efb27071-45a4-4aca-9854-2a1e9146f265", notification.summary!.requestIdentifier)
+        XCTAssertEqual(UUID(uuidString: "efb27071-45a4-4aca-9854-2a1e9146f265"), notification.summary!.requestIdentifier)
         XCTAssertEqual(["CAN", "USA", "MEX"], notification.summary!.storefrontCountryCodes)
         XCTAssertEqual(5, notification.summary!.succeededCount)
         XCTAssertEqual(2, notification.summary!.failedCount)
@@ -131,7 +131,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertNil(notification.summary)
         XCTAssertNotNil(notification.externalPurchaseToken)
         XCTAssertEqual("b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
-        XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148950), notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
         XCTAssertEqual(TokenType.acquisition, notification.externalPurchaseToken!.tokenType)
@@ -140,6 +140,23 @@ final class SignedModelTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
+    public func testExternalPurchaseTokenNotificationWithoutRequiredFieldIsInvalid() async throws {
+        let payload = TestingUtility.readJsonObject("resources/models/signedExternalPurchaseTokenNotification.json")
+        for key in ["externalPurchaseId", "tokenCreationDate", "appAppleId", "bundleId"] {
+            var notification = payload
+            var externalPurchaseToken = notification["externalPurchaseToken"] as! [String: Any]
+            externalPurchaseToken.removeValue(forKey: key)
+            notification["externalPurchaseToken"] = externalPurchaseToken
+            let signedNotification = TestingUtility.createSignedDataFromJsonString(String(decoding: try JSONSerialization.data(withJSONObject: notification), as: UTF8.self))
+
+            let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { _, _, _ in
+                XCTFail()
+                return nil
+            }
+            XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), verifiedNotification)
+        }
+    }
+
     public func testExternalPurchaseTokenSandboxNotificationDecoding() async throws {
         let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenSandboxNotification.json")
 
@@ -166,12 +183,37 @@ final class SignedModelTests: XCTestCase {
         XCTAssertNil(notification.summary)
         XCTAssertNotNil(notification.externalPurchaseToken)
         XCTAssertEqual("SANDBOX_b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
-        XCTAssertEqual(1698148950000, notification.externalPurchaseToken!.tokenCreationDate)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148950), notification.externalPurchaseToken!.tokenCreationDate)
         XCTAssertEqual(55555, notification.externalPurchaseToken!.appAppleId)
         XCTAssertEqual("com.example", notification.externalPurchaseToken!.bundleId)
         XCTAssertEqual(TokenType.acquisition, notification.externalPurchaseToken!.tokenType)
         XCTAssertEqual("ACQUISITION", notification.externalPurchaseToken!.rawTokenType)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698149000), notification.externalPurchaseToken!.tokenExpirationDate)
+        TestingUtility.confirmCodableInternallyConsistent(notification)
+    }
+
+    public func testExternalPurchaseTokenCoreTechnologyNotificationDecoding() async throws {
+        let signedNotification = TestingUtility.createSignedDataFromJson("resources/models/signedExternalPurchaseTokenCoreTechnologyNotification.json")
+
+        let verifiedNotification = await TestingUtility.getSignedDataVerifier().verifyAndDecodeNotification(signedPayload: signedNotification) { bundleId, appAppleId, environment in
+            XCTAssertEqual("com.example", bundleId)
+            XCTAssertEqual(55555, appAppleId)
+            XCTAssertEqual(.production, environment)
+            return nil
+        }
+
+        guard case .valid(let notification) = verifiedNotification else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual(NotificationTypeV2.externalPurchaseToken, notification.notificationType)
+        XCTAssertEqual(Subtype.unreported, notification.subtype)
+        XCTAssertNotNil(notification.externalPurchaseToken)
+        XCTAssertEqual("b2158121-7af9-49d4-9561-1f588205523e", notification.externalPurchaseToken!.externalPurchaseId)
+        XCTAssertEqual(TokenType.coreTechnology, notification.externalPurchaseToken!.tokenType)
+        XCTAssertEqual("CORE_TECHNOLOGY", notification.externalPurchaseToken!.rawTokenType)
+        XCTAssertNil(notification.externalPurchaseToken!.tokenExpirationDate)
         TestingUtility.confirmCodableInternallyConsistent(notification)
     }
     
@@ -238,6 +280,13 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("com.example.sku.premium", acItem.sku)
         XCTAssertEqual("Premium feature", acItem.description)
         XCTAssertEqual("Premium Feature", acItem.displayName)
+        XCTAssertNotNil(acItem.offer)
+        XCTAssertEqual(AdvancedCommerceOfferPeriod.p1M, acItem.offer!.period)
+        XCTAssertEqual("P1M", acItem.offer!.rawPeriod)
+        XCTAssertEqual(3, acItem.offer!.periodCount)
+        XCTAssertEqual(4990, acItem.offer!.price)
+        XCTAssertEqual(AdvancedCommerceOfferReason.acquisition, acItem.offer!.reason)
+        XCTAssertEqual("ACQUISITION", acItem.offer!.rawReason)
         XCTAssertEqual(9990, acItem.price)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698149200), acItem.revocationDate)
         XCTAssertNotNil(acItem.refunds)
@@ -257,6 +306,7 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(Date(timeIntervalSince1970: 1698150000), txnCommitment.commitmentExpiresDate)
         XCTAssertEqual(119880, txnCommitment.commitmentPrice)
         XCTAssertEqual(12, txnCommitment.totalBillingPeriods)
+        XCTAssertEqual("11111", transaction.previousOriginalTransactionId)
         TestingUtility.confirmCodableInternallyConsistent(transaction)
     }
 
@@ -328,7 +378,175 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(RevocationType.refundProrated, transaction.revocationType)
         XCTAssertEqual("REFUND_PRORATED", transaction.rawRevocationType)
         XCTAssertEqual(50000, transaction.revocationPercentage)
+        XCTAssertNil(transaction.previousOriginalTransactionId)
         TestingUtility.confirmCodableInternallyConsistent(transaction)
+    }
+
+    public func testTransactionWithAssignmentRevocationDecoding() async throws {
+        let signedTransaction = TestingUtility.createSignedDataFromJson("resources/models/signedTransactionWithAssignmentRevocation.json")
+
+        let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+
+        guard case .valid(let transaction) = verifiedTransaction else {
+            XCTAssertTrue(false)
+            return
+        }
+
+        XCTAssertEqual("12345", transaction.originalTransactionId)
+        XCTAssertEqual("23456", transaction.transactionId)
+        XCTAssertEqual(5, transaction.quantity)
+        XCTAssertEqual(InAppOwnershipType.assigned, transaction.inAppOwnershipType)
+        XCTAssertEqual("ASSIGNED", transaction.rawInAppOwnershipType)
+        XCTAssertEqual(Date(timeIntervalSince1970: 1698148950), transaction.revocationDate)
+        XCTAssertEqual(RevocationType.assignmentRevoke, transaction.revocationType)
+        XCTAssertEqual("ASSIGNMENT_REVOKE", transaction.rawRevocationType)
+        XCTAssertNil(transaction.revocationReason)
+        XCTAssertNil(transaction.revocationPercentage)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
+    }
+
+    public func testAdvancedCommerceOfferOrDescriptorsWithoutAFieldIsInvalidInTransaction() async throws {
+        for (object, key) in Self.advancedCommerceRequiredKeys {
+            let signedTransaction = TestingUtility.createSignedDataFromJsonString(try advancedCommercePayload("resources/models/signedTransaction.json", removing: key, from: object))
+
+            let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+
+            XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), verifiedTransaction)
+        }
+    }
+
+    public func testAdvancedCommerceOfferOrDescriptorsWithoutAFieldIsInvalidInRenewalInfo() async throws {
+        for (object, key) in Self.advancedCommerceRequiredKeys {
+            let signedRenewalInfo = TestingUtility.createSignedDataFromJsonString(try advancedCommercePayload("resources/models/signedRenewalInfo.json", removing: key, from: object))
+
+            let verifiedRenewalInfo = await TestingUtility.getSignedDataVerifier().verifyAndDecodeRenewalInfo(signedRenewalInfo: signedRenewalInfo)
+
+            XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), verifiedRenewalInfo)
+        }
+    }
+
+    public func testAdvancedCommerceTransactionWithoutDescriptorsAndOfferDecodes() async throws {
+        var payload = TestingUtility.readJsonObject("resources/models/signedTransaction.json")
+        var advancedCommerceInfo = payload["advancedCommerceInfo"] as! [String: Any]
+        advancedCommerceInfo.removeValue(forKey: "descriptors")
+        advancedCommerceInfo.removeValue(forKey: "period")
+        var items = advancedCommerceInfo["items"] as! [[String: Any]]
+        items[0].removeValue(forKey: "offer")
+        advancedCommerceInfo["items"] = items
+        payload["advancedCommerceInfo"] = advancedCommerceInfo
+        let signedTransaction = TestingUtility.createSignedDataFromJsonString(String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self))
+
+        let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+
+        guard case .valid(let transaction) = verifiedTransaction else {
+            XCTFail()
+            return
+        }
+        let info = transaction.advancedCommerceInfo!
+        XCTAssertNil(info.descriptors)
+        XCTAssertNil(info.items![0].offer)
+        XCTAssertEqual("com.example.sku.premium", info.items![0].sku)
+        TestingUtility.confirmCodableInternallyConsistent(transaction)
+    }
+
+    public func testAdvancedCommerceOfferOrDescriptorsOutsideTheRequestLimitsIsInvalidInTransaction() async throws {
+        for (object, key, value) in Self.advancedCommerceValuesOutsideTheLimits {
+            let signedTransaction = TestingUtility.createSignedDataFromJsonString(try advancedCommercePayload("resources/models/signedTransaction.json", setting: [key: value], in: object))
+
+            let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: signedTransaction)
+
+            XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), verifiedTransaction)
+        }
+    }
+
+    public func testAdvancedCommerceOfferOrDescriptorsOutsideTheRequestLimitsIsInvalidInRenewalInfo() async throws {
+        for (object, key, value) in Self.advancedCommerceValuesOutsideTheLimits {
+            let signedRenewalInfo = TestingUtility.createSignedDataFromJsonString(try advancedCommercePayload("resources/models/signedRenewalInfo.json", setting: [key: value], in: object))
+
+            let verifiedRenewalInfo = await TestingUtility.getSignedDataVerifier().verifyAndDecodeRenewalInfo(signedRenewalInfo: signedRenewalInfo)
+
+            XCTAssertEqual(VerificationResult.invalid(VerificationError.INVALID_JWT_FORMAT), verifiedRenewalInfo)
+        }
+    }
+
+    public func testAdvancedCommerceOfferAndDescriptorsAtTheRequestLimitsDecodeInTransaction() async throws {
+        for periodCount: Int32 in [1, 12] {
+            let payload = try advancedCommercePayloadAtTheLimits("resources/models/signedTransaction.json", periodCount: periodCount)
+
+            let verifiedTransaction = await TestingUtility.getSignedDataVerifier().verifyAndDecodeTransaction(signedTransaction: TestingUtility.createSignedDataFromJsonString(payload))
+
+            guard case .valid(let transaction) = verifiedTransaction else {
+                XCTFail()
+                return
+            }
+            let info = transaction.advancedCommerceInfo!
+            XCTAssertEqual(String(repeating: "A", count: 30), info.descriptors!.displayName)
+            XCTAssertEqual(String(repeating: "A", count: 45), info.descriptors!.description)
+            XCTAssertEqual(periodCount, info.items![0].offer!.periodCount)
+            TestingUtility.confirmCodableInternallyConsistent(transaction)
+        }
+    }
+
+    public func testAdvancedCommerceOfferAndDescriptorsAtTheRequestLimitsDecodeInRenewalInfo() async throws {
+        for periodCount: Int32 in [1, 12] {
+            let payload = try advancedCommercePayloadAtTheLimits("resources/models/signedRenewalInfo.json", periodCount: periodCount)
+
+            let verifiedRenewalInfo = await TestingUtility.getSignedDataVerifier().verifyAndDecodeRenewalInfo(signedRenewalInfo: TestingUtility.createSignedDataFromJsonString(payload))
+
+            guard case .valid(let renewalInfo) = verifiedRenewalInfo else {
+                XCTFail()
+                return
+            }
+            let info = renewalInfo.advancedCommerceInfo!
+            XCTAssertEqual(String(repeating: "A", count: 30), info.descriptors!.displayName)
+            XCTAssertEqual(String(repeating: "A", count: 45), info.descriptors!.description)
+            XCTAssertEqual(periodCount, info.items![0].offer!.periodCount)
+            TestingUtility.confirmCodableInternallyConsistent(renewalInfo)
+        }
+    }
+
+    private static let advancedCommerceValuesOutsideTheLimits: [(String, String, any Sendable)] = [
+        ("offer", "periodCount", 13), ("offer", "periodCount", 0),
+        ("descriptors", "displayName", String(repeating: "A", count: 31)), ("descriptors", "description", String(repeating: "A", count: 46))]
+
+    private func advancedCommercePayloadAtTheLimits(_ path: String, periodCount: Int32) throws -> String {
+        let withOffer = try advancedCommercePayload(path, setting: ["periodCount": Int(periodCount)], in: "offer")
+        let payload = try JSONSerialization.jsonObject(with: Data(withOffer.utf8)) as! [String: Any]
+        return try advancedCommercePayload(payload, setting: ["displayName": String(repeating: "A", count: 30), "description": String(repeating: "A", count: 45)], in: "descriptors")
+    }
+
+    private static let advancedCommerceRequiredKeys = [("descriptors", "displayName"), ("descriptors", "description"),
+                                                       ("offer", "price"), ("offer", "period"), ("offer", "periodCount"), ("offer", "reason")]
+
+    private func advancedCommercePayload(_ path: String, removing key: String, from object: String) throws -> String {
+        return try advancedCommercePayload(TestingUtility.readJsonObject(path), setting: [key: nil], in: object)
+    }
+
+    private func advancedCommercePayload(_ path: String, setting values: [String: Any?], in object: String) throws -> String {
+        return try advancedCommercePayload(TestingUtility.readJsonObject(path), setting: values, in: object)
+    }
+
+    private func advancedCommercePayload(_ payload: [String: Any], setting values: [String: Any?], in object: String) throws -> String {
+        var payload = payload
+        var advancedCommerceInfo = payload["advancedCommerceInfo"] as! [String: Any]
+        func apply(_ target: inout [String: Any]) {
+            for (key, value) in values {
+                target[key] = value
+            }
+        }
+        if object == "descriptors" {
+            var descriptors = advancedCommerceInfo["descriptors"] as! [String: Any]
+            apply(&descriptors)
+            advancedCommerceInfo["descriptors"] = descriptors
+        } else {
+            var items = advancedCommerceInfo["items"] as! [[String: Any]]
+            var offer = items[0]["offer"] as! [String: Any]
+            apply(&offer)
+            items[0]["offer"] = offer
+            advancedCommerceInfo["items"] = items
+        }
+        payload["advancedCommerceInfo"] = advancedCommerceInfo
+        return String(decoding: try JSONSerialization.data(withJSONObject: payload), as: UTF8.self)
     }
 
     public func testRenewalInfoDecoding() async throws {
@@ -384,6 +602,13 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("com.example.sku.premium", item.sku)
         XCTAssertEqual("Premium feature", item.description)
         XCTAssertEqual("Premium Feature", item.displayName)
+        XCTAssertNotNil(item.offer)
+        XCTAssertEqual(AdvancedCommerceOfferPeriod.p2W, item.offer!.period)
+        XCTAssertEqual("P2W", item.offer!.rawPeriod)
+        XCTAssertEqual(2, item.offer!.periodCount)
+        XCTAssertEqual(2990, item.offer!.price)
+        XCTAssertEqual(AdvancedCommerceOfferReason.winBack, item.offer!.reason)
+        XCTAssertEqual("WIN_BACK", item.offer!.rawReason)
         XCTAssertEqual(9990, item.price)
         XCTAssertNotNil(item.priceIncreaseInfo)
         XCTAssertEqual(["com.example.sku.1", "com.example.sku.2"], item.priceIncreaseInfo!.dependentSKUs)
@@ -429,6 +654,8 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual("71134", appTransaction.appTransactionId)
         XCTAssertEqual(PurchasePlatform.iOS, appTransaction.originalPlatform)
         XCTAssertEqual("iOS", appTransaction.rawOriginalPlatform)
+        XCTAssertEqual(StoreType.consumer, appTransaction.storeType)
+        XCTAssertEqual("CONSUMER", appTransaction.rawStoreType)
         TestingUtility.confirmCodableInternallyConsistent(appTransaction)
     }
 
@@ -493,6 +720,17 @@ final class SignedModelTests: XCTestCase {
         XCTAssertEqual(AppStoreEnvironment.sandbox, appData.environment)
         XCTAssertEqual("Sandbox", appData.rawEnvironment)
         XCTAssertEqual("signed-app-transaction-info", appData.signedAppTransactionInfo)
+    }
+
+    public func testInitializersSetStoreTypeAndPreviousOriginalTransactionId() throws {
+        let appTransaction = AppTransaction(receiptType: .sandbox, storeType: .consumer)
+        XCTAssertEqual(StoreType.consumer, appTransaction.storeType)
+        XCTAssertEqual("CONSUMER", appTransaction.rawStoreType)
+        XCTAssertEqual("CONSUMER", AppTransaction(rawReceiptType: "Sandbox", rawStoreType: "CONSUMER").rawStoreType)
+
+        let transaction = try JWSTransactionDecodedPayload(type: .consumable, previousOriginalTransactionId: "11111")
+        XCTAssertEqual("11111", transaction.previousOriginalTransactionId)
+        XCTAssertEqual("11111", try JWSTransactionDecodedPayload(rawType: "Consumable", previousOriginalTransactionId: "11111").previousOriginalTransactionId)
     }
 
     // Xcode-generated dates are not well formed, therefore we only compare to ms precision

@@ -1,17 +1,27 @@
 // Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
 ///The request body that contains consumption information for an In-App Purchase.
 ///
 ///[ConsumptionRequest](https://developer.apple.com/documentation/appstoreserverapi/consumptionrequest)
 public struct ConsumptionRequest: Decodable, Encodable, Hashable, Sendable {
 
-    public init(customerConsented: Bool, deliveryStatus: DeliveryStatus, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, refundPreference: RefundPreference? = nil) {
-        self.init(customerConsented: customerConsented, rawDeliveryStatus: deliveryStatus.rawValue, sampleContentProvided: sampleContentProvided, consumptionPercentage: consumptionPercentage, rawRefundPreference: refundPreference?.rawValue)
+    private static let minimumConsumptionPercentage: Int32 = 0
+    private static let maximumConsumptionPercentage: Int32 = 100000
+
+    public enum ValidationError: Error {
+        case consumptionPercentageOutOfRange
     }
 
-    public init(customerConsented: Bool, rawDeliveryStatus: String, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, rawRefundPreference: String? = nil) {
+    public init(customerConsented: Bool, deliveryStatus: DeliveryStatus, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, refundPreference: RefundPreference? = nil) throws {
+        try self.init(customerConsented: customerConsented, rawDeliveryStatus: deliveryStatus.rawValue, sampleContentProvided: sampleContentProvided, consumptionPercentage: consumptionPercentage, rawRefundPreference: refundPreference?.rawValue)
+    }
+
+    public init(customerConsented: Bool, rawDeliveryStatus: String, sampleContentProvided: Bool, consumptionPercentage: Int32? = nil, rawRefundPreference: String? = nil) throws {
+        if let consumptionPercentage = consumptionPercentage {
+            guard consumptionPercentage >= Self.minimumConsumptionPercentage && consumptionPercentage <= Self.maximumConsumptionPercentage else {
+                throw ValidationError.consumptionPercentageOutOfRange
+            }
+        }
         self.customerConsented = customerConsented
         self.rawDeliveryStatus = rawDeliveryStatus
         self.sampleContentProvided = sampleContentProvided
@@ -19,27 +29,32 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable, Sendable {
         self.rawRefundPreference = rawRefundPreference
     }
 
-    ///A Boolean value that indicates whether the customer consented to provide consumption data to the App Store.
+    ///A Boolean value of true or false that indicates whether the customer consented to provide consumption data.
     ///
     ///[customerConsented](https://developer.apple.com/documentation/appstoreserverapi/customerconsented)
     public var customerConsented: Bool
 
-    ///An integer that indicates the percentage, in milliunits, of the In-App Purchase the customer consumed.
+    ///An integer that indicates the percentage of the In-App Purchase the customer consumed, in milliunits.
     ///
     ///[consumptionPercentage](https://developer.apple.com/documentation/appstoreserverapi/consumptionpercentage)
     public var consumptionPercentage: Int32?
 
-    ///See ``rawDeliveryStatus``
-    public var deliveryStatus: DeliveryStatus? {
-        DeliveryStatus(rawValue: rawDeliveryStatus)
-    }
-
     ///A value that indicates whether the app successfully delivered an In-App Purchase that works properly.
     ///
     ///[deliveryStatus](https://developer.apple.com/documentation/appstoreserverapi/deliverystatus)
+    public var deliveryStatus: DeliveryStatus? {
+        get {
+            return DeliveryStatus(rawValue: rawDeliveryStatus)
+        }
+        set {
+            self.rawDeliveryStatus = newValue.map { $0.rawValue } ?? rawDeliveryStatus
+        }
+    }
+
+    ///See ``deliveryStatus``
     public var rawDeliveryStatus: String
 
-    ///A value that indicates your preferred outcome for the refund request.
+    ///A value that indicates your preference, based on your operational logic, as to whether the App Store should grant the refund.
     ///
     ///[refundPreference](https://developer.apple.com/documentation/appstoreserverapi/refundpreference)
     public var refundPreference: RefundPreference? {
@@ -54,7 +69,7 @@ public struct ConsumptionRequest: Decodable, Encodable, Hashable, Sendable {
     ///See ``refundPreference``
     public var rawRefundPreference: String?
 
-    ///A Boolean value that indicates whether you provided, prior to its purchase, a free sample or trial of the content, or information about its functionality.
+    ///A Boolean value of true or false that indicates whether you provided, prior to its purchase, a free sample or trial of the content, or information about its functionality.
     ///
     ///[sampleContentProvided](https://developer.apple.com/documentation/appstoreserverapi/samplecontentprovided)
     public var sampleContentProvided: Bool

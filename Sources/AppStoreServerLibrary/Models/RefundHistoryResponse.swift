@@ -5,24 +5,24 @@
 ///[RefundHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/refundhistoryresponse)
 public struct RefundHistoryResponse: Decodable, Encodable, Hashable, Sendable {
 
-    public init(signedTransactions: [String]? = nil, revision: String? = nil, hasMore: Bool? = nil) {
-        self.signedTransactions = signedTransactions
-        self.revision = revision
+    public init(hasMore: Bool? = nil, revision: String? = nil, signedTransactions: [String]? = nil) {
         self.hasMore = hasMore
+        self.revision = revision
+        self.signedTransactions = signedTransactions
     }
 
-    ///A list of up to 20 JWS transactions, or an empty array if the customer hasn&#39;t received any refunds in your app. The transactions are sorted in ascending order by revocationDate.
-    ///
-    ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
-    public var signedTransactions: [String]?
-    
-    ///A token you use in a query to request the next set of transactions for the customer.
-    ///
-    ///[revision](https://developer.apple.com/documentation/appstoreserverapi/revision)
-    public var revision: String?
-    
-    ///A Boolean value indicating whether the App Store has more transaction data.
+    ///A Boolean value that indicates whether the App Store has more transactions than it returns in signedTransactions.
     ///
     ///[hasMore](https://developer.apple.com/documentation/appstoreserverapi/hasmore)
     public var hasMore: Bool?
+
+    ///A token you provide in a query to request the next set of transactions from the Get Refund History endpoint.
+    ///
+    ///[revision](https://developer.apple.com/documentation/appstoreserverapi/revision)
+    public var revision: String?
+
+    ///A list of up to 20 JWS transactions, or an empty array if the customer hasn’t received any refunds in your app.
+    ///
+    ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
+    public var signedTransactions: [String]?
 }

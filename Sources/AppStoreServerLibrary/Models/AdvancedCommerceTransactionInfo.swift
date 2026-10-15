@@ -7,6 +7,7 @@ public struct AdvancedCommerceTransactionInfo: Decodable, Encodable, Hashable, S
         self.init(descriptors: descriptors, estimatedTax: estimatedTax, items: items, rawPeriod: period?.rawValue, requestReferenceId: requestReferenceId, taxCode: taxCode, taxExclusivePrice: taxExclusivePrice, taxRate: taxRate)
     }
 
+    @_disfavoredOverload
     public init(descriptors: AdvancedCommerceDescriptors? = nil, estimatedTax: Int64? = nil, items: [AdvancedCommerceTransactionItem]? = nil, rawPeriod: String? = nil, requestReferenceId: String? = nil, taxCode: String? = nil, taxExclusivePrice: Int64? = nil, taxRate: String? = nil) {
         self.descriptors = descriptors
         self.estimatedTax = estimatedTax
@@ -24,7 +25,7 @@ public struct AdvancedCommerceTransactionInfo: Decodable, Encodable, Hashable, S
     ///[advancedCommerceEstimatedTax](https://developer.apple.com/documentation/appstoreserverapi/advancedcommerceestimatedtax)
     public var estimatedTax: Int64?
 
-    ///[advancedCommerceTransactionItem](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercetransactionitem)
+    ///[advancedCommerceTransactionItems](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercetransactionitems)
     public var items: [AdvancedCommerceTransactionItem]?
 
     ///[advancedCommercePeriod](https://developer.apple.com/documentation/appstoreserverapi/advancedcommerceperiod)

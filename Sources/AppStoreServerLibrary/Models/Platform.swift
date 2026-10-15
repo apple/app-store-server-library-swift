@@ -4,7 +4,12 @@
 ///
 ///[platform](https://developer.apple.com/documentation/appstoreserverapi/platform)
 public enum Platform: Int32, Decodable, Encodable, Hashable, Sendable {
+    ///The platform is undeclared.
     case undeclared = 0
+
+    ///An Apple platform.
     case apple = 1
+
+    ///Non-Apple platform.
     case nonApple = 2
 }

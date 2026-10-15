@@ -1,0 +1,4 @@
+{
+  "errorCode": 4000207,
+  "errorMessage": "Invalid request. The consumption percentage is outside the valid range."
+}

@@ -5,24 +5,24 @@
 ///[NotificationHistoryResponse](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponse)
 public struct NotificationHistoryResponse: Decodable, Encodable, Hashable, Sendable {
 
-    public init(paginationToken: String? = nil, hasMore: Bool? = nil, notificationHistory: [NotificationHistoryResponseItem]? = nil) {
-        self.paginationToken = paginationToken
-        self.hasMore = hasMore
+    public init(notificationHistory: [NotificationHistoryResponseItem]? = nil, hasMore: Bool? = nil, paginationToken: String? = nil) {
         self.notificationHistory = notificationHistory
+        self.hasMore = hasMore
+        self.paginationToken = paginationToken
     }
 
-    ///A pagination token that you return to the endpoint on a subsequent call to receive the next set of results.
+    ///An array of App Store Server Notifications history records.
     ///
-    ///[paginationToken](https://developer.apple.com/documentation/appstoreserverapi/paginationtoken)
-    public var paginationToken: String?
+    ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
+    public var notificationHistory: [NotificationHistoryResponseItem]?
 
-    ///A Boolean value indicating whether the App Store has more transaction data.
+    ///A Boolean value that indicates whether the App Store has more notification history records to send.
     ///
     ///[hasMore](https://developer.apple.com/documentation/appstoreserverapi/hasmore)
     public var hasMore: Bool?
 
-    ///An array of App Store server notification history records.
+    ///A pagination token that you provide to Get Notification History on a subsequent request to get the next page of responses.
     ///
-    ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
-    public var notificationHistory: [NotificationHistoryResponseItem]?
+    ///[paginationToken](https://developer.apple.com/documentation/appstoreserverapi/paginationtoken)
+    public var paginationToken: String?
 }

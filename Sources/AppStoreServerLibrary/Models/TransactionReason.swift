@@ -4,6 +4,9 @@
 ///
 ///[transactionReason](https://developer.apple.com/documentation/appstoreserverapi/transactionreason)
 public enum TransactionReason: String, Decodable, Encodable, Hashable, Sendable {
+    ///The customer initiated the purchase, which may be for any in-app purchase type: consumable, non-consumable, non-renewing subscription, or auto-renewable subscription.
     case purchase = "PURCHASE"
+
+    ///The App Store server initiated the purchase transaction to renew an auto-renewable subscription.
     case renewal = "RENEWAL"
 }

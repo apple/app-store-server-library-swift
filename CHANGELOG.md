@@ -39,12 +39,12 @@
 
 ## Version 2.3.0
 - Incorporate changes for App Store Server API v1.13 and App Store Server Notifications v2.13 [https://github.com/apple/app-store-server-library-swift/pull/61]
-- Resolve issue where a Date passed as an input that contained a microsecond portiion would cause an API exception [https://github.com/apple/app-store-server-library-swift/pull/62]
+- Resolve issue where a Date passed as an input that contained a microsecond portion would cause an API exception [https://github.com/apple/app-store-server-library-swift/pull/62]
 
 ## Version 2.2.0
 - Incorporate changes for App Store Server API v1.12 and App Store Server Notifications v2.12 [https://github.com/apple/app-store-server-library-swift/pull/57]
 - Improve README installation code [https://github.com/apple/app-store-server-library-swift/pull/56] from @philmodin
-- Handle null appAccountToken appropriately in PromotionalOfferSignatureCreator and update JSON parsing logic to follow standard patterns [https://github.com/apple/app-store-server-library-java/pull/100]
+- Send an empty string for appAccountToken in ConsumptionRequest when the value is omitted and move to in-line Encodable/Decodable parsing [https://github.com/apple/app-store-server-library-swift/pull/54]
 
 ## Version 2.1.0
 - Incorporate changes for App Store Server API v1.11 and App Store Server Notifications v2.11 [https://github.com/apple/app-store-server-library-swift/pull/49]

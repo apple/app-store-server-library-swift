@@ -1,0 +1,12 @@
+{
+  "members": [
+    {
+      "appTransactionId": "700000000000000000"
+    },
+    {
+      "appTransactionId": "700000000000000001"
+    }
+  ],
+  "paginationToken": "pagination_token_output",
+  "hasMore": true
+}

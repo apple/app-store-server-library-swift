@@ -24,12 +24,12 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("com.example.productId", decodedJson["productId"] as! String)
         }
         
-        let extendRenewalDateRequest = MassExtendRenewalDateRequest(
+        let extendRenewalDateRequest = try MassExtendRenewalDateRequest(
+            requestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac",
             extendByDays: 45,
             extendReasonCode: .customerSatisfaction,
-            requestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac",
-            storefrontCountryCodes: ["USA", "MEX"],
-            productId: "com.example.productId"
+            productId: "com.example.productId",
+            storefrontCountryCodes: ["USA", "MEX"]
         )
         
         TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateRequest)
@@ -54,7 +54,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("fdf964a4-233b-486c-aac1-97d8d52688ac", decodedJson["requestIdentifier"] as! String)
         }
         
-        let extendRenewalDateRequest = ExtendRenewalDateRequest(
+        let extendRenewalDateRequest = try ExtendRenewalDateRequest(
             extendByDays: 45,
             extendReasonCode: ExtendReasonCode.customerSatisfaction,
             requestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac")
@@ -72,6 +72,25 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(true, extendRenewalDateResponse.success)
         XCTAssertEqual(Date(timeIntervalSince1970: 1698148900), extendRenewalDateResponse.effectiveDate)
         TestingUtility.confirmCodableInternallyConsistent(extendRenewalDateResponse)
+    }
+
+    public func testExtendSubscriptionRenewalDateWithUnknownExtendReasonCode() async throws {
+        let client = try await getClientWithBody("resources/models/extendSubscriptionRenewalDateResponse.json") { request, body in
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual(99, decodedJson["extendReasonCode"] as! Int)
+        }
+
+        let extendRenewalDateRequest = try ExtendRenewalDateRequest(
+            extendByDays: 45,
+            rawExtendReasonCode: 99,
+            requestIdentifier: "fdf964a4-233b-486c-aac1-97d8d52688ac")
+
+        let response = await client.extendSubscriptionRenewalDate(originalTransactionId: "4124214", extendRenewalDateRequest: extendRenewalDateRequest)
+
+        guard case .success = response else {
+            XCTFail()
+            return
+        }
     }
     
     public func testGetAllSubscriptionStatuses() async throws {
@@ -96,25 +115,25 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             subscriptionGroupIdentifier: "sub_group_one",
             lastTransactions: [
                 LastTransactionsItem(
-                    status: Status.active,
                     originalTransactionId: "3749183",
-                    signedTransactionInfo: "signed_transaction_one",
-                    signedRenewalInfo: "signed_renewal_one"
+                    status: Status.active,
+                    signedRenewalInfo: "signed_renewal_one",
+                    signedTransactionInfo: "signed_transaction_one"
                 ), LastTransactionsItem(
-                    status: Status.revoked,
                     originalTransactionId: "5314314134",
-                    signedTransactionInfo: "signed_transaction_two",
-                    signedRenewalInfo: "signed_renewal_two"
+                    status: Status.revoked,
+                    signedRenewalInfo: "signed_renewal_two",
+                    signedTransactionInfo: "signed_transaction_two"
                 )
             ])
         let secondItem = SubscriptionGroupIdentifierItem(
             subscriptionGroupIdentifier: "sub_group_two",
             lastTransactions: [
                 LastTransactionsItem(
-                    status: Status.expired,
                     originalTransactionId: "3413453",
-                    signedTransactionInfo: "signed_transaction_three",
-                    signedRenewalInfo: "signed_renewal_three"
+                    status: Status.expired,
+                    signedRenewalInfo: "signed_renewal_three",
+                    signedTransactionInfo: "signed_transaction_three"
                 )])
         XCTAssertEqual([item, secondItem], statusResponse.data)
         TestingUtility.confirmCodableInternallyConsistent(statusResponse)
@@ -206,8 +225,8 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             endDate: Date(timeIntervalSince1970: 1698148950),
             notificationType: NotificationTypeV2.subscribed,
             notificationSubtype: Subtype.initialBuy,
-            transactionId: "999733843",
-            onlyFailures: true
+            onlyFailures: true,
+            transactionId: "999733843"
         )
         
         TestingUtility.confirmCodableInternallyConsistent(notificationHistoryRequest)
@@ -222,7 +241,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(true, notificationHistoryResponse.hasMore)
         let expectedNotificationHistory = [
             NotificationHistoryResponseItem(
-                signedPayload: "signed_payload_one", sendAttempts: [
+                sendAttempts: [
                     SendAttemptItem(
                         attemptDate: Date(timeIntervalSince1970: 1698148900),
                         sendAttemptResult: SendAttemptResult.noResponse
@@ -231,15 +250,15 @@ final class AppStoreServerAPIClientTests: XCTestCase {
                         attemptDate: Date(timeIntervalSince1970: 1698148950),
                         sendAttemptResult: SendAttemptResult.success
                     )
-                ]
+                ], signedPayload: "signed_payload_one"
             ),
             NotificationHistoryResponseItem(
-                signedPayload: "signed_payload_two", sendAttempts: [
+                sendAttempts: [
                     SendAttemptItem(
                         attemptDate: Date(timeIntervalSince1970: 1698148800),
                         sendAttemptResult: SendAttemptResult.circularRedirect
                     )
-                ]
+                ], signedPayload: "signed_payload_two"
             )
         ]
         XCTAssertEqual(expectedNotificationHistory, notificationHistoryResponse.notificationHistory)
@@ -258,11 +277,33 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             endDate: Date(timeIntervalSince1970: 1698148950).advanced(by: 0.000_001), // 1 microsecond
             notificationType: NotificationTypeV2.subscribed,
             notificationSubtype: Subtype.initialBuy,
-            transactionId: "999733843",
-            onlyFailures: true
+            onlyFailures: true,
+            transactionId: "999733843"
         )
 
         let _ = await client.getNotificationHistory(paginationToken: "a036bc0e-52b8-4bee-82fc-8c24cb6715d6", notificationHistoryRequest: notificationHistoryRequest)
+    }
+
+    public func testGetNotificationHistoryWithUnknownNotificationTypeAndSubtype() async throws {
+        let client = try await getClientWithBody("resources/models/getNotificationHistoryResponse.json") { request, body in
+            let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
+            XCTAssertEqual("NEW_NOTIFICATION_TYPE", decodedJson["notificationType"] as! String)
+            XCTAssertEqual("NEW_SUBTYPE", decodedJson["notificationSubtype"] as! String)
+        }
+
+        let notificationHistoryRequest = NotificationHistoryRequest(
+            startDate: Date(timeIntervalSince1970: 1698148900),
+            endDate: Date(timeIntervalSince1970: 1698148950),
+            rawNotificationType: "NEW_NOTIFICATION_TYPE",
+            rawNotificationSubtype: "NEW_SUBTYPE"
+        )
+
+        let response = await client.getNotificationHistory(paginationToken: nil, notificationHistoryRequest: notificationHistoryRequest)
+
+        guard case .success = response else {
+            XCTFail()
+            return
+        }
     }
     
     public func testGetTransactionHistoryV1() async throws {
@@ -378,6 +419,52 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(transactionInfoResponse)
     }
     
+    public func testPathParametersArePercentEncoded() async throws {
+        let client = try await getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/..%2F..%2Fv1%2Fnotifications%2Ftest%3Ffoo%3Dbar%23fragment", request.url)
+        }
+
+        let response = await client.getTransactionInfo(transactionId: "../../v1/notifications/test?foo=bar#fragment")
+
+        guard case .success = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testMultiplePathParametersArePercentEncoded() async throws {
+        let client = try await getClientWithBody("resources/models/getDefaultMessageResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example%2Fproduct/en%20US", request.url)
+        }
+
+        let response = await client.getDefaultMessage(productId: "com.example/product", locale: "en US")
+
+        guard case .success = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
+
+    public func testDotAndEmptyPathParametersAreRejected() async throws {
+        let client = try await getClientWithBody("resources/models/transactionInfoResponse.json") { request, body in
+            XCTAssertTrue(false)
+        }
+
+        for pathParameter in ["..", ".", ""] {
+            guard case .failure(let failure) = await client.getTransactionInfo(transactionId: pathParameter) else {
+                XCTAssertTrue(false)
+                return
+            }
+            XCTAssertNil(failure.statusCode)
+            guard case .failure = await client.getDefaultMessage(productId: "com.example", locale: pathParameter) else {
+                XCTAssertTrue(false)
+                return
+            }
+        }
+    }
+
     public func testLookUpOrderId() async throws {
         let client = try await getClientWithBody("resources/models/lookupOrderIdResponse.json") { request, body in
             XCTAssertEqual(.GET, request.method)
@@ -425,7 +512,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(2, decodedJson["platform"] as! Int)
             XCTAssertEqual(false, decodedJson["sampleContentProvided"] as! Bool)
             XCTAssertEqual(3, decodedJson["deliveryStatus"] as! Int)
-            XCTAssertEqual("7389A31A-FB6D-4569-A2A6-DB7D85D84813", decodedJson["appAccountToken"] as! String)
+            XCTAssertEqual("7389a31a-fb6d-4569-a2a6-db7d85d84813", decodedJson["appAccountToken"] as! String)
             XCTAssertEqual(4, decodedJson["accountTenure"] as! Int)
             XCTAssertEqual(5, decodedJson["playTime"] as! Int)
             XCTAssertEqual(6, decodedJson["lifetimeDollarsRefunded"] as! Int)
@@ -435,16 +522,16 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let consumptionRequest = ConsumptionRequestV1(
-            customerConsented: true,
-            consumptionStatus: ConsumptionStatus.notConsumed,
-            platform: Platform.nonApple,
-            sampleContentProvided: false,
-            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
-            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813"),
             accountTenure: AccountTenure.thirtyDaysToNinetyDays,
-            playTime: PlayTime.oneDayToFourDays,
-            lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
+            appAccountToken: UUID(uuidString: "7389a31a-fb6d-4569-a2a6-db7d85d84813"),
+            consumptionStatus: ConsumptionStatus.notConsumed,
+            customerConsented: true,
+            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
+            lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
+            platform: Platform.nonApple,
+            playTime: PlayTime.oneDayToFourDays,
+            sampleContentProvided: false,
             userStatus: UserStatus.limitedAccess,
             refundPreference: RefundPreferenceV1.noPreference
         )
@@ -477,16 +564,16 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let consumptionRequest = ConsumptionRequestV1(
-            customerConsented: true,
-            consumptionStatus: ConsumptionStatus.notConsumed,
-            platform: Platform.nonApple,
-            sampleContentProvided: false,
-            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
-            appAccountToken: nil,
             accountTenure: AccountTenure.thirtyDaysToNinetyDays,
-            playTime: PlayTime.oneDayToFourDays,
-            lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
+            appAccountToken: nil,
+            consumptionStatus: ConsumptionStatus.notConsumed,
+            customerConsented: true,
+            deliveryStatus: DeliveryStatusV1.didNotDeliverDueToServerOutage,
             lifetimeDollarsPurchased: LifetimeDollarsPurchased.twoThousandDollarsOrGreater,
+            lifetimeDollarsRefunded: LifetimeDollarsRefunded.oneThousandDollarsToOneThousandNineHundredNinetyNineDollarsAndNinetyNineCents,
+            platform: Platform.nonApple,
+            playTime: PlayTime.oneDayToFourDays,
+            sampleContentProvided: false,
             userStatus: UserStatus.limitedAccess
         )
 
@@ -512,7 +599,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("GRANT_FULL", decodedJson["refundPreference"] as! String)
         }
 
-        let consumptionRequest = ConsumptionRequest(
+        let consumptionRequest = try ConsumptionRequest(
             customerConsented: true,
             deliveryStatus: DeliveryStatus.delivered,
             sampleContentProvided: false,
@@ -541,7 +628,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertNil(decodedJson["refundPreference"])
         }
 
-        let consumptionRequest = ConsumptionRequest(
+        let consumptionRequest = try ConsumptionRequest(
             customerConsented: true,
             deliveryStatus: DeliveryStatus.undeliveredQualityIssue,
             sampleContentProvided: false
@@ -553,6 +640,27 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertTrue(false)
             return
         }
+    }
+
+    public func testSendConsumptionInformationConsumptionPercentageOutOfRangeError() async throws {
+        let body = TestingUtility.readFile("resources/models/consumptionPercentageOutOfRangeError.json")
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
+        let consumptionRequest = try ConsumptionRequest(
+            customerConsented: true,
+            deliveryStatus: DeliveryStatus.delivered,
+            sampleContentProvided: false,
+            consumptionPercentage: 100000
+        )
+        let result = await client.sendConsumptionInformation(transactionId: "49571273", consumptionRequest: consumptionRequest)
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertEqual(APIError.consumptionPercentageOutOfRange, failure.apiError)
+        XCTAssertEqual(4000207, failure.rawApiError)
+        XCTAssertEqual("Invalid request. The consumption percentage is outside the valid range.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
 
     
@@ -578,6 +686,13 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("keyId", header["kid"] as! String)
             XCTAssertEqual("com.example", payload["bid"] as! String)
             XCTAssertEqual("ES256", header["alg"] as! String)
+            let payloadString = String(decoding: payloadData, as: UTF8.self)
+            XCTAssertNotNil(payloadString.range(of: #""iat":[0-9]+[,}]"#, options: .regularExpression))
+            XCTAssertNotNil(payloadString.range(of: #""exp":[0-9]+[,}]"#, options: .regularExpression))
+            let issuedAt = (payload["iat"] as! NSNumber).int64Value
+            let expiration = (payload["exp"] as! NSNumber).int64Value
+            XCTAssertLessThanOrEqual(abs(issuedAt - Int64(Date().timeIntervalSince1970)), 60)
+            XCTAssertLessThanOrEqual(abs(expiration - issuedAt - 300), 1)
         }
         
         let _ = await client.getTransactionInfo(transactionId: "1234")
@@ -659,6 +774,82 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual("Testing error.", failure.errorMessage)
         XCTAssertNil(failure.causedBy)
     }
+
+    public func testAPIErrorWithoutErrorMessage() async throws {
+        let client = try await getAppStoreServerAPIClient("{\"errorCode\": 4000006}", .badRequest, nil)
+        let result = await client.getTransactionInfo(transactionId: "1234")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertEqual(APIError.invalidTransactionId, failure.apiError)
+        XCTAssertEqual(4000006, failure.rawApiError)
+        XCTAssertNil(failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
+    public func testErrorPayloadInitializer() throws {
+        let errorPayload = ErrorPayload(errorCode: 4000006, errorMessage: "Invalid transaction id.")
+        XCTAssertEqual(4000006, errorPayload.errorCode)
+        XCTAssertEqual("Invalid transaction id.", errorPayload.errorMessage)
+        TestingUtility.confirmCodableInternallyConsistent(errorPayload)
+        let emptyErrorPayload = ErrorPayload()
+        XCTAssertNil(emptyErrorPayload.errorCode)
+        XCTAssertNil(emptyErrorPayload.errorMessage)
+    }
+
+    public func testAPIErrorCodes() async throws {
+        XCTAssertEqual(APIError.invalidRefundPreference, APIError(rawValue: 4000044))
+        XCTAssertEqual(APIError.consumptionPercentageOutOfRange, APIError(rawValue: 4000207))
+        XCTAssertEqual(APIError.undeliveredConsumptionPercentageNonZero, APIError(rawValue: 4000208))
+        XCTAssertEqual(APIError.consumptionPercentageAutoRenewableSubscription, APIError(rawValue: 4000209))
+        XCTAssertEqual(APIError.advancedCommerceTransactionNotSupported, APIError(rawValue: 4000210))
+        XCTAssertEqual(APIError.invalidAssignedTransactionNotSupported, APIError(rawValue: 4000227))
+        XCTAssertEqual(APIError.assignedSubscriptionExtensionIneligible, APIError(rawValue: 4030028))
+        XCTAssertEqual(APIError.invalidCurrency, APIError(rawValue: 4000053))
+        XCTAssertEqual(APIError.nullRequestInfo, APIError(rawValue: 4000079))
+        XCTAssertEqual(APIError.repeatedRequestReferenceId, APIError(rawValue: 4000097))
+        XCTAssertEqual(APIError.removalAllNotAllowed, APIError(rawValue: 4000168))
+        XCTAssertEqual(APIError.freeTrialOfferMustUsePeriodCountOfOne, APIError(rawValue: 4000223))
+        XCTAssertEqual(APIError.unauthorized, APIError(rawValue: 4010000))
+        XCTAssertEqual(APIError.subscriptionDoesNotExist, APIError(rawValue: 4030008))
+        XCTAssertEqual(APIError.migrationNotAllowedWhenPriceIncreaseCommunicated, APIError(rawValue: 4030027))
+        XCTAssertEqual(APIError.productNotFound, APIError(rawValue: 4040016))
+    }
+
+    public func testAPIErrorHasOneNamePerErrorCode() async throws {
+        XCTAssertEqual(APIError.appTransactionDoesNotExist, APIError(rawValue: 4040019))
+        XCTAssertEqual(4040019, APIError.appTransactionDoesNotExist.rawValue)
+        XCTAssertEqual(APIError.transactionIdIsNotOriginalTransactionId, APIError(rawValue: 4000187))
+        XCTAssertEqual(4000187, APIError.transactionIdIsNotOriginalTransactionId.rawValue)
+        switch APIError(rawValue: 4040019) {
+        case .appTransactionDoesNotExist:
+            break
+        default:
+            XCTFail()
+        }
+        switch APIError(rawValue: 4000187) {
+        case .transactionIdIsNotOriginalTransactionId:
+            break
+        default:
+            XCTFail()
+        }
+    }
+
+    public func testQueryParameterWithPlusIsPercentEncoded() async throws {
+        let client = try await getClientWithBody("resources/models/getRefundHistoryResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v2/refund/lookup/555555?revision=revision%2Binput%20with%26symbols%3D", request.url)
+        }
+
+        let response = await client.getRefundHistory(anyTransactionId: "555555", revision: "revision+input with&symbols=")
+
+        guard case .success = response else {
+            XCTAssertTrue(false)
+            return
+        }
+    }
     
     public func testDecodingWithUnknownEnumValue() async throws {
         let client = try await getClientWithBody("resources/models/transactionHistoryResponseWithMalformedEnvironment.json") { request, body in
@@ -730,7 +921,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/transactions/49571273/appAccountToken", request.url)
             XCTAssertEqual(["application/json"], request.headers["Content-Type"])
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("7389A31A-FB6D-4569-A2A6-DB7D85D84813", decodedJson["appAccountToken"] as! String)
+            XCTAssertEqual("7389a31a-fb6d-4569-a2a6-db7d85d84813", decodedJson["appAccountToken"] as! String)
         }
         
         let updateAppAccountTokenRequest = UpdateAppAccountTokenRequest(
@@ -758,7 +949,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual(400, failure.statusCode)
-        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(APIError.invalidAppAccountTokenUUID, failure.apiError)
         XCTAssertEqual(4000183, failure.rawApiError)
         XCTAssertEqual("Invalid request. The app account token field must be a valid UUID.", failure.errorMessage)
         XCTAssertNil(failure.causedBy)
@@ -776,7 +967,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual(400, failure.statusCode)
-        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(APIError.familyTransactionNotSupported, failure.apiError)
         XCTAssertEqual(4000185, failure.rawApiError)
         XCTAssertEqual("Invalid request. Family Sharing transactions aren't supported by this endpoint.", failure.errorMessage)
         XCTAssertNil(failure.causedBy)
@@ -794,7 +985,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             return
         }
         XCTAssertEqual(400, failure.statusCode)
-        XCTAssertNotNil(failure.apiError)
+        XCTAssertEqual(APIError.transactionIdIsNotOriginalTransactionId, failure.apiError)
         XCTAssertEqual(4000187, failure.rawApiError)
         XCTAssertEqual("Invalid request. The transaction ID provided is not an original transaction ID.", failure.errorMessage)
         XCTAssertNil(failure.causedBy)
@@ -803,7 +994,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testUploadImage() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
             XCTAssertEqual("image/png", request.headers.first(name: "Content-Type"))
             XCTAssertNotNil(body)
             XCTAssertEqual(Data([1, 2, 3]), body)
@@ -819,7 +1010,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testDeleteImage() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.DELETE, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
         }
 
         let result = await client.deleteImage(imageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
@@ -849,7 +1040,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testUploadMessage() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual("Header text", decodedJson["header"] as! String)
             XCTAssertEqual("Body text", decodedJson["body"] as! String)
@@ -866,12 +1057,12 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testUploadMessageWithImage() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual("Header text", decodedJson["header"] as! String)
             XCTAssertEqual("Body text", decodedJson["body"] as! String)
             let image = decodedJson["image"] as! [String: Any]
-            XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", image["imageIdentifier"] as! String)
+            XCTAssertEqual("b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901", image["imageIdentifier"] as! String)
             XCTAssertEqual("Alt text", image["altText"] as! String)
         }
 
@@ -887,7 +1078,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testDeleteMessage() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.DELETE, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
         }
 
         let result = await client.deleteMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
@@ -918,7 +1109,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual(.PUT, request.method)
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/default/com.example.product/en-US", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", decodedJson["messageIdentifier"] as! String)
+            XCTAssertEqual("a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", decodedJson["messageIdentifier"] as! String)
         }
 
         let defaultConfigurationRequest = DefaultConfigurationRequest(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!)
@@ -960,7 +1151,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
     public func testUploadImageWithImageSize() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890?imageSize=FULL_SIZE", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/image/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890?imageSize=FULL_SIZE", request.url)
             XCTAssertEqual("image/png", request.headers.first(name: "Content-Type"))
             XCTAssertNotNil(body)
             XCTAssertEqual(Data([1, 2, 3]), body)
@@ -1038,7 +1229,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual(60000, response.config.totalDuration)
         XCTAssertEqual(500, response.config.responseTimeThreshold)
         XCTAssertEqual(95, response.config.successRateThreshold)
-        XCTAssertEqual("c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d", response.requestId)
+        XCTAssertEqual(UUID(uuidString: "c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d"), response.requestId)
         TestingUtility.confirmCodableInternallyConsistent(response)
     }
 
@@ -1048,7 +1239,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/performanceTest/result/c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d", request.url)
         }
 
-        let result = await client.getPerformanceTestResults(requestId: "c4b87a1d-2e3f-4a5b-9c6d-7e8f9a0b1c2d")
+        let result = await client.getPerformanceTestResults(requestId: UUID(uuidString: "C4B87A1D-2E3F-4A5B-9C6D-7E8F9A0B1C2D")!)
         guard case .success(let response) = result else {
             XCTAssertTrue(false)
             return
@@ -1073,27 +1264,48 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         TestingUtility.confirmCodableInternallyConsistent(response)
     }
 
+    public func testGetPerformanceTestResultsWithoutRequiredFieldFails() async throws {
+        var body = TestingUtility.readJsonObject("resources/models/performanceTestResultResponse.json")
+        body.removeValue(forKey: "result")
+        let client = try await getAppStoreServerAPIClient(String(decoding: try JSONSerialization.data(withJSONObject: body), as: UTF8.self)) { request, body in
+            XCTAssertEqual(.GET, request.method)
+        }
+
+        let result = await client.getPerformanceTestResults(requestId: UUID(uuidString: "C4B87A1D-2E3F-4A5B-9C6D-7E8F9A0B1C2D")!)
+        guard case .failure(let failure) = result else {
+            XCTFail()
+            return
+        }
+        XCTAssertNil(failure.statusCode)
+        XCTAssertNil(failure.apiError)
+        guard case DecodingError.keyNotFound(let key, _) = failure.causedBy! else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual("result", key.stringValue)
+    }
+
     public func testUploadMessageWithBulletPoints() async throws {
         let client = try await getAppStoreServerAPIClient("") { request, body in
             XCTAssertEqual(.PUT, request.method)
-            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890", request.url)
+            XCTAssertEqual("https://local-testing-base-url/inApps/v1/messaging/message/a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890", request.url)
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
             XCTAssertEqual("Header text", decodedJson["header"] as! String)
             XCTAssertEqual("Body text", decodedJson["body"] as! String)
             XCTAssertEqual("ABOVE_IMAGE", decodedJson["headerPosition"] as! String)
             let image = decodedJson["image"] as! [String: Any]
-            XCTAssertEqual("B2C3D4E5-F6A7-8901-B2C3-D4E5F6A78901", image["imageIdentifier"] as! String)
+            XCTAssertEqual("b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901", image["imageIdentifier"] as! String)
             XCTAssertEqual("Alt text", image["altText"] as! String)
             let bulletPoints = decodedJson["bulletPoints"] as! [[String: Any]]
             XCTAssertEqual(1, bulletPoints.count)
             XCTAssertEqual("Bullet text", bulletPoints[0]["text"] as! String)
-            XCTAssertEqual("C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012", bulletPoints[0]["imageIdentifier"] as! String)
+            XCTAssertEqual("c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89012", bulletPoints[0]["imageIdentifier"] as! String)
             XCTAssertEqual("Bullet alt text", bulletPoints[0]["altText"] as! String)
         }
 
         let image = try UploadMessageImage(imageIdentifier: UUID(uuidString: "b2c3d4e5-f6a7-8901-b2c3-d4e5f6a78901")!, altText: "Alt text")
-        let bulletPoint = try BulletPoint(text: "Bullet text", imageIdentifier: UUID(uuidString: "c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89012")!, altText: "Bullet alt text")
-        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image, headerPosition: HeaderPosition.aboveImage, bulletPoints: [bulletPoint])
+        let bulletPoint = try BulletPoint(altText: "Bullet alt text", imageIdentifier: UUID(uuidString: "c3d4e5f6-a7b8-9012-c3d4-e5f6a7b89012")!, text: "Bullet text")
+        let uploadMessageRequestBody = try UploadMessageRequestBody(header: "Header text", body: "Body text", image: image, bulletPoints: [bulletPoint], headerPosition: HeaderPosition.aboveImage)
         TestingUtility.confirmCodableInternallyConsistent(uploadMessageRequestBody)
         let result = await client.uploadMessage(messageIdentifier: UUID(uuidString: "a1b2c3d4-e5f6-7890-a1b2-c3d4e5f67890")!, uploadMessageRequestBody: uploadMessageRequestBody)
         guard case .success = result else {
@@ -1158,7 +1370,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
              return
          }
          XCTAssertEqual(404, failure.statusCode)
-         XCTAssertEqual(APIError.AppTransactionDoesNotExistError, failure.apiError)
+         XCTAssertEqual(APIError.appTransactionDoesNotExist, failure.apiError)
          XCTAssertEqual(4040019, failure.rawApiError)
          XCTAssertEqual("No AppTransaction exists for the customer.", failure.errorMessage)
          XCTAssertNil(failure.causedBy)
@@ -1184,7 +1396,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/changePrice/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("7C80BB86-F892-4B21-A919-1357811D6C4F", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("7c80bb86-f892-4b21-a919-1357811d6c4f", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             XCTAssertEqual("USD", decodedJson["currency"] as! String)
             XCTAssertEqual("USA", decodedJson["storefront"] as! String)
             let item = (decodedJson["items"] as! [[String: Any]])[0]
@@ -1218,7 +1430,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/cancel/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("932c6903-0ab8-4469-9f21-015f6fab013c", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             XCTAssertEqual("USA", decodedJson["storefront"] as! String)
         }
 
@@ -1239,13 +1451,32 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         XCTAssertEqual("signed_transaction_info", cancelResponse.signedTransactionInfo)
     }
 
+    public func testCancelSubscriptionNotEligibleError() async throws {
+        let body = TestingUtility.readFile("resources/models/subscriptionNotEligibleError.json")
+        let client = try await getAppStoreServerAPIClient(body, .forbidden, nil)
+        let subscriptionCancelRequest = AdvancedCommerceSubscriptionCancelRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
+            storefront: "USA"
+        )
+        let result = await client.cancelSubscription(transactionId: "4124214", subscriptionCancelRequest: subscriptionCancelRequest)
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(403, failure.statusCode)
+        XCTAssertEqual(APIError.subscriptionNotEligible, failure.apiError)
+        XCTAssertEqual(4030010, failure.rawApiError)
+        XCTAssertEqual("The subscription isn't eligible for the requested changes.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
     public func testRevokeSubscription() async throws {
         let client = try await getClientWithBody("resources/models/advancedCommerceSubscriptionRevokeResponse.json") { request, body in
             XCTAssertEqual(.POST, request.method)
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/revoke/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("932c6903-0ab8-4469-9f21-015f6fab013c", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             XCTAssertEqual("UNINTENDED_PURCHASE", decodedJson["refundReason"] as! String)
             XCTAssertEqual(true, decodedJson["refundRiskingPreference"] as! Bool)
             XCTAssertEqual("PRORATED", decodedJson["refundType"] as! String)
@@ -1253,9 +1484,9 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let subscriptionRevokeRequest = AdvancedCommerceSubscriptionRevokeRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
             refundReason: AdvancedCommerceRefundReason.unintendedPurchase,
             refundRiskingPreference: true,
-            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
             refundType: AdvancedCommerceRefundType.prorated,
             storefront: "USA"
         )
@@ -1278,7 +1509,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/transaction/requestRefund/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("932c6903-0ab8-4469-9f21-015f6fab013c", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             XCTAssertEqual(true, decodedJson["refundRiskingPreference"] as! Bool)
             XCTAssertEqual("USD", decodedJson["currency"] as! String)
             XCTAssertEqual("USA", decodedJson["storefront"] as! String)
@@ -1290,9 +1521,9 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
 
         let requestRefundRequest = try AdvancedCommerceRequestRefundRequest(
+            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
             items: [try AdvancedCommerceRequestRefundItem(sku: "AD_FREE_1M", refundReason: AdvancedCommerceRefundReason.unsatisfiedWithPurchase, refundType: AdvancedCommerceRefundType.full, revoke: true)],
             refundRiskingPreference: true,
-            requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
             currency: "USD",
             storefront: "USA"
         )
@@ -1314,7 +1545,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/changeMetadata/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("932c6903-0ab8-4469-9f21-015f6fab013c", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             let descriptors = decodedJson["descriptors"] as! [String: Any]
             XCTAssertEqual("NEXT_BILL_CYCLE", descriptors["effective"] as! String)
             XCTAssertEqual("Remove ads and unlock advanced features.", descriptors["description"] as! String)
@@ -1330,7 +1561,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         let subscriptionChangeMetadataRequest = AdvancedCommerceSubscriptionChangeMetadataRequest(
             requestInfo: AdvancedCommerceRequestInfo(requestReferenceId: UUID(uuidString: "932c6903-0ab8-4469-9f21-015f6fab013c")!),
             descriptors: try AdvancedCommerceSubscriptionChangeMetadataDescriptors(effective: AdvancedCommerceEffective.nextBillCycle, description: "Remove ads and unlock advanced features.", displayName: "Ad-free package"),
-            items: [try AdvancedCommerceSubscriptionChangeMetadataItem(effective: AdvancedCommerceEffective.nextBillCycle, currentSku: "AD_FREE_1M", sku: "AD_FREE_1M_V2")],
+            items: [try AdvancedCommerceSubscriptionChangeMetadataItem(currentSku: "AD_FREE_1M", effective: AdvancedCommerceEffective.nextBillCycle, sku: "AD_FREE_1M_V2")],
             storefront: "USA",
             taxCode: "C003-00-1"
         )
@@ -1353,7 +1584,7 @@ final class AppStoreServerAPIClientTests: XCTestCase {
             XCTAssertEqual("https://local-testing-base-url/advancedCommerce/v1/subscription/migrate/4124214", request.url)
 
             let decodedJson = try! JSONSerialization.jsonObject(with: body!) as! [String: Any]
-            XCTAssertEqual("932C6903-0AB8-4469-9F21-015F6FAB013C", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
+            XCTAssertEqual("932c6903-0ab8-4469-9f21-015f6fab013c", (decodedJson["requestInfo"] as! [String: Any])["requestReferenceId"] as! String)
             let descriptors = decodedJson["descriptors"] as! [String: Any]
             XCTAssertEqual("Remove ads and unlock advanced features.", descriptors["description"] as! String)
             XCTAssertEqual("Ad-free package", descriptors["displayName"] as! String)
@@ -1385,6 +1616,199 @@ final class AppStoreServerAPIClientTests: XCTestCase {
         }
         XCTAssertEqual("signed_renewal_info_value", migrateResponse.signedRenewalInfo)
         XCTAssertEqual("signed_transaction_info_value", migrateResponse.signedTransactionInfo)
+    }
+
+    public func testGetCustomerGroups() async throws {
+        let client = try await getClientWithBody("resources/models/getCustomerGroupsResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/groups/v1/currentGroups/1234", request.url)
+            XCTAssertNil(request.body)
+        }
+
+        let response = await client.getCustomerGroups(anyTransactionId: "1234")
+
+        guard case .success(let customerGroupsResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        let expectedGroups = [
+            GroupEntry(
+                groupId: "900000000000000000",
+                groupType: GroupType.organization,
+                roles: [
+                    RoleEntry(productId: "example.productId.one", role: Role.admin),
+                    RoleEntry(productId: "example.productId.two", role: Role.none)
+                ]
+            ),
+            GroupEntry(
+                groupId: "900000000000000001",
+                groupType: GroupType.consumer
+            )
+        ]
+        XCTAssertEqual(expectedGroups, customerGroupsResponse.groups)
+        let organizationGroup = customerGroupsResponse.groups![0]
+        XCTAssertEqual(GroupType.organization, organizationGroup.groupType)
+        XCTAssertEqual("ORGANIZATION", organizationGroup.rawGroupType)
+        XCTAssertEqual(Role.admin, organizationGroup.roles![0].role)
+        XCTAssertEqual("ADMIN", organizationGroup.roles![0].rawRole)
+        XCTAssertEqual(Role.none, organizationGroup.roles![1].role)
+        XCTAssertEqual("NONE", organizationGroup.roles![1].rawRole)
+        let consumerGroup = customerGroupsResponse.groups![1]
+        XCTAssertEqual(GroupType.consumer, consumerGroup.groupType)
+        XCTAssertEqual("CONSUMER", consumerGroup.rawGroupType)
+        XCTAssertNil(consumerGroup.roles)
+        TestingUtility.confirmCodableInternallyConsistent(customerGroupsResponse)
+    }
+
+    public func testGetCustomerGroupsWithUnknownValues() async throws {
+        let client = try await getClientWithBody("resources/models/getCustomerGroupsResponseWithUnknownValues.json") { request, body in
+        }
+
+        let response = await client.getCustomerGroups(anyTransactionId: "1234")
+
+        guard case .success(let customerGroupsResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(1, customerGroupsResponse.groups?.count)
+        let group = customerGroupsResponse.groups![0]
+        XCTAssertEqual("900000000000000002", group.groupId)
+        XCTAssertNil(group.groupType)
+        XCTAssertEqual("UNKNOWN_GROUP_TYPE", group.rawGroupType)
+        XCTAssertEqual(1, group.roles?.count)
+        let role = group.roles![0]
+        XCTAssertEqual("example.productId.three", role.productId)
+        XCTAssertNil(role.role)
+        XCTAssertEqual("UNKNOWN_ROLE", role.rawRole)
+        TestingUtility.confirmCodableInternallyConsistent(customerGroupsResponse)
+
+        var updatedGroup = group
+        updatedGroup.groupType = GroupType.consumer
+        XCTAssertEqual("CONSUMER", updatedGroup.rawGroupType)
+        var updatedRole = role
+        updatedRole.role = Role.admin
+        XCTAssertEqual("ADMIN", updatedRole.rawRole)
+    }
+
+    public func testGetCustomerGroupsInvalidTransactionId() async throws {
+        let body = TestingUtility.readFile("resources/models/invalidTransactionIdError.json")
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
+        let result = await client.getCustomerGroups(anyTransactionId: "invalid_id")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertEqual(APIError.invalidTransactionId, failure.apiError)
+        XCTAssertEqual(4000006, failure.rawApiError)
+        XCTAssertEqual("Invalid transaction id.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
+    public func testGetCustomerGroupsTransactionIdNotFound() async throws {
+        let body = TestingUtility.readFile("resources/models/transactionIdNotFoundError.json")
+        let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
+        let result = await client.getCustomerGroups(anyTransactionId: "not_found_id")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(404, failure.statusCode)
+        XCTAssertEqual(APIError.transactionIdNotFound, failure.apiError)
+        XCTAssertEqual(4040010, failure.rawApiError)
+        XCTAssertEqual("Transaction id not found.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
+    public func testGetGroupMembers() async throws {
+        let client = try await getClientWithBody("resources/models/getGroupMembersResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            let urlComponents = URLComponents(string: request.url)
+            XCTAssertEqual("/groups/v1/group/900000000000000000", urlComponents?.path)
+            let params: [String: [String]] = (urlComponents?.queryItems?.reduce(into: [String:[String]](), { dict, item in
+                dict[item.name, default: []].append(item.value!)
+            }))!
+            XCTAssertEqual(["pagination_token_input"], params["paginationToken"])
+            XCTAssertEqual(["50"], params["limit"])
+            XCTAssertEqual(2, params.count)
+            XCTAssertNil(request.body)
+        }
+
+        let response = await client.getGroupMembers(groupId: "900000000000000000", paginationToken: "pagination_token_input", limit: 50)
+
+        guard case .success(let groupMembersResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        let expectedMembers = [
+            GroupMemberEntry(appTransactionId: "700000000000000000"),
+            GroupMemberEntry(appTransactionId: "700000000000000001")
+        ]
+        XCTAssertEqual(expectedMembers, groupMembersResponse.members)
+        XCTAssertEqual("pagination_token_output", groupMembersResponse.paginationToken)
+        XCTAssertEqual(true, groupMembersResponse.hasMore)
+        TestingUtility.confirmCodableInternallyConsistent(groupMembersResponse)
+    }
+
+    public func testGetGroupMembersWithoutOptionalParameters() async throws {
+        let client = try await getClientWithBody("resources/models/getGroupMembersResponse.json") { request, body in
+            XCTAssertEqual(.GET, request.method)
+            XCTAssertEqual("https://local-testing-base-url/groups/v1/group/900000000000000000", request.url)
+            XCTAssertNil(request.body)
+        }
+
+        let response = await client.getGroupMembers(groupId: "900000000000000000")
+
+        guard case .success(let groupMembersResponse) = response else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(2, groupMembersResponse.members?.count)
+    }
+
+    public func testGetGroupMembersInvalidGroupId() async throws {
+        let body = TestingUtility.readFile("resources/models/invalidGroupIdError.json")
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
+        let result = await client.getGroupMembers(groupId: "invalid_group_id")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertEqual(APIError.invalidGroupId, failure.apiError)
+        XCTAssertEqual(4000225, failure.rawApiError)
+        XCTAssertEqual("Invalid request. The group ID is invalid.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
+    public func testGetGroupMembersInvalidLimit() async throws {
+        let body = TestingUtility.readFile("resources/models/invalidLimitError.json")
+        let client = try await getAppStoreServerAPIClient(body, .badRequest, nil)
+        let result = await client.getGroupMembers(groupId: "900000000000000000", limit: 101)
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(400, failure.statusCode)
+        XCTAssertEqual(APIError.invalidLimit, failure.apiError)
+        XCTAssertEqual(4000004, failure.rawApiError)
+        XCTAssertEqual("Invalid request limit.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
+    }
+
+    public func testGetGroupMembersGroupNotFound() async throws {
+        let body = TestingUtility.readFile("resources/models/groupNotFoundError.json")
+        let client = try await getAppStoreServerAPIClient(body, .notFound, nil)
+        let result = await client.getGroupMembers(groupId: "900000000000000009")
+        guard case .failure(let failure) = result else {
+            XCTAssertTrue(false)
+            return
+        }
+        XCTAssertEqual(404, failure.statusCode)
+        XCTAssertEqual(APIError.groupNotFound, failure.apiError)
+        XCTAssertEqual(4040022, failure.rawApiError)
+        XCTAssertEqual("Group not found.", failure.errorMessage)
+        XCTAssertNil(failure.causedBy)
     }
 
     public func getClientWithBody(_ path: String, _ requestVerifier: @escaping RequestVerifier) async throws -> AppStoreServerAPIClient {

@@ -6,9 +6,7 @@
 public struct AdvancedCommerceSubscriptionChangeMetadataDescriptors: Decodable, Encodable, Hashable, Sendable {
 
     public init(effective: AdvancedCommerceEffective, description: String? = nil, displayName: String? = nil) throws {
-        self.rawEffective = effective.rawValue
-        self.description = try description.map(HelperValidationUtils.validateDescription)
-        self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
+        try self.init(rawEffective: effective.rawValue, description: description, displayName: displayName)
     }
 
     public init(rawEffective: String, description: String? = nil, displayName: String? = nil) throws {
@@ -17,17 +15,17 @@ public struct AdvancedCommerceSubscriptionChangeMetadataDescriptors: Decodable, 
         self.displayName = try displayName.map(HelperValidationUtils.validateDisplayName)
     }
 
-    ///A string you provide that describes a SKU.
+    ///The new description for the subscription.
     ///
     ///[description](https://developer.apple.com/documentation/advancedcommerceapi/description)
     public var description: String?
 
-    ///A string with a product name that you can localize and is suitable for display to customers.
+    ///The new display name for the subscription.
     ///
     ///[displayName](https://developer.apple.com/documentation/advancedcommerceapi/displayname)
     public var displayName: String?
 
-    ///A value that indicates when the change takes effect.
+    ///The string that determines when the metadata change goes into effect.
     ///
     ///[effective](https://developer.apple.com/documentation/advancedcommerceapi/effective)
     public var effective: AdvancedCommerceEffective? {
@@ -57,8 +55,8 @@ public struct AdvancedCommerceSubscriptionChangeMetadataDescriptors: Decodable, 
 
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.description, forKey: .description)
-        try container.encodeIfPresent(self.displayName, forKey: .displayName)
+        try container.encodeIfPresent(self.description.map(HelperValidationUtils.validateDescription), forKey: .description)
+        try container.encodeIfPresent(self.displayName.map(HelperValidationUtils.validateDisplayName), forKey: .displayName)
         try container.encode(self.rawEffective, forKey: .effective)
     }
 }

@@ -9,7 +9,7 @@ public struct ResponseBodyV2: Decodable, Encodable, Hashable, Sendable {
         self.signedPayload = signedPayload
     }
 
-    ///A cryptographically signed payload, in JSON Web Signature (JWS) format, containing the response body for a version 2 notification.
+    ///The payload in JSON Web Signature (JWS) format, signed by the App Store.
     ///
     ///[signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)
     public var signedPayload: String?

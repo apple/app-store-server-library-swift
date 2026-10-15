@@ -1,7 +1,5 @@
 // Copyright (c) 2026 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
 ///An object that describes test response times.
 ///
 ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
@@ -17,26 +15,26 @@ public struct PerformanceTestResponseTimes: Decodable, Encodable, Hashable, Send
 
     ///Average response time in milliseconds.
     ///
-    ///[average](https://developer.apple.com/documentation/retentionmessaging/average)
+    ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
     public var average: Int64
 
     ///The 50th percentile response time in milliseconds.
     ///
-    ///[p50](https://developer.apple.com/documentation/retentionmessaging/p50)
+    ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
     public var p50: Int64
 
     ///The 90th percentile response time in milliseconds.
     ///
-    ///[p90](https://developer.apple.com/documentation/retentionmessaging/p90)
+    ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
     public var p90: Int64
 
     ///The 95th percentile response time in milliseconds.
     ///
-    ///[p95](https://developer.apple.com/documentation/retentionmessaging/p95)
+    ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
     public var p95: Int64
 
     ///The 99th percentile response time in milliseconds.
     ///
-    ///[p99](https://developer.apple.com/documentation/retentionmessaging/p99)
+    ///[PerformanceTestResponseTimes](https://developer.apple.com/documentation/retentionmessaging/performancetestresponsetimes)
     public var p99: Int64
 }

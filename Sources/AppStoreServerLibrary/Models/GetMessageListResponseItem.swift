@@ -11,6 +11,7 @@ public struct GetMessageListResponseItem: Decodable, Encodable, Hashable, Sendab
         self.init(messageIdentifier: messageIdentifier, rawMessageState: messageState?.rawValue)
     }
 
+    @_disfavoredOverload
     public init(messageIdentifier: UUID? = nil, rawMessageState: String? = nil) {
         self.messageIdentifier = messageIdentifier
         self.rawMessageState = rawMessageState
@@ -23,9 +24,14 @@ public struct GetMessageListResponseItem: Decodable, Encodable, Hashable, Sendab
 
     ///The current state of the message.
     ///
-    ///[messageState](https://developer.apple.com/documentation/retentionmessaging/messageState)
+    ///[messageState](https://developer.apple.com/documentation/retentionmessaging/messagestate)
     public var messageState: MessageState? {
-        return rawMessageState.flatMap { MessageState(rawValue: $0) }
+        get {
+            return rawMessageState.flatMap { MessageState(rawValue: $0) }
+        }
+        set {
+            self.rawMessageState = newValue.map { $0.rawValue }
+        }
     }
 
     ///See ``messageState``
@@ -36,15 +42,15 @@ public struct GetMessageListResponseItem: Decodable, Encodable, Hashable, Sendab
         case messageState
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.messageIdentifier = try container.decodeIfPresent(UUID.self, forKey: .messageIdentifier)
         self.rawMessageState = try container.decodeIfPresent(String.self, forKey: .messageState)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.messageIdentifier, forKey: .messageIdentifier)
+        try container.encodeIfPresent(self.messageIdentifier?.uuidString.lowercased(), forKey: .messageIdentifier)
         try container.encodeIfPresent(self.rawMessageState, forKey: .messageState)
     }
 }

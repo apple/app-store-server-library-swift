@@ -12,11 +12,11 @@ public struct AdvancedCommerceSubscriptionMigrateResponse: Decodable, Encodable,
 
     ///Subscription renewal information signed by the App Store, in JSON Web Signature (JWS) format, for the migrated subscription.
     ///
-    ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
+    ///[JWSRenewalInfo](https://developer.apple.com/documentation/advancedcommerceapi/jwsrenewalinfo)
     public var signedRenewalInfo: String
 
     ///Transaction information signed by the App Store, in JSON Web Signature (JWS) Compact Serialization format, for the migrated subscription.
     ///
-    ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
+    ///[JWSTransaction](https://developer.apple.com/documentation/advancedcommerceapi/jwstransaction)
     public var signedTransactionInfo: String
 }

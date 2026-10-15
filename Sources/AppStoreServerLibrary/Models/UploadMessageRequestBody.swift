@@ -1,8 +1,6 @@
 // Copyright (c) 2025 Apple Inc. Licensed under MIT License.
 
-import Foundation
-
-///The request body for uploading a message, which includes the message text and an optional image reference.
+///The request body for uploading a message, which includes the message text and an optional image reference and bullet points.
 ///
 ///[UploadMessageRequestBody](https://developer.apple.com/documentation/retentionmessaging/uploadmessagerequestbody)
 public struct UploadMessageRequestBody: Decodable, Encodable, Hashable, Sendable {
@@ -17,15 +15,16 @@ public struct UploadMessageRequestBody: Decodable, Encodable, Hashable, Sendable
         case tooManyBulletPoints
     }
 
-    public init(header: String, body: String, image: UploadMessageImage? = nil, headerPosition: HeaderPosition? = nil, bulletPoints: [BulletPoint]? = nil) throws {
-        try self.init(header: header, body: body, image: image, rawHeaderPosition: headerPosition?.rawValue, bulletPoints: bulletPoints)
+    public init(header: String, body: String, image: UploadMessageImage? = nil, bulletPoints: [BulletPoint]? = nil, headerPosition: HeaderPosition? = nil) throws {
+        try self.init(header: header, body: body, image: image, bulletPoints: bulletPoints, rawHeaderPosition: headerPosition?.rawValue)
     }
 
-    public init(header: String, body: String, image: UploadMessageImage? = nil, rawHeaderPosition: String? = nil, bulletPoints: [BulletPoint]? = nil) throws {
-        guard header.count <= Self.maximumHeaderLength else {
+    @_disfavoredOverload
+    public init(header: String, body: String, image: UploadMessageImage? = nil, bulletPoints: [BulletPoint]? = nil, rawHeaderPosition: String? = nil) throws {
+        guard header.unicodeScalars.count <= Self.maximumHeaderLength else {
             throw ValidationError.headerTooLong
         }
-        guard body.count <= Self.maximumBodyLength else {
+        guard body.unicodeScalars.count <= Self.maximumBodyLength else {
             throw ValidationError.bodyTooLong
         }
         if let bulletPoints = bulletPoints {
@@ -36,8 +35,8 @@ public struct UploadMessageRequestBody: Decodable, Encodable, Hashable, Sendable
         self.header = header
         self.body = body
         self.image = image
-        self.rawHeaderPosition = rawHeaderPosition
         self.bulletPoints = bulletPoints
+        self.rawHeaderPosition = rawHeaderPosition
     }
 
     ///The header text of the retention message that the system displays to customers.
@@ -55,44 +54,49 @@ public struct UploadMessageRequestBody: Decodable, Encodable, Hashable, Sendable
     ///[UploadMessageImage](https://developer.apple.com/documentation/retentionmessaging/uploadmessageimage)
     public var image: UploadMessageImage?
 
+    ///An optional array of up to five bullet points.
+    ///
+    ///[BulletPoint](https://developer.apple.com/documentation/retentionmessaging/bulletpoint)
+    public var bulletPoints: [BulletPoint]?
+
     ///The position of header text, which defaults to placing header text above the body.
     ///
     ///[headerPosition](https://developer.apple.com/documentation/retentionmessaging/headerposition)
     public var headerPosition: HeaderPosition? {
-        return rawHeaderPosition.flatMap { HeaderPosition(rawValue: $0) }
+        get {
+            return rawHeaderPosition.flatMap { HeaderPosition(rawValue: $0) }
+        }
+        set {
+            self.rawHeaderPosition = newValue.map { $0.rawValue }
+        }
     }
 
     ///See ``headerPosition``
     public var rawHeaderPosition: String?
 
-    ///An optional array of bullet points.
-    ///
-    ///[bulletPoints](https://developer.apple.com/documentation/retentionmessaging/bulletpoints)
-    public var bulletPoints: [BulletPoint]?
-
     public enum CodingKeys: CodingKey {
         case header
         case body
         case image
-        case headerPosition
         case bulletPoints
+        case headerPosition
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.header = try container.decode(String.self, forKey: .header)
         self.body = try container.decode(String.self, forKey: .body)
         self.image = try container.decodeIfPresent(UploadMessageImage.self, forKey: .image)
-        self.rawHeaderPosition = try container.decodeIfPresent(String.self, forKey: .headerPosition)
         self.bulletPoints = try container.decodeIfPresent([BulletPoint].self, forKey: .bulletPoints)
+        self.rawHeaderPosition = try container.decodeIfPresent(String.self, forKey: .headerPosition)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.header, forKey: .header)
         try container.encode(self.body, forKey: .body)
         try container.encodeIfPresent(self.image, forKey: .image)
-        try container.encodeIfPresent(self.rawHeaderPosition, forKey: .headerPosition)
         try container.encodeIfPresent(self.bulletPoints, forKey: .bulletPoints)
+        try container.encodeIfPresent(self.rawHeaderPosition, forKey: .headerPosition)
     }
 }

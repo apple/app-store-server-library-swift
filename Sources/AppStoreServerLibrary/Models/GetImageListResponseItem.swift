@@ -7,14 +7,15 @@ import Foundation
 ///[GetImageListResponseItem](https://developer.apple.com/documentation/retentionmessaging/getimagelistresponseitem)
 public struct GetImageListResponseItem: Decodable, Encodable, Hashable, Sendable {
 
-    public init(imageIdentifier: UUID? = nil, imageState: ImageState? = nil, imageSize: ImageSize? = nil) {
-        self.init(imageIdentifier: imageIdentifier, rawImageState: imageState?.rawValue, rawImageSize: imageSize?.rawValue)
+    public init(imageIdentifier: UUID? = nil, imageSize: ImageSize? = nil, imageState: ImageState? = nil) {
+        self.init(imageIdentifier: imageIdentifier, rawImageSize: imageSize?.rawValue, rawImageState: imageState?.rawValue)
     }
 
-    public init(imageIdentifier: UUID? = nil, rawImageState: String? = nil, rawImageSize: String? = nil) {
+    @_disfavoredOverload
+    public init(imageIdentifier: UUID? = nil, rawImageSize: String? = nil, rawImageState: String? = nil) {
         self.imageIdentifier = imageIdentifier
-        self.rawImageState = rawImageState
         self.rawImageSize = rawImageSize
+        self.rawImageState = rawImageState
     }
 
     ///The identifier of the image.
@@ -22,43 +23,53 @@ public struct GetImageListResponseItem: Decodable, Encodable, Hashable, Sendable
     ///[imageIdentifier](https://developer.apple.com/documentation/retentionmessaging/imageidentifier)
     public var imageIdentifier: UUID?
 
-    ///The current state of the image.
-    ///
-    ///[imageState](https://developer.apple.com/documentation/retentionmessaging/imagestate)
-    public var imageState: ImageState? {
-        return rawImageState.flatMap { ImageState(rawValue: $0) }
-    }
-
-    ///See ``imageState``
-    public var rawImageState: String?
-
     ///The size of the image.
     ///
     ///[imageSize](https://developer.apple.com/documentation/retentionmessaging/imagesize)
     public var imageSize: ImageSize? {
-        return rawImageSize.flatMap { ImageSize(rawValue: $0) }
+        get {
+            return rawImageSize.flatMap { ImageSize(rawValue: $0) }
+        }
+        set {
+            self.rawImageSize = newValue.map { $0.rawValue }
+        }
     }
 
     ///See ``imageSize``
     public var rawImageSize: String?
 
+    ///The current state of the image.
+    ///
+    ///[imageState](https://developer.apple.com/documentation/retentionmessaging/imagestate)
+    public var imageState: ImageState? {
+        get {
+            return rawImageState.flatMap { ImageState(rawValue: $0) }
+        }
+        set {
+            self.rawImageState = newValue.map { $0.rawValue }
+        }
+    }
+
+    ///See ``imageState``
+    public var rawImageState: String?
+
     public enum CodingKeys: CodingKey {
         case imageIdentifier
-        case imageState
         case imageSize
+        case imageState
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.imageIdentifier = try container.decodeIfPresent(UUID.self, forKey: .imageIdentifier)
-        self.rawImageState = try container.decodeIfPresent(String.self, forKey: .imageState)
         self.rawImageSize = try container.decodeIfPresent(String.self, forKey: .imageSize)
+        self.rawImageState = try container.decodeIfPresent(String.self, forKey: .imageState)
     }
 
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.imageIdentifier, forKey: .imageIdentifier)
-        try container.encodeIfPresent(self.rawImageState, forKey: .imageState)
+        try container.encodeIfPresent(self.imageIdentifier?.uuidString.lowercased(), forKey: .imageIdentifier)
         try container.encodeIfPresent(self.rawImageSize, forKey: .imageSize)
+        try container.encodeIfPresent(self.rawImageState, forKey: .imageState)
     }
 }

@@ -4,6 +4,12 @@
 ///
 ///[tokenType](https://developer.apple.com/documentation/appstoreservernotifications/tokentype)
 public enum TokenType: String, Decodable, Encodable, Hashable, Sendable {
-    case services = "SERVICES"
+    ///A token type that indicates an initial acquisition.
     case acquisition = "ACQUISITION"
+
+    ///A token type that indicates usage of App Store services.
+    case services = "SERVICES"
+
+    ///A token type an app receives from the MarketplaceKit token(for:) API.
+    case coreTechnology = "CORE_TECHNOLOGY"
 }

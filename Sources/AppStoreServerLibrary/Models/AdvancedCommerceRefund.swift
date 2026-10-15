@@ -9,6 +9,7 @@ public struct AdvancedCommerceRefund: Decodable, Encodable, Hashable, Sendable {
         self.init(refundAmount: refundAmount, refundDate: refundDate, rawRefundReason: refundReason?.rawValue, rawRefundType: refundType?.rawValue)
     }
 
+    @_disfavoredOverload
     public init(refundAmount: Int64? = nil, refundDate: Date? = nil, rawRefundReason: String? = nil, rawRefundType: String? = nil) {
         self.refundAmount = refundAmount
         self.refundDate = refundDate
@@ -58,7 +59,7 @@ public struct AdvancedCommerceRefund: Decodable, Encodable, Hashable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.refundAmount = try container.decodeIfPresent(Int64.self, forKey: .refundAmount)
-        self.refundDate = try container.decodeIfPresent(Date.self, forKey: .refundDate)
+        self.refundDate = try container.decodeIfPresent(Double.self, forKey: .refundDate).map { Date(timeIntervalSince1970: $0 / 1000.0) }
         self.rawRefundReason = try container.decodeIfPresent(String.self, forKey: .refundReason)
         self.rawRefundType = try container.decodeIfPresent(String.self, forKey: .refundType)
     }
@@ -66,7 +67,7 @@ public struct AdvancedCommerceRefund: Decodable, Encodable, Hashable, Sendable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(self.refundAmount, forKey: .refundAmount)
-        try container.encodeIfPresent(self.refundDate, forKey: .refundDate)
+        try container.encodeIfPresent(self.refundDate.map { ($0.timeIntervalSince1970 * 1000.0).rounded(.towardZero) }, forKey: .refundDate)
         try container.encodeIfPresent(self.rawRefundReason, forKey: .refundReason)
         try container.encodeIfPresent(self.rawRefundType, forKey: .refundType)
     }
