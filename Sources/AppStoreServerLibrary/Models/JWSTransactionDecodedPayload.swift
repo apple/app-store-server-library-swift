@@ -1,6 +1,8 @@
 // Copyright (c) 2023 Apple Inc. Licensed under MIT License.
 
 import Foundation
+import JWTKit
+
 ///A decoded payload containing transaction information.
 ///
 ///[JWSTransactionDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload)
@@ -410,4 +412,6 @@ public struct JWSTransactionDecodedPayload: DecodedSignedData, Decodable, Encoda
         try container.encodeIfPresent(self.rawBillingPlanType, forKey: .billingPlanType)
         try container.encodeIfPresent(self.commitmentInfo, forKey: .commitmentInfo)
     }
+
+    public func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
 }
