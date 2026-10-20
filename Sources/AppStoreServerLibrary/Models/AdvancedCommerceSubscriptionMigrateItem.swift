@@ -11,6 +11,11 @@ public struct AdvancedCommerceSubscriptionMigrateItem: Decodable, Encodable, Has
         self.displayName = try HelperValidationUtils.validateDisplayName(displayName)
     }
 
+    ///The SKU to use for the migrated item.
+    ///
+    ///[SKU](https://developer.apple.com/documentation/advancedcommerceapi/sku)
+    public var sku: String
+
     ///The description of the SKU.
     ///
     ///[description](https://developer.apple.com/documentation/advancedcommerceapi/description)
@@ -21,14 +26,16 @@ public struct AdvancedCommerceSubscriptionMigrateItem: Decodable, Encodable, Has
     ///[displayName](https://developer.apple.com/documentation/advancedcommerceapi/displayname)
     public var displayName: String
 
-    ///The SKU to use for the migrated item.
-    ///
-    ///[SKU](https://developer.apple.com/documentation/advancedcommerceapi/sku)
-    public var sku: String
-
     public enum CodingKeys: String, CodingKey {
+        case sku = "SKU"
         case description = "description"
         case displayName = "displayName"
-        case sku = "SKU"
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(HelperValidationUtils.validateSku(self.sku), forKey: .sku)
+        try container.encode(HelperValidationUtils.validateDescription(self.description), forKey: .description)
+        try container.encode(HelperValidationUtils.validateDisplayName(self.displayName), forKey: .displayName)
     }
 }

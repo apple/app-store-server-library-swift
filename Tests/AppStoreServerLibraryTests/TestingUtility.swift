@@ -18,7 +18,11 @@ public class TestingUtility {
         let absolutePath = Bundle.module.url(forResource: path, withExtension: "")!
         return try! Data(contentsOf: absolutePath)
     }
-    
+
+    public static func readJsonObject(_ path: String) -> [String: Any] {
+        return try! JSONSerialization.jsonObject(with: readBytes(path)) as! [String: Any]
+    }
+
     public static func getSignedDataVerifier(_ environment: AppStoreEnvironment, _ bundleId: String, _ appAppleId: Int64) -> SignedDataVerifier {
         return try! SignedDataVerifier(rootCertificates: [readBytes("resources/certs/testCA.der")], bundleId: bundleId, appAppleId: appAppleId, environment: environment, enableOnlineChecks: false)
     }
@@ -37,8 +41,29 @@ public class TestingUtility {
         XCTAssertEqual(parsedValue, codable)
     }
     
+    public static func confirmRequiredKeys<T>(_ type: T.Type, _ json: [String: Any], requiredKeys: [String], file: StaticString = #filePath, line: UInt = #line) where T : Decodable {
+        XCTAssertNoThrow(try getJsonDecoder().decode(type, from: JSONSerialization.data(withJSONObject: json)), file: file, line: line)
+        let requiredOnly = json.filter { requiredKeys.contains($0.key) }
+        XCTAssertEqual(requiredKeys.count, requiredOnly.count, file: file, line: line)
+        XCTAssertNoThrow(try getJsonDecoder().decode(type, from: JSONSerialization.data(withJSONObject: requiredOnly)), file: file, line: line)
+        for key in requiredKeys {
+            var missingKey = json
+            missingKey.removeValue(forKey: key)
+            XCTAssertThrowsError(try getJsonDecoder().decode(type, from: JSONSerialization.data(withJSONObject: missingKey)), file: file, line: line) { error in
+                guard case DecodingError.keyNotFound(let codingKey, _) = error else {
+                    XCTFail(file: file, line: line)
+                    return
+                }
+                XCTAssertEqual(key, codingKey.stringValue, file: file, line: line)
+            }
+        }
+    }
+
     public static func createSignedDataFromJson(_ path: String) -> String {
-        let payload = readFile(path)
+        return createSignedDataFromJsonString(readFile(path))
+    }
+
+    public static func createSignedDataFromJsonString(_ payload: String) -> String {
         let signingKey = Crypto.P256.Signing.PrivateKey()
 
         let header = JWTHeader(alg: "ES256")

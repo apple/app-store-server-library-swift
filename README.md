@@ -1,5 +1,5 @@
 # Apple App Store Server Swift Library
-The Swift server library for the [App Store Server API](https://developer.apple.com/documentation/appstoreserverapi), [App Store Server Notifications](https://developer.apple.com/documentation/appstoreservernotifications), the [Retention Messaging API](https://developer.apple.com/documentation/retentionmessaging), and [Advanced Commerce API](https://developer.apple.com/documentation/AdvancedCommerceAPI). Also available in [Java](https://github.com/apple/app-store-server-library-java), [Python](https://github.com/apple/app-store-server-library-python), and [Node.js](https://github.com/apple/app-store-server-library-node).
+The Swift server library for the [App Store Server API](https://developer.apple.com/documentation/appstoreserverapi), [App Store Server Notifications](https://developer.apple.com/documentation/appstoreservernotifications), the [Retention Messaging API](https://developer.apple.com/documentation/retentionmessaging), and [Advanced Commerce API](https://developer.apple.com/documentation/advancedcommerceapi). Also available in [Java](https://github.com/apple/app-store-server-library-java), [Python](https://github.com/apple/app-store-server-library-python), and [Node.js](https://github.com/apple/app-store-server-library-node).
 
 ## Table of Contents
 1. [Installation](#installation)
@@ -38,6 +38,7 @@ Download and store the root certificates found in the Apple Root Certificates se
 ### API Usage
 
 ```swift
+import Foundation
 import AppStoreServerLibrary
 
 let issuerId = "99b16628-15e4-4668-972b-eeff55eeff55"
@@ -66,6 +67,7 @@ case .failure(let failure):
 ### Verification Usage
 
 ```swift
+import Foundation
 import AppStoreServerLibrary
 
 let bundleId = "com.example"
@@ -90,6 +92,7 @@ case .invalid(let error):
 ### Receipt Usage
 
 ```swift
+import Foundation
 import AppStoreServerLibrary
 
 let issuerId = "99b16628-15e4-4668-972b-eeff55eeff55"
@@ -102,7 +105,7 @@ let environment = AppStoreEnvironment.sandbox
 let client = try! AppStoreServerAPIClient(signingKey: encodedKey, keyId: keyId, issuerId: issuerId, bundleId: bundleId, environment: environment)
 
 let appReceipt = "MI..."
-let transactionIdOptional = ReceiptUtility.extractTransactionId(appReceipt: appReceipt)
+let transactionIdOptional = try! ReceiptUtility.extractTransactionId(appReceipt: appReceipt)
 if let transactionId = transactionIdOptional {
     var transactionHistoryRequest = TransactionHistoryRequest()
     transactionHistoryRequest.sort = TransactionHistoryRequest.Order.ascending
@@ -132,6 +135,7 @@ if let transactionId = transactionIdOptional {
 ### Promotional Offer Signature Creation
 
 ```swift
+import Foundation
 import AppStoreServerLibrary
 
 let keyId = "ABCDEFGHIJ"

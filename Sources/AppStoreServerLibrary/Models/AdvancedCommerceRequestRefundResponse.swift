@@ -5,18 +5,18 @@
 ///[RequestRefundResponse](https://developer.apple.com/documentation/advancedcommerceapi/requestrefundresponse)
 public struct AdvancedCommerceRequestRefundResponse: Decodable, Encodable, Hashable, Sendable {
 
-    public init(signedRenewalInfo: String? = nil, signedTransactionInfo: String) {
-        self.signedRenewalInfo = signedRenewalInfo
+    public init(signedTransactionInfo: String, signedRenewalInfo: String? = nil) {
         self.signedTransactionInfo = signedTransactionInfo
+        self.signedRenewalInfo = signedRenewalInfo
     }
 
     ///Subscription renewal information signed by the App Store, in JSON Web Signature (JWS) format.
     ///
-    ///[JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
+    ///[JWSRenewalInfo](https://developer.apple.com/documentation/advancedcommerceapi/jwsrenewalinfo)
     public var signedRenewalInfo: String?
 
     ///Transaction information signed by the App Store, in JWS Compact Serialization format.
     ///
-    ///[JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
+    ///[JWSTransaction](https://developer.apple.com/documentation/advancedcommerceapi/jwstransaction)
     public var signedTransactionInfo: String
 }

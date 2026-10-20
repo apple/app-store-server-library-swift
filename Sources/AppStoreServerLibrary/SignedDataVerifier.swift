@@ -2,7 +2,7 @@
 
 import Foundation
 
-///A verifier and decoder class designed to decode signed data from the App Store.
+///A verifier and decoder designed to decode signed data from the App Store.
 public struct SignedDataVerifier: Sendable {
 
     public enum ConfigurationError: Error, Hashable, Sendable {
@@ -16,7 +16,7 @@ public struct SignedDataVerifier: Sendable {
     private var enableOnlineChecks: Bool
      
     /// - Parameter rootCertificates: The set of Apple Root certificate authority certificates, as found on [Apple PKI](https://www.apple.com/certificateauthority/)
-    /// - Parameter bundleId: The: bundle identifier of the app.
+    /// - Parameter bundleId: The bundle identifier of the app.
     /// - Parameter appAppleId: The unique identifier of the app in the App Store.
     /// - Parameter environment: The server environment, either sandbox or production.
     /// - Parameter enableOnlineChecks: Whether to enable revocation checking and check expiration using the current date
@@ -36,7 +36,7 @@ public struct SignedDataVerifier: Sendable {
     /// Verifies and decodes a signedRenewalInfo obtained from the App Store Server API, an App Store Server Notification, or from a device
     /// See [JWSRenewalInfo](https://developer.apple.com/documentation/appstoreserverapi/jwsrenewalinfo)
     ///
-    ///  - Parameter signedRenewalInfo The signedRenewalInfo field
+    ///  - Parameter signedRenewalInfo: The signedRenewalInfo field
     ///  - Returns: If success, the decoded renewal info after verification, else the reason for verification failure
     public func verifyAndDecodeRenewalInfo(signedRenewalInfo: String) async -> VerificationResult<JWSRenewalInfoDecodedPayload> {
         let renewalInfoResult = await decodeSignedData(signedData: signedRenewalInfo, type: JWSRenewalInfoDecodedPayload.self)
@@ -53,7 +53,7 @@ public struct SignedDataVerifier: Sendable {
     ///  Verifies and decodes a signedTransaction obtained from the App Store Server API, an App Store Server Notification, or from a device
     ///  See [JWSTransaction](https://developer.apple.com/documentation/appstoreserverapi/jwstransaction)
     ///
-    ///  - Parameter signedTransaction The signedTransaction field
+    ///  - Parameter signedTransaction: The signedTransaction field
     ///  - Returns: If success, the decoded transaction info after verification, else the reason for verification failure
     public func verifyAndDecodeTransaction(signedTransaction: String) async -> VerificationResult<JWSTransactionDecodedPayload> {
         let transactionResult = await decodeSignedData(signedData: signedTransaction, type: JWSTransactionDecodedPayload.self)
@@ -73,7 +73,7 @@ public struct SignedDataVerifier: Sendable {
     ///  Verifies and decodes an App Store Server Notification signedPayload
     ///  See [signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)
     ///
-    ///  - Parameter signedPayload The payload received by your server
+    ///  - Parameter signedPayload: The payload received by your server
     ///  - Returns: If success, the decoded payload after verification, else the reason for verification failure
     public func verifyAndDecodeNotification(signedPayload: String) async -> VerificationResult<ResponseBodyV2DecodedPayload> {
         return await verifyAndDecodeNotification(signedPayload: signedPayload, validateNotification: self.verifyNotificationAppIdentifierAndEnvironment)
@@ -97,7 +97,7 @@ public struct SignedDataVerifier: Sendable {
             } else if let externalPurchaseToken = notification.externalPurchaseToken {
                 appAppleId = externalPurchaseToken.appAppleId
                 bundleId = externalPurchaseToken.bundleId
-                if externalPurchaseToken.externalPurchaseId?.starts(with: "SANDBOX") == true {
+                if externalPurchaseToken.externalPurchaseId.starts(with: "SANDBOX") {
                     environment = .sandbox
                 } else {
                     environment = .production
@@ -133,7 +133,7 @@ public struct SignedDataVerifier: Sendable {
     ///Verifies and decodes a signed AppTransaction
     ///See [AppTransaction](https://developer.apple.com/documentation/storekit/apptransaction)
     ///
-    ///- Parameter signedAppTransaction The signed AppTransaction
+    ///- Parameter signedAppTransaction: The signed AppTransaction
     ///- Returns: If success, the decoded AppTransaction after validation, else the reason for verification failure
     public func verifyAndDecodeAppTransaction(signedAppTransaction: String) async -> VerificationResult<AppTransaction> {
         let appTransactionResult = await decodeSignedData(signedData: signedAppTransaction, type: AppTransaction.self)

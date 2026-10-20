@@ -126,9 +126,11 @@ final class XcodeSignedDataVerifierTests: XCTestCase {
     private func confirmCodableInternallyConsistentForXcode<T>(_ codable: T) where T : Codable, T : Equatable {
         let type = type(of: codable)
         let encoder = JSONEncoder()
-        // Xcode receipts contain a decimal value, we encode the value as encoded in those receipts
         encoder.dateEncodingStrategy = .millisecondsSince1970
-        let parsedValue = try! getJsonDecoder().decode(type, from: encoder.encode(codable))
-        XCTAssertEqual(parsedValue, codable)
+        let encoded = try! encoder.encode(codable)
+        let parsedValue = try! getJsonDecoder().decode(type, from: encoded)
+        XCTAssertEqual(try! JSONSerialization.jsonObject(with: encoder.encode(parsedValue)) as! NSDictionary, try! JSONSerialization.jsonObject(with: encoded) as! NSDictionary)
+        XCTAssertEqual(parsedValue, try! getJsonDecoder().decode(type, from: encoder.encode(parsedValue)))
+        XCTAssertEqual(try! JSONSerialization.jsonObject(with: getJsonEncoder().encode(codable)) as! NSDictionary, try! JSONSerialization.jsonObject(with: encoded) as! NSDictionary)
     }
 }

@@ -5,18 +5,18 @@
 ///[notificationHistoryResponseItem](https://developer.apple.com/documentation/appstoreserverapi/notificationhistoryresponseitem)
 public struct NotificationHistoryResponseItem: Decodable, Encodable, Hashable, Sendable {
 
-    public init(signedPayload: String? = nil, sendAttempts: [SendAttemptItem]? = nil) {
-        self.signedPayload = signedPayload
+    public init(sendAttempts: [SendAttemptItem]? = nil, signedPayload: String? = nil) {
         self.sendAttempts = sendAttempts
+        self.signedPayload = signedPayload
     }
 
-    ///A cryptographically signed payload, in JSON Web Signature (JWS) format, containing the response body for a version 2 notification.
-    ///
-    ///[signedPayload](https://developer.apple.com/documentation/appstoreservernotifications/signedpayload)
-    public var signedPayload: String?
-
-    ///An array of information the App Store server records for its attempts to send a notification to your server. The maximum number of entries in the array is six.
+    ///An array of information the App Store server records for its attempts to send a notification to your server.
     ///
     ///[sendAttemptItem](https://developer.apple.com/documentation/appstoreserverapi/sendattemptitem)
     public var sendAttempts: [SendAttemptItem]?
+
+    ///The cryptographically signed payload, in JSON Web Signature (JWS) format, containing the original response body of a version 2 notification.
+    ///
+    ///[signedPayload](https://developer.apple.com/documentation/appstoreserverapi/signedpayload)
+    public var signedPayload: String?
 }

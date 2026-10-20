@@ -3,7 +3,7 @@
 import Foundation
 import Crypto
 
-public struct PromotionalOfferSignatureCreator {
+public struct PromotionalOfferSignatureCreator: Sendable {
     private let ecPrivateKey: P256.Signing.PrivateKey
     private let keyId: String
     private let bundleId: String
@@ -15,7 +15,7 @@ public struct PromotionalOfferSignatureCreator {
     }
     ///Create a promotional offer signature
     ///
-    ///[Generating a signature for promotional offers](https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/subscriptions_and_offers/generating_a_signature_for_promotional_offers)
+    ///[Generating a signature for promotional offers](https://developer.apple.com/documentation/storekit/generating-a-signature-for-promotional-offers)
     ///
     /// - Parameter productIdentifier: The subscription product identifier
     /// - Parameter subscriptionOfferID: The subscription discount identifier
@@ -29,5 +29,10 @@ public struct PromotionalOfferSignatureCreator {
         let dataBytes = Data(payload.utf8)
         let signature = try ecPrivateKey.signature(for: SHA256.hash(data: dataBytes))
         return signature.derRepresentation.base64EncodedString()
+    }
+
+    public func createSignature(productIdentifier: String, subscriptionOfferID: String, appAccountToken: String, nonce: UUID, timestamp: Date) throws -> String {
+        let milliseconds = Int64((timestamp.timeIntervalSince1970 * 1000.0).rounded(.towardZero))
+        return try createSignature(productIdentifier: productIdentifier, subscriptionOfferID: subscriptionOfferID, appAccountToken: appAccountToken, nonce: nonce, timestamp: milliseconds)
     }
 }

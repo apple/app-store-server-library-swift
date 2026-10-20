@@ -13,10 +13,21 @@ public struct AdvancedCommerceSubscriptionMigrateDescriptors: Decodable, Encodab
     ///The description of the subscription to migrate to.
     ///
     ///[description](https://developer.apple.com/documentation/advancedcommerceapi/description)
-    public var description: String?
+    public var description: String
 
     ///The display name of the subscription to migrate to.
     ///
     ///[displayName](https://developer.apple.com/documentation/advancedcommerceapi/displayname)
-    public var displayName: String?
+    public var displayName: String
+
+    public enum CodingKeys: CodingKey {
+        case description
+        case displayName
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(HelperValidationUtils.validateDescription(self.description), forKey: .description)
+        try container.encode(HelperValidationUtils.validateDisplayName(self.displayName), forKey: .displayName)
+    }
 }

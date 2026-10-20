@@ -7,6 +7,7 @@ public struct AdvancedCommerceRenewalInfo: Decodable, Encodable, Hashable, Senda
         self.init(consistencyToken: consistencyToken, descriptors: descriptors, items: items, rawPeriod: period?.rawValue, requestReferenceId: requestReferenceId, taxCode: taxCode)
     }
 
+    @_disfavoredOverload
     public init(consistencyToken: String? = nil, descriptors: AdvancedCommerceDescriptors? = nil, items: [AdvancedCommerceRenewalItem]? = nil, rawPeriod: String? = nil, requestReferenceId: String? = nil, taxCode: String? = nil) {
         self.consistencyToken = consistencyToken
         self.descriptors = descriptors
@@ -22,7 +23,7 @@ public struct AdvancedCommerceRenewalInfo: Decodable, Encodable, Hashable, Senda
     ///[advancedCommerceDescriptors](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercedescriptors)
     public var descriptors: AdvancedCommerceDescriptors?
 
-    ///[advancedCommerceRenewalItem](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercerenewalitem)
+    ///[advancedCommerceRenewalItems](https://developer.apple.com/documentation/appstoreserverapi/advancedcommercerenewalitems)
     public var items: [AdvancedCommerceRenewalItem]?
 
     ///[advancedCommercePeriod](https://developer.apple.com/documentation/appstoreserverapi/advancedcommerceperiod)

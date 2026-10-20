@@ -9,6 +9,7 @@ public struct RenewalCommitmentInfo: Decodable, Encodable, Hashable, Sendable {
         self.init(commitmentAutoRenewProductId: commitmentAutoRenewProductId, rawCommitmentAutoRenewStatus: commitmentAutoRenewStatus?.rawValue, rawCommitmentRenewalBillingPlanType: commitmentRenewalBillingPlanType?.rawValue, commitmentRenewalDate: commitmentRenewalDate, commitmentRenewalPrice: commitmentRenewalPrice)
     }
 
+    @_disfavoredOverload
     public init(commitmentAutoRenewProductId: String? = nil, rawCommitmentAutoRenewStatus: Int32? = nil, rawCommitmentRenewalBillingPlanType: String? = nil, commitmentRenewalDate: Date? = nil, commitmentRenewalPrice: Int64? = nil) {
         self.commitmentAutoRenewProductId = commitmentAutoRenewProductId
         self.rawCommitmentAutoRenewStatus = rawCommitmentAutoRenewStatus
@@ -65,7 +66,7 @@ public struct RenewalCommitmentInfo: Decodable, Encodable, Hashable, Sendable {
         self.commitmentAutoRenewProductId = try container.decodeIfPresent(String.self, forKey: .commitmentAutoRenewProductId)
         self.rawCommitmentAutoRenewStatus = try container.decodeIfPresent(Int32.self, forKey: .commitmentAutoRenewStatus)
         self.rawCommitmentRenewalBillingPlanType = try container.decodeIfPresent(String.self, forKey: .commitmentRenewalBillingPlanType)
-        self.commitmentRenewalDate = try container.decodeIfPresent(Date.self, forKey: .commitmentRenewalDate)
+        self.commitmentRenewalDate = try container.decodeIfPresent(Double.self, forKey: .commitmentRenewalDate).map { Date(timeIntervalSince1970: $0 / 1000.0) }
         self.commitmentRenewalPrice = try container.decodeIfPresent(Int64.self, forKey: .commitmentRenewalPrice)
     }
 
@@ -74,7 +75,7 @@ public struct RenewalCommitmentInfo: Decodable, Encodable, Hashable, Sendable {
         try container.encodeIfPresent(self.commitmentAutoRenewProductId, forKey: .commitmentAutoRenewProductId)
         try container.encodeIfPresent(self.rawCommitmentAutoRenewStatus, forKey: .commitmentAutoRenewStatus)
         try container.encodeIfPresent(self.rawCommitmentRenewalBillingPlanType, forKey: .commitmentRenewalBillingPlanType)
-        try container.encodeIfPresent(self.commitmentRenewalDate, forKey: .commitmentRenewalDate)
+        try container.encodeIfPresent(self.commitmentRenewalDate.map { ($0.timeIntervalSince1970 * 1000.0).rounded(.towardZero) }, forKey: .commitmentRenewalDate)
         try container.encodeIfPresent(self.commitmentRenewalPrice, forKey: .commitmentRenewalPrice)
     }
 }

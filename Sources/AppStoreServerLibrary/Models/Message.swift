@@ -15,4 +15,13 @@ public struct Message: Decodable, Encodable, Hashable, Sendable {
     ///
     ///[messageIdentifier](https://developer.apple.com/documentation/retentionmessaging/messageidentifier)
     public var messageIdentifier: UUID?
+
+    public enum CodingKeys: CodingKey {
+        case messageIdentifier
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.messageIdentifier?.uuidString.lowercased(), forKey: .messageIdentifier)
+    }
 }

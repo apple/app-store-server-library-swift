@@ -7,11 +7,12 @@ import Foundation
 ///[alternateProduct](https://developer.apple.com/documentation/retentionmessaging/alternateproduct)
 public struct AlternateProduct: Decodable, Encodable, Hashable, Sendable {
 
-    public init(messageIdentifier: UUID? = nil, productId: String? = nil, billingPlanType: BillingPlanType? = nil) {
+    public init(messageIdentifier: UUID, productId: String, billingPlanType: BillingPlanType? = nil) {
         self.init(messageIdentifier: messageIdentifier, productId: productId, rawBillingPlanType: billingPlanType?.rawValue)
     }
 
-    public init(messageIdentifier: UUID? = nil, productId: String? = nil, rawBillingPlanType: String? = nil) {
+    @_disfavoredOverload
+    public init(messageIdentifier: UUID, productId: String, rawBillingPlanType: String? = nil) {
         self.messageIdentifier = messageIdentifier
         self.productId = productId
         self.rawBillingPlanType = rawBillingPlanType
@@ -20,12 +21,12 @@ public struct AlternateProduct: Decodable, Encodable, Hashable, Sendable {
     ///The message identifier of the text to display in the switch-plan retention message.
     ///
     ///[messageIdentifier](https://developer.apple.com/documentation/retentionmessaging/messageidentifier)
-    public var messageIdentifier: UUID?
+    public var messageIdentifier: UUID
 
     ///The product identifier of the subscription the retention message suggests for your customer to switch to.
     ///
     ///[productId](https://developer.apple.com/documentation/retentionmessaging/productid)
-    public var productId: String?
+    public var productId: String
 
     ///[billingPlanType](https://developer.apple.com/documentation/retentionmessaging/billingplantype)
     public var billingPlanType: BillingPlanType? {
@@ -48,15 +49,15 @@ public struct AlternateProduct: Decodable, Encodable, Hashable, Sendable {
 
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.messageIdentifier = try container.decodeIfPresent(UUID.self, forKey: .messageIdentifier)
-        self.productId = try container.decodeIfPresent(String.self, forKey: .productId)
+        self.messageIdentifier = try container.decode(UUID.self, forKey: .messageIdentifier)
+        self.productId = try container.decode(String.self, forKey: .productId)
         self.rawBillingPlanType = try container.decodeIfPresent(String.self, forKey: .billingPlanType)
     }
 
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.messageIdentifier, forKey: .messageIdentifier)
-        try container.encodeIfPresent(self.productId, forKey: .productId)
+        try container.encode(self.messageIdentifier.uuidString.lowercased(), forKey: .messageIdentifier)
+        try container.encode(self.productId, forKey: .productId)
         try container.encodeIfPresent(self.rawBillingPlanType, forKey: .billingPlanType)
     }
 }

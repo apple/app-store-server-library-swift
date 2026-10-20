@@ -21,4 +21,15 @@ public struct AdvancedCommerceInfo: Decodable, Encodable, Hashable, Sendable {
     ///
     ///[advancedCommerceData](https://developer.apple.com/documentation/retentionmessaging/advancedcommercedata)
     public var advancedCommerceData: String?
+
+    public enum CodingKeys: CodingKey {
+        case messageIdentifier
+        case advancedCommerceData
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.messageIdentifier?.uuidString.lowercased(), forKey: .messageIdentifier)
+        try container.encodeIfPresent(self.advancedCommerceData, forKey: .advancedCommerceData)
+    }
 }
